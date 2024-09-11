@@ -13,7 +13,7 @@ You can find out more about the PSBBN software [here](https://en.wikipedia.org/w
 - Associated manual pages and troubleshooting regarding the "Audio Player" feature translated and re-added to the user guide.
 - Japanese qwerty on-screen keyboard replaced with US English on-screen keyboard.
 
-Video demonstrating how PSBBN can be used in 2024. **Note**: Additional software and setup is required to achieve everything shown in this video.
+Video demonstrating how PSBBN can be used in 2024. **Note**: Additional software and setup is required to achieve everything shown in this video. Click the image to watch:
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/kR1MVcAkW5M/0.jpg)](https://www.youtube.com/watch?v=kR1MVcAkW5M)
 
