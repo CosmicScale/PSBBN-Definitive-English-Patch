@@ -7,6 +7,7 @@ You can find out more about the PSBBN software [here](https://en.wikipedia.org/w
 ## Patch Features:
 - A full English translation of the stock Japanese BB Navigator version 0.32.
 - All binaries, XML files, textures, and pictures have been translated.*
+- Compatible with any fat model PS2 console regardless of region
 - DNAS authorization checks bypassed to enable online connectivity.
 - Links to working mirrors of the online game channels for Sony, Hudson, EA, Konami, Capcom, Namco, and KOEI. Courtesy of vitas155 at psbbn.ru.
 - "Audio Player" feature re-added to the Music Channel from an earlier release of PSBBN, allowing compatibility with NetMD MiniDisc Recorder.
