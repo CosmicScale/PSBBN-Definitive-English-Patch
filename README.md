@@ -43,7 +43,7 @@ I would highly recommend that you install the [Retro GEM Game ID Resetter](https
 
 ## New installation scripts
 
-These scripts are essential for unlocking all the new features exclusive to version 2.0. They require a Linux environment to run. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive or a virtual machine. Only Debian-based distributions are supported, with Linux Mint being the recommended choice. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. The HDD/SSD can be connected to your PC internally or via USB.
+These scripts are essential for unlocking all the new features exclusive to version 2.0. They require a Linux environment to run. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive or a virtual machine. Debian-based distributions using `apt` and Arch-based distributions using `pacman` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. The HDD/SSD can be connected to your PC internally or via USB.
 
 ## Video Tutorial:
 
