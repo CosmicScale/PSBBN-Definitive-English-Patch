@@ -42,7 +42,6 @@ if [[ -f "$SOURCES_LIST" ]]; then
     fi
 fi
 
-packagesNeeded=(curl jq)
 if [ -x "$(command -v apt)" ];
 then
     sudo apt install -y axel imagemagick xxd python3-venv python3-pip nodejs npm
@@ -73,10 +72,8 @@ if ! command -v mkfs.exfat &> /dev/null; then
     echo "Error: Failed to install exfat driver."
     read -p "Press any key to exit..."
     exit 1
+	fi
 fi
-fi
-
-
 
 # Setup Python virtual environment and install Python dependencies
 python3 -m venv venv
