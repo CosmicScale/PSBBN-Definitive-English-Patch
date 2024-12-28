@@ -46,7 +46,7 @@ if [ -x "$(command -v apt)" ]; then
     sudo apt install -y axel imagemagick xxd python3-venv python3-pip nodejs npm
 # Or if user is on Arch-based system, do this instead    
 elif [ -x "$(command -v pacman)" ]; then
-    sudo pacman -Sy --needed archlinux-keyring axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync
+    sudo pacman -Sy --needed archlinux-keyring && sudo pacman -S --needed axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync
 fi
 if [ $? -ne 0 ]; then
     echo
