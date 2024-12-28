@@ -361,7 +361,7 @@ if compgen -G "${input_dir}/*" > /dev/null; then
     output="${ARTWORK_DIR}/${base_name}.png"
     
     # Convert each file to .png with resizing and 8-bit depth
-    magick "$file" -resize 256x256\! -depth 8 -dither FloydSteinberg -colors 256 "$output" | tee -a "${LOG_FILE}"
+    convert "$file" -resize 256x256\! -depth 8 -dither FloydSteinberg -colors 256 "$output" | tee -a "${LOG_FILE}"
   done
   rm "${input_dir}"/*
 else
