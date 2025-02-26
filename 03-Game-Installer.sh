@@ -15,7 +15,7 @@ MISSING_ART=${TOOLKIT_PATH}/missing-art.log
 
 
 # Modify this path if your games are stored in a different location:
-GAMES_PATH="/mnt/d/roms/ps2"
+GAMES_PATH="${TOOLKIT_PATH}/games"
 
 POPS_FOLDER="${GAMES_PATH}/POPS"
 PS1_LIST="${TOOLKIT_PATH}/ps1.list"
