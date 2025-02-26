@@ -685,16 +685,16 @@ mkdir "${TOOLKIT_PATH}"/OPL 2>> "${LOG_FILE}"
 if hash mount.exfat-fuse; then
     sudo mount.exfat-fuse ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
 else
-	sudo mount ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
+    sudo mount ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
 fi
 
 if [ $? -ne 0 ]; then
     echo
     echo
-	echo "Error: Failed to mount ${DEVICE}3 - did you run 01-Setup.sh?"
+    echo "Error: Failed to mount ${DEVICE}3 - did you run 01-Setup.sh?"
     read -n 1 -s -r -p "Press any key to exit..."
     echo
-	exit 1;
+    exit 1;
 fi
 
 echo | tee -a "${LOG_FILE}"
