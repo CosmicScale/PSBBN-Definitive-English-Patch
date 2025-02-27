@@ -684,7 +684,7 @@ mkdir "${TOOLKIT_PATH}"/OPL 2>> "${LOG_FILE}"
 sudo mount ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
 
 # Handle possibility host system's `mount` is using Fuse
-if [ $? -ne 0 ] && [ hash mount.exfat-fuse ]; then
+if [ $? -ne 0 ] && hash mount.exfat-fuse; then
     sudo mount.exfat-fuse ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
 fi
 
