@@ -681,11 +681,11 @@ echo >> "${LOG_FILE}"
 echo "Mounting OPL partition" | tee -a "${LOG_FILE}"
 mkdir "${TOOLKIT_PATH}"/OPL 2>> "${LOG_FILE}"
 
-# Handle systems that require explicit mount.exfat-fuse
-if hash mount.exfat-fuse; then
+sudo mount ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
+
+# Handle possibility host system's `mount` is using Fuse
+if [ $? -ne 0 ] && [ hash mount.exfat-fuse ]; then
     sudo mount.exfat-fuse ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
-else
-    sudo mount ${DEVICE}3 "${TOOLKIT_PATH}"/OPL
 fi
 
 if [ $? -ne 0 ]; then
