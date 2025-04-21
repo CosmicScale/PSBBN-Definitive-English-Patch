@@ -93,7 +93,7 @@ fi
 fi
 # Check if user is on Debian-based system
 if [ -x "$(command -v apt)" ]; then
-    sudo apt update && sudo apt install -y axel imagemagick xxd python3 python3-venv python3-pip nodejs npm bc rsync curl zip
+    sudo apt update && sudo apt install -y axel imagemagick xxd python3 python3-venv python3-pip nodejs npm bc rsync curl zip wget
 # Or if user is on Fedora-based system, do this instead
 elif [ -x "$(command -v dnf)" ]; then
     sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip nodejs npm bc rsync curl zip
