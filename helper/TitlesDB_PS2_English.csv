@@ -18,7 +18,7 @@ SLPS_732.67|.hack//G.U. Vol. 3: Aruku You na Hayasa de|Namco Bandai Games
 SLUS_214.89|.hack//G.U. Vol. 3: Redemption|Namco Bandai Games
 SLPS_251.21|.hack//Kansen Kakudai Vol. 1|Bandai
 SLPS_732.30|.hack//Kansen Kakudai Vol. 1|Bandai
-SLES_522.37|.hack//Part 1: Infection|Bandai.
+SLES_522.37|.hack//Part 1: Infection|Bandai
 SLUS_202.67|.hack//Part 1: Infection|Bandai
 SLUS_290.42|.hack//Part 1: Infection (Demo)|Bandai
 SLUS_280.23|.hack//Part 1: Infection (Trade Demo)|Bandai
@@ -116,10 +116,10 @@ SLPM_656.07|3LDK: Shiawase ni Narou yo (Shokai Genteiban)|Princess Soft
 SLES_501.94|4x4 Evo|TerminalReality,Inc.
 SLUS_200.91|4x4 Evo|TerminalReality,Inc.
 SLES_511.99|4x4 Evo 2|
-SLES_537.34|50 Cent: Bulletproof|Genuine Games
-SLES_539.06|50 Cent: Bulletproof|Genuine Games
-SLES_539.94|50 Cent: Bulletproof|Genuine Games
-SLUS_213.15|50 Cent: Bulletproof|Genuine Games
+SLES_537.34|50 Cent: Bulletproof|Vivendi Universal
+SLES_539.06|50 Cent: Bulletproof|Vivendi Universal
+SLES_539.94|50 Cent: Bulletproof|Vivendi Universal
+SLUS_213.15|50 Cent: Bulletproof|Vivendi Universal
 PCPX_963.03|6-gatsu Hatsubai Title Promotion Disc: Aconcagua / Boku no Natsuyasumi / TVDJ|
 SLPS_250.25|7 (Seven): Molmorth no Kiheitai|Namco
 SLPS_734.08|7 (Seven): Molmorth no Kiheitai|Namco
@@ -339,11 +339,11 @@ SLUS_210.69|American Chopper|Creat Studios
 SLES_537.79|American Chopper 2: Full Throttle|Creat Studios
 SLUS_212.88|American Chopper 2: Full Throttle|Creat Studios
 SLUS_208.16|American Idol|Hothouse Creations
-SCES_517.06|Amplitude|Harmonix
-SCUS_972.58|Amplitude|Harmonix
-SCED_519.05|Amplitude (Demo)|Harmonix
-SCUS_972.62|Amplitude (Demo)|Harmonix
-SCUS_978.69|Amplitude: P.O.D. (Demo)|
+SCES_517.06|Amplitude|Sony Computer Entertainment
+SCUS_972.58|Amplitude|Sony Computer Entertainment
+SCED_519.05|Amplitude (Demo)|Sony Computer Entertainment
+SCUS_972.62|Amplitude (Demo)|Sony Computer Entertainment
+SCUS_978.69|Amplitude: P.O.D. (Demo)|Sony Computer Entertainment
 SLES_546.26|An American Tail|
 SLPM_668.58|An Itsuka, Todokuo Sora ni.: You no Michi to Hi no Tasogare to|
 SLPM_667.09|Angel Profile|GeneX
@@ -642,8 +642,8 @@ SLES_521.87|Baldur's Gate: Dark Alliance II|Black Isle Studios
 SLES_521.88|Baldur's Gate: Dark Alliance II|Black Isle Studios
 SLPM_658.45|Baldur's Gate: Dark Alliance II|Black Isle Studios
 SLUS_206.75|Baldur's Gate: Dark Alliance II|Black Isle Studios
-SLES_555.78|Band Hero|
-SLUS_218.98|Band Hero|
+SLES_555.78|Band Hero|Activision
+SLUS_218.98|Band Hero|Activision
 SLKA_250.91|Bansuk Yeongung vs. 3D|
 SLES_519.78|Baphomets Fluch: Der Schlafende Drache|
 SLPM_663.90|Bara no Ki ni Bara no Hanasaku: Das Versprechen|
@@ -660,8 +660,8 @@ SLES_545.66|Barbie in The 12 Dancing Princesses|Activision
 SLES_546.08|Barbie in The 12 Dancing Princesses|Activision
 SLUS_215.79|Barbie in The 12 Dancing Princesses|Activision
 SLES_552.16|Baroque|Rising Star Games
-SLPM_667.47|Baroque|Rising Star Games
-SLUS_217.14|Baroque|Rising Star Games
+SLPM_667.47|Baroque|Sting
+SLUS_217.14|Baroque|Atlus
 SLPS_254.69|Baseball Live 2005|
 SLPS_200.84|Basic Studio: Powerful Game Koubou (Disc 1) (Basic Studio Disc)|
 SLPS_200.85|Basic Studio: Powerful Game Koubou (Disc 2) (Play Disc)|
@@ -1014,15 +1014,15 @@ SLES_546.81|Burnout Dominator|Criterion Studios
 SLKA_252.60|Burnout Dominator|Criterion Studios
 SLPM_667.39|Burnout Dominator|Criterion Studios
 SLUS_215.96|Burnout Dominator|Criterion Studios
-SLAJ_250.66|Burnout Revenge|Criterion Studios
-SLES_535.06|Burnout Revenge|Criterion Studios
-SLES_535.07|Burnout Revenge|Criterion Studios
-SLKA_253.04|Burnout Revenge|Criterion Studios
-SLPM_661.08|Burnout Revenge|Criterion Studios
-SLUS_212.42|Burnout Revenge|Criterion Studios
-SLED_535.12|Burnout Revenge (Demo)|Criterion Studios
-SLED_536.37|Burnout Revenge (Demo)|Criterion Studios
-SLUS_291.53|Burnout Revenge (Demo)|Criterion Studios
+SLAJ_250.66|Burnout Revenge|Electronic Arts
+SLES_535.06|Burnout Revenge|Electronic Arts
+SLES_535.07|Burnout Revenge|Electronic Arts
+SLKA_253.04|Burnout Revenge|Electronic Arts
+SLPM_661.08|Burnout Revenge|Electronic Arts
+SLUS_212.42|Burnout Revenge|Electronic Arts
+SLED_535.12|Burnout Revenge (Demo)|Electronic Arts
+SLED_536.37|Burnout Revenge (Demo)|Electronic Arts
+SLUS_291.53|Burnout Revenge (Demo)|Electronic Arts
 SLKA_252.21|Busin 0: Wizardry Alternative Neo|Racjin
 SLPM_653.78|Busin 0: Wizardry Alternative Neo|Racjin
 SLPM_658.76|Busin 0: Wizardry Alternative Neo|Racjin
@@ -1499,8 +1499,8 @@ SLPM_660.67|Crash Bandicoot: Bakusou! Nitro Kart|
 SLPM_660.90|Crash Bandicoot: Gatchanko World|
 SLPM_645.09|Crash Bandicoot: Mawangui Buhwal|
 SLPM_645.13|Crash Bandicoot: Mawangui Buhwal|
-SLES_503.86|Crash Bandicoot: The Wrath of Cortex|
-SLUS_202.38|Crash Bandicoot: The Wrath of Cortex|
+SLES_503.86|Crash Bandicoot: The Wrath of Cortex|Vivendi Universal
+SLUS_202.38|Crash Bandicoot: The Wrath of Cortex|Vivendi Universal
 SLUS_290.10|Crash Bandicoot: The Wrath of Cortex (Demo)|
 SLES_515.11|Crash Nitro Kart|Universal
 SLUS_206.49|Crash Nitro Kart|Universal
@@ -1530,7 +1530,7 @@ SLES_545.49|Crazy Frog Racer 2|Turtle Games
 SLES_530.00|Crazy Golf|Mere Mortals
 SLES_533.18|Crazy Golf: World Tour|Liquid Games
 SLES_502.15|Crazy Taxi|Acclaim
-SLPM_621.02|Crazy Taxi|Acclaim
+SLPM_621.02|Crazy Taxi|SEGA
 SLUS_202.02|Crazy Taxi|Acclaim
 SLES_520.44|Crescent Suzuki Racing|Kuju Entertainment
 SLES_543.96|Cricket 07|EA Sports
@@ -1983,9 +1983,9 @@ SLES_516.21|Dirt Track Devils|Bigben Interactive
 SLUS_205.61|Disaster Report|Agetec
 SLUS_280.25|Disaster Report (Trade Demo)|Agetec
 SLES_544.54|Disgaea 2: Cursed Memories|Koei
-SLUS_213.97|Disgaea 2: Cursed Memories|Koei
+SLUS_213.97|Disgaea 2: Cursed Memories|Nippon Ichi Software
 SLES_524.58|Disgaea: Hour of Darkness|Koei
-SLUS_206.66|Disgaea: Hour of Darkness|Nippon Ichi Software
+SLUS_206.66|Disgaea: Hour of Darkness|Atlus
 SLUS_280.34|Disgaea: Hour of Darkness (Trade Demo)|
 SLES_554.28|Disney Bolt|Disney Interactive Studios
 SLES_554.29|Disney Bolt|Disney Interactive Studios
@@ -2214,10 +2214,10 @@ SLPS_200.02|Doukyuu: Billiard Master 2|
 SLES_508.42|Downforce|Smart Dog
 SLPS_202.48|Downforce|Smart Dog
 SLUS_204.05|Downforce|Smart Dog
-SCUS_971.77|Downhill Domination|Incog Inc. Entertainment
-SLES_522.02|Downhill Domination|Incog Inc. Entertainment
-SCUS_973.29|Downhill Domination (Demo)|Incog Inc. Entertainment
-SLED_523.25|Downhill Domination (Demo)|Incog Inc. Entertainment
+SCUS_971.77|Downhill Domination|Sony Computer Entertainment
+SLES_522.02|Downhill Domination|Codemasters
+SCUS_973.29|Downhill Domination (Demo)|Sony Computer Entertainment
+SLED_523.25|Downhill Domination (Demo)|Codemasters
 SCPS_560.10|Downhill Racer|
 SLES_539.63|Downhill Slalom|Phoenix Games
 SLES_514.82|Downtown Run|Ubisoft
@@ -2624,9 +2624,9 @@ SLPM_622.16|Everblue|Arika
 SLES_513.81|Everblue 2|Arika
 SLPM_622.14|Everblue 2|Arika
 SLUS_205.98|Everblue 2|Arika
-SLES_500.50|Evergrace|Crave Entertainment
-SLPS_250.03|Evergrace|Crave Entertainment
-SLUS_200.16|Evergrace|Crave Entertainment
+SLES_500.50|Evergrace|Ubisoft
+SLPS_250.03|Evergrace|FromSoftware
+SLUS_200.16|Evergrace|Agetec
 SLPS_250.44|Evergrace II|
 SCES_525.82|Everybody's Golf|Clap Hanz
 SCKA_200.57|Everybody's Golf 4|
@@ -3353,10 +3353,10 @@ SLPM_620.09|Ganbare! Nippon! Olympic 2000|
 SCKA_100.01|Gangcheol Gigap Sadan: Online Battlefield|
 SCKA_140.01|Gangcheol Gigap Sadan: Online Battlefield|
 SLPM_659.50|Gantz: The Game|
-SCPS_550.18|Garakuta Meisaku Gekijou: Rakugaki Oukoku|
-SLPM_650.97|Garakuta Meisaku Gekijou: Rakugaki Oukoku|
-SLPM_744.08|Garakuta Meisaku Gekijou: Rakugaki Oukoku|
-SLPM_601.53|Garakuta Meisaku Gekijou: Rakugaki Oukoku (Taikenban)|
+SCPS_550.18|Garakuta Meisaku Gekijou: Rakugaki Oukoku|Taito
+SLPM_650.97|Garakuta Meisaku Gekijou: Rakugaki Oukoku|Taito
+SLPM_744.08|Garakuta Meisaku Gekijou: Rakugaki Oukoku|Taito
+SLPM_601.53|Garakuta Meisaku Gekijou: Rakugaki Oukoku (Taikenban)|Taito
 SLPM_653.73|Garasu no Bara|Capcom
 SLES_528.43|Garfield|Hip Interactive
 SLES_541.72|Garfield 2|
@@ -3572,7 +3572,7 @@ SLPM_626.21|Gradius V|Treasure
 SLUS_207.12|Gradius V|Treasure
 SLPM_602.47|Gradius V (Taikenban)|
 SLES_533.11|Graffiti Kingdom|505 Games
-SLUS_211.36|Graffiti Kingdom|505 Games
+SLUS_211.36|Graffiti Kingdom|Hot-B
 PAPX_902.03|Gran Turismo 2000 (Taikenban)|Sony Computer Entertainment
 PBPX_955.02|Gran Turismo 3: A-Spec|Sony Computer Entertainment
 PBPX_955.03|Gran Turismo 3: A-Spec|Sony Computer Entertainment
@@ -3766,16 +3766,16 @@ SLUS_212.24|Guitar Hero|RedOctane
 SLES_555.33|Guitar Hero 5|Neversoft
 SLUS_218.65|Guitar Hero 5|Neversoft
 SLUS_215.86|Guitar Hero Encore: Rocks the 80s|
-SLES_544.42|Guitar Hero II|Harmonix
-SLUS_214.47|Guitar Hero II|Harmonix
-SLED_545.09|Guitar Hero II (Demo)|Harmonix
-SLUS_291.98|Guitar Hero II (Demo)|Harmonix
-SLES_549.62|Guitar Hero III: Legends of Rock|Neversoft
-SLES_549.74|Guitar Hero III: Legends of Rock|Neversoft
-SLKA_253.63|Guitar Hero III: Legends of Rock|Neversoft
-SLKA_254.14|Guitar Hero III: Legends of Rock|Neversoft
-SLPS_258.40|Guitar Hero III: Legends of Rock|Neversoft
-SLUS_216.72|Guitar Hero III: Legends of Rock|Neversoft
+SLES_544.42|Guitar Hero II|RedOctane
+SLUS_214.47|Guitar Hero II|RedOctane
+SLED_545.09|Guitar Hero II (Demo)|RedOctane
+SLUS_291.98|Guitar Hero II (Demo)|RedOctane
+SLES_549.62|Guitar Hero III: Legends of Rock|Activision
+SLES_549.74|Guitar Hero III: Legends of Rock|Activision
+SLKA_253.63|Guitar Hero III: Legends of Rock|Activision
+SLKA_254.14|Guitar Hero III: Legends of Rock|Activision
+SLPS_258.40|Guitar Hero III: Legends of Rock|Activision
+SLUS_216.72|Guitar Hero III: Legends of Rock|Activision
 SLES_553.55|Guitar Hero World Tour|Activision
 SLUS_217.81|Guitar Hero World Tour|Activision
 SLES_551.91|Guitar Hero: Aerosmith|Neversoft
@@ -5010,7 +5010,7 @@ SLPM_655.69|Kita e.: Diamond Dust+: Kiss Is Beginning.|
 SLPM_650.34|Kitakata Kenzou Sangokushi (Disc 1)|
 SLPM_650.35|Kitakata Kenzou Sangokushi (Disc 2)|
 SLPM_624.28|Kiwame Mahjong DX II: The 4th Mondo 21 Cup Competition|
-SCES_503.54|Klonoa 2: Lunatea's Veil|Namco
+SCES_503.54|Klonoa 2: Lunatea's Veil|Sony Computer Entertainment
 SLUS_201.51|Klonoa 2: Lunatea's Veil|Namco
 SLUS_280.04|Klonoa 2: Lunatea's Veil (Trade Demo)|Namco
 SLES_528.36|Knight Rider 2: The Game|
@@ -5501,7 +5501,7 @@ SCED_539.05|Magazine Ufficiale PlayStation 2 Special Sports Demo|
 SCED_530.43|Magazine Ufficiale PlayStation 2 Speciale Platinum Italia|
 SCED_527.95|Magazine Ufficiale PlayStation 2 Speciale di Corso|
 SLPM_621.53|Mageru Tsukeru Hashiru: Ore * Dead Heat|
-SLUS_205.93|Magic Pengel: The Quest for Color|
+SLUS_205.93|Magic Pengel: The Quest for Color|Agetec
 SLPM_622.93|Magical Pachinko Cotton: Pachinko Jikki Simulation|
 SLPS_200.36|Magical Sports 2000 Koushien|
 SLPS_202.44|Magical Sports 2000 Koushien|
@@ -6498,10 +6498,10 @@ SLES_544.02|Need for Speed: Carbon: Collector's Edition|Electronic Arts
 SLES_544.92|Need for Speed: Carbon: Collector's Edition|Electronic Arts
 SLKA_251.85|Need for Speed: Carbon: Collector's Edition|Electronic Arts
 SLUS_214.94|Need for Speed: Carbon: Collector's Edition|Electronic Arts
-SLES_507.31|Need for Speed: Hot Pursuit 2|DreamWorks Interactive.
-SLPM_651.81|Need for Speed: Hot Pursuit 2|DreamWorks Interactive.
-SLPM_675.27|Need for Speed: Hot Pursuit 2|DreamWorks Interactive.
-SLUS_203.62|Need for Speed: Hot Pursuit 2|DreamWorks Interactive.
+SLES_507.31|Need for Speed: Hot Pursuit 2|Electronic Arts
+SLPM_651.81|Need for Speed: Hot Pursuit 2|Electronic Arts
+SLPM_675.27|Need for Speed: Hot Pursuit 2|Electronic Arts
+SLUS_203.62|Need for Speed: Hot Pursuit 2|Electronic Arts
 SLES_535.57|Need for Speed: Most Wanted|Electronic Arts
 SLES_535.58|Need for Speed: Most Wanted|Electronic Arts
 SLES_535.59|Need for Speed: Most Wanted|Electronic Arts
@@ -7872,8 +7872,8 @@ SLPM_645.21|Raging Bless: Hangma Muksirok|
 SLES_538.29|Raiden III|MOSS
 SLPM_626.90|Raiden III|MOSS
 SLUS_214.65|Raiden III|MOSS
-SLPM_656.37|Rakugaki Oukoku 2: Maou-jou no Tatakai|
-SLPM_663.55|Rakugaki Oukoku 2: Maou-jou no Tatakai|
+SLPM_656.37|Rakugaki Oukoku 2: Maou-jou no Tatakai|Taito
+SLPM_663.55|Rakugaki Oukoku 2: Maou-jou no Tatakai|Taito
 SLPS_203.07|Rakushou! Pachi-Slot Sengen|
 SLPS_204.04|Rakushou! Pachi-Slot Sengen 2: Juujika, Deka Dan|
 SLPS_204.19|Rakushou! Pachi-Slot Sengen 3: Rio de Carnival, Juujika 600-shiki|
@@ -8038,7 +8038,7 @@ SLES_514.49|Return to Castle Wolfenstein: Operation Resurrection|Activision
 SLES_515.22|Return to Castle Wolfenstein: Operation Resurrection|Activision
 SLUS_202.97|Return to Castle Wolfenstein: Operation Resurrection|Activision
 SLES_514.50|Return to Castle Wolfenstein: Opération Résurrection|
-SCES_505.01|Rez|Sega
+SCES_505.01|Rez|Sony Computer Entertainment
 SLPM_621.00|Rez|Sega
 SLPM_621.01|Rez|Sega
 SLPM_740.06|Rez|Sega
@@ -8238,9 +8238,9 @@ SLPM_743.01|Ryuu ga Gotoku 2|
 SLPM_666.02|Ryuu ga Gotoku 2 (Disc 1)|
 SLPM_666.03|Ryuu ga Gotoku 2 (Disc 2)|
 SLPM_611.54|Ryuu ga Gotoku 2 (Taikenban)|
-SLES_529.40|S.L.A.I.: Steel Lancer Arena International|Genki
-SLPM_657.91|S.L.A.I.: Steel Lancer Arena International|Genki
-SLUS_209.69|S.L.A.I.: Steel Lancer Arena International|Genki
+SLES_529.40|S.L.A.I.: Steel Lancer Arena International|Konami
+SLPM_657.91|S.L.A.I.: Steel Lancer Arena International|Konami
+SLUS_209.69|S.L.A.I.: Steel Lancer Arena International|Konami
 SLPM_552.47|S.Y.K: Renshouden|
 SLPM_552.05|S.Y.K: Shinsetsu Saiyuuki|
 SLPM_552.06|S.Y.K: Shinsetsu Saiyuuki|
@@ -8550,8 +8550,8 @@ SLUS_206.06|Seek and Destroy|
 SLPM_624.46|Sega Ages 2500 Series Vol. 10: After Burner II|
 SLPM_624.32|Sega Ages 2500 Series Vol. 11: Hokuto no Ken|
 SLPM_626.55|Sega Ages 2500 Series Vol. 11: Hokuto no Ken|
-SLPM_624.00|Sega Ages 2500 Series Vol. 12: Puyo Puyo Tsuu: Perfect Set|
-SLPM_626.56|Sega Ages 2500 Series Vol. 12: Puyo Puyo Tsuu: Perfect Set|
+SLPM_624.00|Sega Ages 2500 Series Vol. 12: Puyo Puyo Tsuu: Perfect Set|SEGA
+SLPM_626.56|Sega Ages 2500 Series Vol. 12: Puyo Puyo Tsuu: Perfect Set|SEGA
 SLPM_624.47|Sega Ages 2500 Series Vol. 13: OutRun|
 SLPM_626.75|Sega Ages 2500 Series Vol. 13: OutRun|
 SLPM_625.00|Sega Ages 2500 Series Vol. 14: Alien Syndrome|
@@ -9405,7 +9405,7 @@ SCPS_193.26|Siren 2|Sony Computer Entertainment
 PAPX_905.11|Siren: Trial Disc (Taikenban)|
 SLES_521.16|Sitting Ducks|
 SLUS_208.86|Sitting Ducks|
-SLES_546.28|Skate Attack|
+SLES_546.28|Skate Attack|Midas
 SLES_547.16|Skateboard Madness: Xtreme Edition|
 SLPS_256.16|Ski Jumping Pairs: Reloaded|
 SLES_529.73|Ski Racing 2005|Coldwood Interactive
@@ -10109,8 +10109,8 @@ SLPS_203.21|Taiko no Tatsujin: Appare Sandaime|
 SCAJ_100.08|Taiko no Tatsujin: Atsumare! Matsuri da!! Yondaime|
 SLPS_203.82|Taiko no Tatsujin: Atsumare! Matsuri da!! Yondaime|
 SLPS_203.83|Taiko no Tatsujin: Atsumare! Matsuri da!! Yondaime|
-SLPS_204.85|Taiko no Tatsujin: Doka! to Oomori Nanadaime|
-SLPS_204.86|Taiko no Tatsujin: Doka! to Oomori Nanadaime|
+SLPS_204.85|Taiko no Tatsujin: Doka! to Oomori Nanadaime|Namco Bandai
+SLPS_204.86|Taiko no Tatsujin: Doka! to Oomori Nanadaime|Namco Bandai
 SLPS_202.72|Taiko no Tatsujin: Doki! Shinkyoku Darake no Haru Matsuri|
 SLPS_203.99|Taiko no Tatsujin: Go! Go! Godaime|
 SLPS_204.00|Taiko no Tatsujin: Go! Go! Godaime|
@@ -10878,15 +10878,15 @@ SLPM_666.11|Tomoyo After: It's a Wonderful Life: CS Edition|
 SLES_535.34|Tony Hawk's American Wasteland|Activision
 SLES_535.35|Tony Hawk's American Wasteland|Activision
 SLUS_212.08|Tony Hawk's American Wasteland|Activision
-SLUS_212.95|Tony Hawk's American Wasteland (Collector's Edition) (Special Edition)|Activision
+SLUS_212.95|Tony Hawk's American Wasteland (Collector's Edition)|Activision
 SLES_547.14|Tony Hawk's Downhill Jam|Activision
 SLES_547.15|Tony Hawk's Downhill Jam|Activision
 SLUS_214.56|Tony Hawk's Downhill Jam|Activision
-SLPM_654.19|Tony Hawk's Pro Skater 2003|Activision
+SLPM_654.19|Tony Hawk's Pro Skater 2003|Capcom
 SLES_504.35|Tony Hawk's Pro Skater 3|Activision
 SLES_504.36|Tony Hawk's Pro Skater 3|Activision
 SLES_504.37|Tony Hawk's Pro Skater 3|Activision
-SLPM_651.90|Tony Hawk's Pro Skater 3|Activision
+SLPM_651.90|Tony Hawk's Pro Skater 3|Success
 SLUS_200.13|Tony Hawk's Pro Skater 3|Activision
 SLES_511.30|Tony Hawk's Pro Skater 4|Activision
 SLES_511.31|Tony Hawk's Pro Skater 4|Activision
