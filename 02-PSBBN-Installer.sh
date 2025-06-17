@@ -115,16 +115,16 @@ MOUNT_OPL() {
     echo "Mounting OPL partition and creating folders..." | tee -a "${LOG_FILE}"
     mkdir -p "${OPL}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${OPL}."
 
-    sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
+    sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}p3 "${OPL}" >> "${LOG_FILE}" 2>&1
 
     # Handle possibility host system's `mount` is using Fuse
     if [ $? -ne 0 ] && hash mount.exfat-fuse; then
         echo "Attempting to use exfat.fuse..." | tee -a "${LOG_FILE}"
-        sudo mount.exfat-fuse -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
+        sudo mount.exfat-fuse -o uid=$UID,gid=$(id -g) ${DEVICE}p3 "${OPL}" >> "${LOG_FILE}" 2>&1
     fi
 
     if [ $? -ne 0 ]; then
-        error_msg "Error" "Failed to mount ${DEVICE}3"
+        error_msg "Error" "Failed to mount ${DEVICE}p3"
     fi
 }
 
@@ -504,7 +504,7 @@ if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
 	else
 		sleep 4
 		sudo mkfs.ext2 -L "RECOVERY" ${DEVICE}2
-		sudo "${TOOLKIT_PATH}/helper/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}3
+		sudo "${TOOLKIT_PATH}/helper/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}p3
 fi
 } >> "${LOG_FILE}" 2>&1
 

@@ -149,16 +149,16 @@ MOUNT_OPL() {
     echo "Mounting OPL partition..." | tee -a "${LOG_FILE}"
     mkdir -p "${OPL}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${OPL}."
 
-    sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
+    sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}p3 "${OPL}" >> "${LOG_FILE}" 2>&1
 
     # Handle possibility host system's `mount` is using Fuse
     if [ $? -ne 0 ] && hash mount.exfat-fuse; then
         echo "Attempting to use exfat.fuse..." | tee -a "${LOG_FILE}"
-        sudo mount.exfat-fuse -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
+        sudo mount.exfat-fuse -o uid=$UID,gid=$(id -g) ${DEVICE}p3 "${OPL}" >> "${LOG_FILE}" 2>&1
     fi
 
     if [ $? -ne 0 ]; then
-        error_msg "Error" "Failed to mount ${DEVICE}3"
+        error_msg "Error" "Failed to mount ${DEVICE}p3"
     fi
 
     # Create necessary folders if they don't exist
@@ -980,7 +980,7 @@ echo  >> "${LOG_FILE}"
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
 echo >> "${LOG_FILE}"
 
-DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
+DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/.[0-9]*$//')
 
 if [[ -z "$DEVICE" ]]; then
     error_msg "Error" "Unable to detect PS2 drive."
