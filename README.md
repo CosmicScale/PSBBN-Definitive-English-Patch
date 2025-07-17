@@ -50,7 +50,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 # Changelog
 
-## July 17, 2025 - PSBBN Definitive Patch v2.11 - Button Swap, VMC Groups, HDD-OSD Icon Generator & More! - [Click to Watch]()
+## July 17, 2025 - PSBBN Update: Definitive Patch v2.11 - Boot Security Patched! Button Swap, VMC Groups & More! - [Click to Watch](https://www.youtube.com/watch?v=kgXe8rlqsr0)
 
 Release Notes:
 
