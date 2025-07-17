@@ -5,6 +5,7 @@ assets/OPL/boot.kelf
 assets/OPL/system.cnf
 assets/NHDDL/boot.kelf
 assets/NHDDL/system.cnf
+assets/extras/
 games/ART/*.png
 games/APPS/*.psu
 assets/HDD-OSD/
@@ -24,3 +25,4 @@ games/APPS/PSBBN.ELF
 IOPRP252.IMG
 POPS.ELF
 gamepath.cfg
+bnupdate.tar.gz

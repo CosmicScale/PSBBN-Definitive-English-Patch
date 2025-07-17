@@ -13,6 +13,7 @@ Usage: ps2iconmaker <gameid> [-t icon type] [-?]
                 5 - PS1 JPN case
                 6 - PS1 PAL case
                 7 - PS1 multi-disc case
+                8 - PS1 virtual memory card
 [-?]: shows this help
 
 If an icon type is not given, a PS2 DVD NTSC case icon will be generated"
@@ -73,6 +74,10 @@ case $type in
     icon="${template_path}/ps1multidiscicon.icn"
     template="${template_path}/PS1-MULTI.bmp"
     ;;
+  8)
+    icon="${template_path}/VMC.icn"
+    template="${template_path}/VMC.png"
+    ;;
   *)
     type="1"
     icon="${template_path}/ps2dvdicon.icn"
@@ -112,6 +117,11 @@ elif [ "$type" -eq 7 ]; then
     \( "${image_path}/${input}_LAB.png" -resize 4x62\! \) -geometry +71+64 -composite \
     \( "${image_path}/${input}_LAB.png" -resize 4x62\! \) -geometry +79+64 -composite \
     "${image_path}/temp.bmp" > /dev/null 2>&1
+elif [ "$type" -eq 8 ]; then
+    convert $template \
+    \( "${image_path}/${input}_LGO.png" \) -geometry +169+283 -composite \
+    "${image_path}/temp.png" > /dev/null 2>&1
+    convert "${image_path}/temp.png" -resize 128x128 -rotate 180 "${image_path}/temp.bmp"
 fi
 
 convert "${image_path}/temp.bmp" \
@@ -126,10 +136,14 @@ convert "${image_path}/temp.bmp" \
 
 dd bs=1 if="${image_path}/temp.bmp" of="${image_path}/temp.tex" skip=138 count=32768 iflag=skip_bytes,count_bytes > /dev/null 2>&1 &&
 
-cat "$icon" "${image_path}/temp.tex" > "${image_path}/$input.ico"
+if [ "$type" -eq 8 ]; then
+  cat "$icon" "${image_path}/temp.tex" > "${image_path}/vmc/$input.ico"
+else
+  cat "$icon" "${image_path}/temp.tex" > "${image_path}/$input.ico"
+fi
 
-if [ -s "${image_path}/$input.ico" ]; then
-  rm "${image_path}/temp.bmp" "${image_path}/temp.tex"
+if [ -s "${image_path}/$input.ico" ] || [ -s "${image_path}/vmc/$input.ico" ]; then
+  rm "${image_path}/temp.bmp" "${image_path}/temp.png" "${image_path}/temp.tex" > /dev/null 2>&1 &&
   echo
   echo "Icon created sucessfully!"
   exit 0

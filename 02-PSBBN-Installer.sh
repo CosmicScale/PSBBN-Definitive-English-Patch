@@ -399,45 +399,67 @@ available=$((capacity - used - 6400 - 128))
 free_space=$((available / 1024))
 max_music=$(((available - 1024) / 1024))
 
-# Prompt user for partition size for music, validate input, and keep asking until valid input is provided
+# Prompt user for partition size for music and POPS, validate input, and keep asking until valid input is provided
 while true; do
-  clear  
-  echo | tee -a "${LOG_FILE}"
-  echo "Partitioning the first 128 GB of the drive:"
-  echo
-  echo "Available: $free_space GB" | tee -a "${LOG_FILE}"
-  echo
-  echo "What size would you like the \"Music\" partition to be?"
-  echo "Minimum 1 GB, maximum $max_music GB"
-  echo
-  read -p "Enter partition size (in GB): " gb_size
-
-  if [[ ! "$gb_size" =~ ^[0-9]+$ ]]; then
+    clear  
+    echo | tee -a "${LOG_FILE}"
+    echo "Partitioning the first 128 GB of the drive:"
     echo
-    echo "Invalid input. Please enter a valid number."
-    sleep 3
-    continue
-  fi
+    echo "Available: $free_space GB" | tee -a "${LOG_FILE}"
+    echo
+    echo "What size would you like the \"Music\" partition to be?"
+    echo "Minimum 1 GB, maximum $max_music GB"
+    echo
+    read -p "Enter partition size (in GB): " music_gb
 
-    if (( gb_size >= 1 && gb_size <= $max_music )); then
-        music_partition=$((gb_size * 1024))
-        while true; do
-            pops_partition=$((available - music_partition))
-            gb_size=$((pops_partition / 1024))
-            echo
-            echo "This leaves $gb_size GB for the POPS partition."
-            echo
-            read -p "Do you wish to proceed? (y/n): " confirm
-            if [[ "$confirm" =~ ^[Yy]$ ]]; then
-                break 2  # Exit both loops
-            else
-                break  # Restart partitioning from the beginning
-            fi
-        done
-    else
+    if [[ ! "$music_gb" =~ ^[0-9]+$ ]]; then
+        echo
+        echo "Invalid input. Please enter a valid number."
+        sleep 3
+        continue
+    fi
+
+    if (( music_gb < 1 || music_gb > max_music )); then
         echo
         echo "Invalid size. Please enter a value between 1 and $max_music GB."
         sleep 3
+        continue
+    fi
+
+    remaining_gb=$((free_space - music_gb))
+    echo
+    echo "What size would you like the \"POPS\" partition to be?"
+    echo "Minimum 1 GB, maximum $remaining_gb GB"
+    echo
+    read -p "Enter partition size (in GB): " pops_gb
+
+    if [[ ! "$pops_gb" =~ ^[0-9]+$ ]]; then
+        echo
+        echo "Invalid input. Please enter a valid number."
+        sleep 3
+        continue
+    fi
+
+    if (( pops_gb < 1 || pops_gb > remaining_gb )); then
+        echo
+        echo "Invalid size. Please enter a value between 1 and $remaining_gb GB."
+        sleep 3
+        continue
+    fi
+
+    allocated_gb=$((music_gb + pops_gb))
+    unallocated_gb=$((free_space - allocated_gb))
+    echo
+    echo "The following partitions will be created:"
+    echo "- Music partition: $music_gb GB"
+    echo "- POPS partition: $pops_gb GB"
+    echo "- Remaining space: $unallocated_gb GB"
+    echo
+    read -p "Do you wish to proceed? (y/n): " confirm
+    if [[ "$confirm" =~ ^[Yy]$ ]]; then
+        music_partition=$((music_gb * 1024))
+        pops_partition=$((pops_gb * 1024))
+        break
     fi
 done
 
@@ -488,7 +510,6 @@ clear_temp() {
 
 echo | tee -a "${LOG_FILE}"
 echo -n "Running APA-Jail by Berion..." | tee -a "${LOG_FILE}"
-echo | tee -a "${LOG_FILE}"
 
 # Signature injection (type A2):
 MAGIC_NUMBER="4150414A2D413200"
@@ -538,6 +559,7 @@ unset MAGIC_NUMBER
 unset PARTITION_NUMBER
 
 ###############################################################################################
+echo | tee -a "${LOG_FILE}"
 
 # Run the command and capture output
 echo >> "${LOG_FILE}"

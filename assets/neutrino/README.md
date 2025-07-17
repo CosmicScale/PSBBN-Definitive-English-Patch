@@ -150,6 +150,7 @@ Options:
 
   -cfg=<file>       Load extra user/game specific config file (without .toml extension)
 
+  -dbc              Enable debug colors
   -logo             Enable logo (adds rom0:PS2LOGO to arguments)
   -qb               Quick-Boot directly into load environment
 

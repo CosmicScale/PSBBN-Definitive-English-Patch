@@ -15,14 +15,17 @@ version_check="2.10"
 TOOLKIT_PATH="$(pwd)"
 ICONS_DIR="${TOOLKIT_PATH}/icons"
 ARTWORK_DIR="${ICONS_DIR}/art"
+VMC_ICON_DIR="${ICONS_DIR}/ico/vmc"
 HELPER_DIR="${TOOLKIT_PATH}/helper"
 ASSETS_DIR="${TOOLKIT_PATH}/assets"
 POPSTARTER="${ASSETS_DIR}/POPStarter/POPSTARTER.ELF"
+POPS_DIR="${ICONS_DIR}/POPS"
 NEUTRINO_DIR="${ASSETS_DIR}/neutrino"
 LOG_FILE="${TOOLKIT_PATH}/game-installer.log"
 MISSING_ART=${TOOLKIT_PATH}/missing-art.log
 MISSING_APP_ART=${TOOLKIT_PATH}/missing-app-art.log
 MISSING_ICON=${TOOLKIT_PATH}/missing-icon.log
+MISSING_VMC=${TOOLKIT_PATH}/missing-vmc.log
 GAMES_PATH="${TOOLKIT_PATH}/games"
 CONFIG_FILE="${TOOLKIT_PATH}/gamepath.cfg"
 
@@ -115,7 +118,7 @@ clean_up() {
     done
 
     # Remove listed files
-    sudo rm -f "${PS1_LIST}" "${PS2_LIST}" "${ALL_GAMES}" "${ARTWORK_DIR}/tmp"/* "${ICONS_DIR}/ico/tmp"/* "${TOOLKIT_PATH}/ps1.list.tmp" 2>>"$LOG_FILE" \
+    sudo rm -rf "${PS1_LIST}" "${PS2_LIST}" "${ALL_GAMES}" "${ARTWORK_DIR}/tmp"/* "${ICONS_DIR}/ico/tmp/"* "$POPS_DIR/"* "${TOOLKIT_PATH}/ps1.list.tmp" 2>>"$LOG_FILE" \
         || { echo "Error: Cleanup failed. See ${LOG_FILE} for details."; exit 1; }
 }
 
@@ -387,6 +390,250 @@ POPS_SYNC() {
         echo "PS1 games copied successfully." | tee -a "${LOG_FILE}"
     fi
     cd ${TOOLKIT_PATH} 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to $TOOLKIT_PATH."
+}
+
+VMC_TITLE() {
+    local title="$1"
+
+    # Remove colons
+    title="${title//:/}"
+
+    local disc_number=""
+    if [[ "$title" =~ \(Disc\ [0-9]+\) ]]; then
+        disc_number="${BASH_REMATCH[0]}"
+        title="${title//$disc_number/}"
+        title="${title%" "}"  # Trim trailing space
+
+        # Truncate to 24 chars if disc number present
+        if (( ${#title} > 24 )); then
+            title="${title:0:24}"
+        fi
+    else
+        # No disc number: truncate to 32 chars max
+        if (( ${#title} > 32 )); then
+            title="${title:0:32}"
+        fi
+    fi
+
+    # Split into words for top row
+    IFS=' ' read -r -a words <<< "$title"
+
+    # Build top line: add full words without exceeding 16 chars
+    local top=""
+    local top_len=0
+    for word in "${words[@]}"; do
+        local add_len=$(( ${#word} + (top_len > 0 ? 1 : 0) ))
+        if (( top_len + add_len <= 16 )); then
+            top+="${top:+ }$word"
+            ((top_len += add_len))
+        else
+            break
+        fi
+    done
+
+    # Bottom line is remainder of title after top line
+    local bottom="${title:$top_len}"
+    bottom="${bottom#" "}"  # Remove leading space
+
+    # If bottom is 1 char and top has more than one word, consider shifting last word
+    if (( ${#bottom} == 1 )); then
+        IFS=' ' read -r -a top_words <<< "$top"
+        if (( ${#top_words[@]} > 1 )); then
+            local last_word="${top_words[-1]}"
+            local new_top="${top% ${last_word}}"
+            local proposed_bottom="${last_word} $bottom"
+            if (( ${#proposed_bottom} <= 16 )); then
+                top="$new_top"
+                bottom="$proposed_bottom"
+            fi
+        fi
+    fi
+
+    if [[ -n "$disc_number" ]]; then
+        if (( ${#bottom} > 4 )); then
+            truncated_bottom="${bottom:0:4}"
+            truncated_bottom="${truncated_bottom%" "}"  # Remove trailing space before ...
+            bottom="${truncated_bottom}... ${disc_number}"
+        else
+            bottom="${bottom:+$bottom }${disc_number}"
+        fi
+    else
+        if (( ${#bottom} > 16 )); then
+            bottom="${bottom:0:13}"
+            bottom="${bottom%" "}"  # Remove trailing space
+            bottom="${bottom}..."
+        fi
+    fi
+
+    python3 "${HELPER_DIR}/txt_to_icon_sys.py" "${ASSETS_DIR}/POPStarter/icon.sys" "$top" "$bottom"
+}
+
+GROUP_VMC() {
+    if [ "$VMC_GROUP_FOLDER" = "GP_Konami JPN" ] || [ "$VMC_GROUP_FOLDER" = "GP_Konami PAL" ] || [ "$VMC_GROUP_FOLDER" = "GP_Konami USA" ]; then
+        cp "${VMC_ICON_DIR}/KONAMI.ico" ./list.ico
+    elif [ "$VMC_GROUP_FOLDER" = "GP_Tomba! USA" ]; then
+        cp "${VMC_ICON_DIR}/TOMBA.ico" ./list.ico
+    elif [ "$VMC_GROUP_FOLDER" = "GP_Tombi! PAL" ]; then
+        cp "${VMC_ICON_DIR}/TOMBI.ico" ./list.ico
+    elif [ "$VMC_GROUP_FOLDER" = "GP_Tomba! JAP" ]; then
+        cp "${VMC_ICON_DIR}/TOMBA-JPN.ico" ./list.ico
+    elif [ "$VMC_GROUP_FOLDER" = "GP_Square JAP" ] || [ "$VMC_GROUP_FOLDER" = "GP_Square USA" ]; then
+        cp "${VMC_ICON_DIR}/SQUARE.ico" ./list.ico
+    elif [ "$VMC_GROUP_FOLDER" = "GP_Arc the Lad USA" ] || [ "$VMC_GROUP_FOLDER" = "GP_Arc the Lad JPN" ]; then
+        cp "${VMC_ICON_DIR}/ARK-THE-LAD.ico" ./list.ico
+    elif [ "$VMC_GROUP_FOLDER" = "GP_Armored Core JPN" ] || [ "$VMC_GROUP_FOLDER" = "GP_Armored Core USA" ]; then
+        cp "${VMC_ICON_DIR}/ARMORED-CORE.ico" ./list.ico
+    elif [ "$VMC_GROUP_FOLDER" = "GP_Gran Turismo JPN" ] || [ "$VMC_GROUP_FOLDER" = "GP_Gran Turismo PAL" ] || [ "$VMC_GROUP_FOLDER" = "GP_Gran Turismo USA" ]; then
+        cp "${VMC_ICON_DIR}/GRAN-TURISMO.ico" ./list.ico
+    elif [ "$VMC_GROUP_FOLDER" = "GP_Tekken JPN" ] || [ "$VMC_GROUP_FOLDER" = "GP_Tekken PAL" ] || [ "$VMC_GROUP_FOLDER" = "GP_Tekken USA" ]; then
+        cp "${VMC_ICON_DIR}/TEKKEN.ico" ./list.ico
+    elif [ "$VMC_GROUP_FOLDER" = "GP_Monster Rancher" ]; then
+        cp "${VMC_ICON_DIR}/MONSTER-RANCHER.ico" ./list.ico
+    elif [ "$VMC_GROUP_FOLDER" = "GP_Monster Farm JPN" ]; then
+        cp "${VMC_ICON_DIR}/MONSTER-FARM.ico" ./list.ico
+    elif [ "$VMC_GROUP_FOLDER" = "GP_PopoloCrois JPN" ]; then
+        cp "${VMC_ICON_DIR}/POPOLOCROIS.ico" ./list.ico
+    fi
+}
+
+CREATE_VMC() {
+
+    declare -A disc_groups
+    declare -A first_disc_folder
+    declare -A vmc_groups_by_id
+    current_group=""
+
+    echo | tee -a "${LOG_FILE}"
+    echo -n "Creating VMCs for PS1 games..."
+    mkdir -p "${POPS_DIR}"
+
+    # First pass: Group file names by base title
+    exec 3< "$PS1_LIST"
+    while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+        base_title="${title%%(Disc*}"
+        base_title="${base_title%" "}"  # Remove trailing space
+        disc_groups["$base_title"]+="$title|$file_name"$'\n'
+    done
+    exec 3<&-
+
+    exec 3< "${HELPER_DIR}/vmc_groups.list"
+    while IFS= read -r line <&3; do
+        line="${line%%$'\r'}"  # Remove trailing carriage return (CR)
+        [[ -z "$line" ]] && continue
+
+        if [[ "$line" == GP_* ]]; then
+            current_group="$line"
+        elif [[ $line =~ ^[A-Z]{4}_[0-9]{3}\.[0-9]{2} ]]; then
+            game_id="${line%%|*}"
+            vmc_groups_by_id["$game_id"]="$current_group"
+        fi
+    done
+    exec 3<&-
+
+    # Second pass: Create folders, DISCS.TXT, and VMCDIR.TXT
+    exec 3< "$PS1_LIST"
+    while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+        folder_name="${file_name%.*}"
+        base_title="${title%%(Disc*}"
+        base_title="${base_title%" "}"
+        mkdir -p "${POPS_DIR}/$folder_name"
+        cd "${POPS_DIR}/$folder_name"
+        if ! cp "${ICONS_DIR}/ico/vmc/$game_id.ico" ./list.ico 2>/dev/null; then
+            cp "${ICONS_DIR}/ico/vmc/VMC.ico" ./list.ico
+            echo "$game_id $title" >> "${MISSING_VMC}"
+        fi
+        
+        VMC_TITLE "$title"
+
+        # Prepare disc list for DISCS.TXT
+        IFS=$'\n' read -rd '' -a entries <<< "${disc_groups[$base_title]}"
+        if ((${#entries[@]} > 1)); then
+            # Determine first disc folder
+            first_entry="${entries[0]}"
+            first_file_name="${first_entry##*|}"
+            first_folder="${first_file_name%.*}"
+
+            # Prepare up to 4 lines for DISCS.TXT
+            disc_list=()
+            for ((i = 0; i < ${#entries[@]} && i < 4; i++)); do
+                disc_list+=("${entries[i]##*|}")
+            done
+
+            # Write DISCS.TXT in the first 4 folders only
+            for ((i = 0; i < ${#disc_list[@]}; i++)); do
+                disc_file_name="${entries[i]##*|}"
+                disc_folder="${disc_file_name%.*}"
+                mkdir -p "${POPS_DIR}/$disc_folder"
+                printf "%s\n" "${disc_list[@]}" > "${POPS_DIR}/$disc_folder/DISCS.TXT"
+            done
+
+            # Write VMCDIR.TXT in all folders
+            for disc_entry in "${entries[@]}"; do
+                disc_file_name="${disc_entry##*|}"
+                disc_folder="${disc_file_name%.*}"
+                mkdir -p "${POPS_DIR}/$disc_folder"
+                printf "%s" "$first_folder" > "${POPS_DIR}/$disc_folder/VMCDIR.TXT"
+            done
+
+            # Overwrite VMCDIR.TXT in all discs with the group ID if it exists and create group VMC
+            if [[ -n "${vmc_groups_by_id[$game_id]}" ]]; then
+                VMC_GROUP_FOLDER="${vmc_groups_by_id[$game_id]}"
+                mkdir -p "${POPS_DIR}/$VMC_GROUP_FOLDER"
+                cd "${POPS_DIR}/$VMC_GROUP_FOLDER"
+                GROUP_VMC
+                GP_TITLE="${vmc_groups_by_id[$game_id]#GP_}"
+                python3 "${HELPER_DIR}/txt_to_icon_sys.py" "${ASSETS_DIR}/POPStarter/icon.sys" "$GP_TITLE" "VMC Group"
+                for disc_entry in "${entries[@]}"; do
+                    disc_file_name="${disc_entry##*|}"
+                    disc_folder="${disc_file_name%.*}"
+                    mkdir -p "${POPS_DIR}/$disc_folder"
+                    printf "%s" "${vmc_groups_by_id[$game_id]}" > "${POPS_DIR}/$disc_folder/VMCDIR.TXT"
+                done
+            fi
+        else
+            # Check if game ID exists in VMC group mapping and make group VMC if necessary
+            if [[ -n "${vmc_groups_by_id[$game_id]}" ]]; then
+                VMC_GROUP_FOLDER="${vmc_groups_by_id[$game_id]}"
+                mkdir -p "${POPS_DIR}/$VMC_GROUP_FOLDER"
+                cd "${POPS_DIR}/$VMC_GROUP_FOLDER"
+                GROUP_VMC
+                GP_TITLE="${vmc_groups_by_id[$game_id]#GP_}"
+                python3 "${HELPER_DIR}/txt_to_icon_sys.py" "${ASSETS_DIR}/POPStarter/icon.sys" "$GP_TITLE" "VMC Group"
+                printf "%s" "${vmc_groups_by_id[$game_id]}" > "${POPS_DIR}/$folder_name/VMCDIR.TXT"
+            fi
+        fi
+    done
+    cd "${TOOLKIT_PATH}"
+    exec 3<&-
+
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="mount __common\n"
+    COMMANDS+="cd POPS\n"
+
+    for dir in "$POPS_DIR"/*/; do
+        [ -d "$dir" ] || continue
+        VMC_FOLDER="$(basename "$dir")"
+        COMMANDS+="mkdir '${VMC_FOLDER}'\n"
+        COMMANDS+="cd '${VMC_FOLDER}'\n"
+        COMMANDS+="lcd '${POPS_DIR}/${VMC_FOLDER}'\n"
+        COMMANDS+="rm icon.sys\n"
+        COMMANDS+="put icon.sys\n"
+        COMMANDS+="rm list.ico\n"
+        COMMANDS+="put list.ico\n"
+        COMMANDS+="rm DISCS.TXT\n"
+        COMMANDS+="put DISCS.TXT\n"
+        COMMANDS+="rm VMCDIR.TXT\n"
+        COMMANDS+="put VMCDIR.TXT\n"
+        COMMANDS+="rm BIOS.BIN\n"
+        COMMANDS+="put BIOS.BIN\n"
+        COMMANDS+="cd ..\n"
+    done
+    COMMANDS+="cd ..\n"
+    COMMANDS+="umount\n"
+    COMMANDS+="exit"
+
+    echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
+    echo | tee -a "${LOG_FILE}"
 }
 
 OPL_SIZE_CKECK() {
@@ -679,12 +926,7 @@ install_elf() {
 
             # Create the new folder in the destination directory
             elf_dir="${dir}/APPS/$title_id"
-
-            if [[ $title_id == "WLE" ]] || [[ $title_id == "DISC" ]]; then
-                error_msg "Error" "The filename $elf cannot be used. Please rename $file and try again."
-            else
-                mkdir -p "${elf_dir}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create directory $elf_dir."
-            fi
+            mkdir -p "${elf_dir}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create directory $elf_dir."
 
             if [[ $dir == $GAMES_PATH ]]; then
                 cp "${dir}/APPS/$elf" "${elf_dir}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to copy $elf to $elf_dir."
@@ -696,8 +938,13 @@ install_elf() {
                 publisher="github.com/cosmicscale"
             elif [[ "$title_id" == "HDDOSD" ]]; then
                 publisher="Sony Computer Entertainment"
+            elif [[ "$title_id" == "BBNAVIGATOR" ]]; then
+                publisher="Sony Computer Entertainment"
             elif [[ "$title_id" == "LAUNCHELF" ]]; then
-                publisher="github.com/ps2homebrew"
+                publisher="israpps.github.io"
+                title="wLaunchELF 4.43x_isr-EXFAT-MMCE"
+            else
+                publisher=""
             fi
 
             cat > "${elf_dir}/title.cfg" <<EOL
@@ -778,7 +1025,7 @@ create_info_sys() {
     local publisher="$3"
     local content_type="255"
 
-    if [ "$title_id" = "PSBBN" ]; then
+    if [ "$title_id" = "BBNAVIGATOR" ]; then
         content_type="0"
     fi
 
@@ -934,7 +1181,7 @@ date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 
 clean_up
-sudo rm -f "${MISSING_ART}" "${MISSING_APP_ART}" ${MISSING_ICON} 2>>"${LOG_FILE}" || error_msg "Error" "Failed to remove missing artwork files. See ${LOG_FILE} for details."
+sudo rm -f "${MISSING_ART}" "${MISSING_APP_ART}" "${MISSING_ICON}" "${MISSING_VMC}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to remove missing artwork files. See ${LOG_FILE} for details."
 
 # Check if the current directory is a Git repository
 if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
@@ -1259,6 +1506,7 @@ elif [ "$INSTALL_TYPE" = "copy" ]; then
     process_psu_files "${GAMES_PATH}/APPS/"
     process_psu_files "${OPL}/APPS/"
 
+    rm -rf "${OPL}/APPS/PSBBN"
     install_elf "${GAMES_PATH}"
     install_elf "${OPL}"
 
@@ -1379,7 +1627,8 @@ mkdir -p "${ICONS_DIR}/bbnl" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to cr
 mkdir -p "${ICONS_DIR}/SAS" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ICONS_DIR}/SAS."
 mkdir -p "${ICONS_DIR}/APPS" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ICONS_DIR}/APPS."
 mkdir -p "${ARTWORK_DIR}/tmp" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ARTWORK_DIR}/tmp."
-mkdir -p "${TOOLKIT_PATH}/icons/ico/tmp" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${TOOLKIT_PATH}/icons/ico/tmp."
+mkdir -p "${TOOLKIT_PATH}/icons/ico/tmp/vmc" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${TOOLKIT_PATH}/icons/ico/tmp/vmc."
+mkdir -p "${TOOLKIT_PATH}/icons/ico/vmc" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${TOOLKIT_PATH}/icons/ico/tmp/vmc."
 
 # Set maximum number of items for the Game Channel (799 + 1 for chosen launcher)
 pp_cap="799"
@@ -1483,7 +1732,7 @@ fi
 
 pp_max=$(( pp_max - SAS_COUNT ))
 
-echo "PP Max after SAS: $pp_max"
+echo "PP Max after SAS: $pp_max" >> "${LOG_FILE}"
 
 APP_COUNT=0
 
@@ -1530,6 +1779,9 @@ else
 
         echo | tee -a "${LOG_FILE}"
         info_sys_filename="$dir/info.sys"
+        if [[ "$title_id" == "LAUNCHELF" ]]; then
+            title="LaunchELF"
+        fi
         create_info_sys "$title" "$title_id" "$publisher"
 
         # Generate the icon.sys file
@@ -1541,7 +1793,7 @@ else
             echo "Created: $dir/list.ico" | tee -a "${LOG_FILE}"
             cp "${ICONS_DIR}/ico/wle-del.ico" "$dir/del.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/del.ico. See ${LOG_FILE} for details."
             echo "Created: $dir/del.ico" | tee -a "${LOG_FILE}"
-        elif [[ "$title_id" == "PSBBN" ]]; then
+        elif [[ "$title_id" == "BBNAVIGATOR" ]]; then
             cp "${ICONS_DIR}/ico/psbbn.ico" "$dir/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
             echo "Created: $dir/list.ico" | tee -a "${LOG_FILE}"
         elif [[ "$title_id" == "HDDOSD" ]]; then
@@ -1554,7 +1806,9 @@ else
             echo "Created: $dir/del.ico" | tee -a "${LOG_FILE}"
         fi
 
-        if [[ "$title_id" != "PSBBN" ]]; then
+        if [[ "$title_id" == "BBNAVIGATOR" ]]; then
+            cp "${ARTWORK_DIR}/PSBBN.png" "${GAMES_PATH}/ART/${elf}_COV.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create ${GAMES_PATH}/ART/${elf}_COV.png. See ${LOG_FILE} for details."
+        else
             APP_ART
         fi
 
@@ -1714,7 +1968,7 @@ if [ -f "$ALL_GAMES" ]; then
     cp ${ARTWORK_DIR}/tmp/* ${ARTWORK_DIR} >> "${LOG_FILE}" 2>&1
 
     echo | tee -a "${LOG_FILE}"
-    echo "Dowbloading HDD-OSD icons for games:"  | tee -a "${LOG_FILE}"
+    echo "Downloading HDD-OSD icons for games:"  | tee -a "${LOG_FILE}"
 
     exec 3< "$ALL_GAMES"
     while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
@@ -1742,7 +1996,9 @@ if [ -f "$ALL_GAMES" ]; then
 
                 if [[ -s "${GAMES_PATH}/ART/${game_id}_COV.png" ]]; then
                     cp "${GAMES_PATH}/ART/${game_id}_COV.png" "${png_file_cov}"
-                else
+                fi
+
+                if [[ "$disc_type" == "POPS" ]]; then
                     wget --quiet --timeout=10 --tries=3 --output-document="${png_file_cov}" \
                     "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS1/${game_id}/${game_id}_COV.png"
                 fi
@@ -1784,7 +2040,7 @@ if [ -f "$ALL_GAMES" ]; then
                 fi
 
                 if [[ -s "$png_file_cov" && -s "$png_file_cov2" && -s "$png_file_lab" ]]; then
-                    echo -n "Creating HDD-OSD icon for $game_id..." | tee -a "${LOG_FILE}"
+                    echo "Creating HDD-OSD icon for $game_id..." | tee -a "${LOG_FILE}"
                     if [[ "$disc_type" != "POPS" ]]; then
                         if [[ "${game_id:2:1}" == "E" ]]; then
                             "${HELPER_DIR}/ps2iconmaker.sh" $game_id -t 2
@@ -1810,7 +2066,52 @@ if [ -f "$ALL_GAMES" ]; then
     done
     exec 3<&-
 
+    echo | tee -a "${LOG_FILE}"
+    echo "Downloading VMC icons:"  | tee -a "${LOG_FILE}"
+
+    exec 3< "$ALL_GAMES"
+    while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+        if [[ "$disc_type" == "POPS" ]]; then
+            ico_file="${ICONS_DIR}/ico/vmc/$game_id.ico"
+        
+            if [[ ! -s "$ico_file" ]]; then
+                # Attempt to download icon using wget
+                echo -n "VMC icon not found locally for $game_id. Attempting to download from the HDD-OSD icon database..." | tee -a "${LOG_FILE}"
+                echo | tee -a "${LOG_FILE}"
+                wget --quiet --timeout=10 --tries=3 --output-document="$ico_file" \
+                "https://raw.githubusercontent.com/CosmicScale/HDD-OSD-Icon-Database/main/vmc/${game_id}.ico"
+                if [[ -s "$ico_file" ]]; then
+                    echo "Successfully downloaded VMC icon for ${game_id}." | tee -a "${LOG_FILE}"
+                    echo | tee -a "${LOG_FILE}"
+                else
+                    # If wget fails, run the art downloader
+                    [[ -f "$ico_file" ]] && rm -f "$ico_file"
+
+                    png_file_lgo="${TOOLKIT_PATH}/icons/ico/tmp/${game_id}_LGO.png"
+
+                    echo -n "VMC icon not found on database. Downloading icon assets for $game_id..." | tee -a "${LOG_FILE}"
+
+                    wget --quiet --timeout=10 --tries=3 --output-document="${png_file_lgo}" \
+                    "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS1/${game_id}/${game_id}_LGO.png"
+                fi
+
+                if [[ -s "$png_file_lgo" ]]; then
+                    echo| tee -a "${LOG_FILE}"
+                    echo -n "Creating VMC icon for $game_id..." | tee -a "${LOG_FILE}"
+                    "${HELPER_DIR}/ps2iconmaker.sh" $game_id -t 8
+                    echo | tee -a "${LOG_FILE}"
+                else
+                    echo | tee -a "${LOG_FILE}"
+                    echo "Insufficient assets to create VMC icon for $game_id." | tee -a "${LOG_FILE}"
+                    echo | tee -a "${LOG_FILE}"
+                fi
+            fi
+        fi
+    done
+    exec 3<&-
+
     cp "${ICONS_DIR}/ico/tmp/"*.ico "${ICONS_DIR}/ico/" >/dev/null 2>&1
+    cp "${ICONS_DIR}/ico/tmp/vmc/"*.ico "${ICONS_DIR}/ico/vmc" >/dev/null 2>&1
 
     echo | tee -a "${LOG_FILE}"
     echo "Creating Assets for Games:"  | tee -a "${LOG_FILE}"
@@ -1974,9 +2275,9 @@ echo -n "Unmounting OPL partition..." | tee -a "${LOG_FILE}"
 UNMOUNT_OPL
 echo | tee -a "${LOG_FILE}"
 
-################################### Create BBNL Partitions ###################################
+CREATE_VMC
 
-echo | tee -a "${LOG_FILE}"
+################################### Create BBNL Partitions ###################################
 
 if find "${ICONS_DIR}/SAS" -mindepth 1 -maxdepth 1 -type d ! -name '.*' | grep -q .; then
     echo "Creating BBNL Partitions for SAS Apps:" | tee -a "${LOG_FILE}"
@@ -2042,7 +2343,7 @@ if find "${ICONS_DIR}/APPS" -mindepth 1 -maxdepth 1 -type d ! -name '.*' | grep 
         COMMANDS+="cd res\n"
         COMMANDS+="lcd '${ICONS_DIR}/APPS/$folder_name'\n"
         COMMANDS+="put info.sys\n"
-        if [ "$pp_name" != "PP.PSBBN" ]; then
+        if [ "$pp_name" != "PP.BBNAVIGATOR" ]; then
             COMMANDS+="put jkt_001.png\n"
         fi
         COMMANDS+="cd /\n"
@@ -2167,8 +2468,12 @@ fi
 cp "${MISSING_ART}" "${ARTWORK_DIR}/tmp" >> "${LOG_FILE}" 2>&1
 cp "${MISSING_APP_ART}" "${ARTWORK_DIR}/tmp" >> "${LOG_FILE}" 2>&1
 cp "${MISSING_ICON}" "${ICONS_DIR}/ico/tmp" >> "${LOG_FILE}" 2>&1
+cp "${MISSING_VMC}" "${ICONS_DIR}/ico/tmp/" >> "${LOG_FILE}" 2>&1
 cd "${ICONS_DIR}/ico/tmp/"
 rm *.png >/dev/null 2>&1
+if [ -d "${ICONS_DIR}/ico/tmp/vmc" ] && [ -z "$(ls -A "${ICONS_DIR}/ico/tmp/vmc")" ]; then
+    rmdir "${ICONS_DIR}/ico/tmp/vmc"
+fi
 zip -r "${ARTWORK_DIR}/tmp/ico.zip" * >/dev/null 2>&1
 cd "${ARTWORK_DIR}/tmp/" 
 zip -r "${ARTWORK_DIR}/tmp/art.zip" * >/dev/null 2>&1
