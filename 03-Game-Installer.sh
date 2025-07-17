@@ -2069,9 +2069,8 @@ if [ -f "$ALL_GAMES" ]; then
     echo | tee -a "${LOG_FILE}"
     echo "Downloading VMC icons:"  | tee -a "${LOG_FILE}"
 
-    exec 3< "$ALL_GAMES"
+    exec 3< "$PS1_LIST"
     while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
-        if [[ "$disc_type" == "POPS" ]]; then
             ico_file="${ICONS_DIR}/ico/vmc/$game_id.ico"
         
             if [[ ! -s "$ico_file" ]]; then
@@ -2106,7 +2105,6 @@ if [ -f "$ALL_GAMES" ]; then
                     echo | tee -a "${LOG_FILE}"
                 fi
             fi
-        fi
     done
     exec 3<&-
 
