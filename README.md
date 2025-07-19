@@ -50,11 +50,11 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 # Changelog
 
-## July 17, 2025 - PSBBN Update: Definitive Patch v2.11 - Boot Security Patched! Button Swap, VMC Groups & More! - [Click to Watch](https://www.youtube.com/watch?v=kgXe8rlqsr0)
+## July 17, 2025 - Definitive Patch v2.11 - Boot Security Patched! Button Swap, VMC Groups & More! - [Click to Watch](https://www.youtube.com/watch?v=kgXe8rlqsr0)
 
-Release Notes:
+**Release Notes:**
 
-### PSBBN Updated to Definitive Patch v2.11
+**PSBBN Updated to Definitive Patch v2.11**
 
 Patch v2.11 can be installed by running the [PSBBN Installer script](#psbbn-installer-script) (all data will be lost), or via the new `Update PSBBN Software` option in the [Extras script](#extras-script) (requires a FAT32-formatted USB drive, 128 GB or smaller, and a USB keyboard to complete setup).
 
@@ -65,10 +65,10 @@ New in Definitive Patch v2.11:
 - The `PlayStation BB Guide` has been updated to reflect the button swap and the relocation of the `Game Collection`. A new section has been added covering the Online Channels. Numerous improvements to the English translation.
 - Improves the update process. A USB drive and keyboard will not be required for future updates.
 
-### `02-PSBBN-Installer.sh`:
+**`02-PSBBN-Installer.sh`:**
 - You can now set a custom size for the [POPS](#popstarter-and-virtual-memory-cards) partition. Previously, it filled all remaining space after creating the music partition.
 
-### `03-Game-Installer.sh`, `ps2iconmaker.sh` & `txt_to_icon_sys.py`: 
+**`03-Game-Installer.sh`, `ps2iconmaker.sh` & `txt_to_icon_sys.py`:**
 
 - Multi-disc PS1 games now support disc swapping without additional setup. A `DISCS.TXT` file is created for every multi-disc game. Multi-disc games also now share a [POPStarter Virtual Memory Card (VMC)](#popstarter-and-virtual-memory-cards)
 - [POPStarter VMC Groups](#popstarter-and-virtual-memory-cards) for PS1 games: games that can interact with each other's save data now share a single VMC. For example, licenses earned in Gran Turismo can be transferred to Gran Turismo 2, and Metal Gear Solid’s Psycho Mantis can comment on other Konami games you've played.
@@ -76,31 +76,31 @@ New in Definitive Patch v2.11:
 - The game installer now automatically generates HDD-OSD (Browser 2.0) icons if not found on the [HDD-OSD Icon Database](https://github.com/cosmicscale/hdd-osd-icon-database). If cover images for a game are available in the OPL Manager Art Database, a 3D icon for the game will be automatically generated. 3D icons are also created for VMCs when a game logo is available. All newly generated icons are automatically contributed to the HDD-OSD Icon Database, and missing icons are reported.
 - Fixed a bug where incorrect publisher information could be displayed for `ELF` files
 
-### `list-builder.py`:
+**`list-builder.py`:**
 
 - Improved Game ID extraction for edge cases. Now handles non-standard IDs like `LSP99016.101` and PS1 games with non-standard `system.cnf` files.
 
-### Neutrino Updated to Version 1.7.0
+**Neutrino Updated to Version 1.7.0**
 
 - Full changelog for Neutrino can be found [here](https://github.com/rickgaiser/neutrino/releases/tag/v1.7.0)
 
-### Open PS2 Loader Updated to v1.2.0 Beta-2210-6b300b0
+**Open PS2 Loader Updated to v1.2.0 Beta-2210-6b300b0**
 - Adds support for VMC Groups and bug fixes.
 
-### wLaunchELF
+**wLaunchELF**
 - Upgraded to [wLaunchELF v4.43x_isr](#wlaunchelf_isr). Improves stability, and adds support for exFAT on external drives and MMCE (SD card browsing on Mem Card Pro 2/SD2PSX).
 
 ## June 05, 2025 - PSBBN Definitive Patch v2.10 – Big Game Installer Changes & More! - [Click to Watch](https://www.youtube.com/watch?v=XTacIPOGAwE)
 
 <details>
-<summary>Release Notes:</summary>
+<summary><b>Release Notes:</b></summary>
 
-### PFS Shell.elf & HDL Dump.elf:
+**PFS Shell.elf & HDL Dump.elf:**
 
 - PFS Shell updated to support creating 8 MB PFS partitions
 - HDL Dump updated to properly modify their headers
 
-### PSBBN Disk Image Updated to Version 2.10:
+**PSBBN Disk Image Updated to Version 2.10:**
 
 - Disk created with a new version of PFS Shell for full compatibility with 8 MB PFS partitions 
 - Added a direct link to the Game Collection in the Top Menu  
@@ -115,7 +115,7 @@ New in Definitive Patch v2.11:
 - Enabled telnet access to PSBBN for development purposes  
 - Corrections to the English translation  
 
-### `02-PSBBN-Installer.sh`:
+**`02-PSBBN-Installer.sh`:**
 
 - Prevents the script from installing the PSBBN Definitive Patch if the version is below 2.10  
 - Partitions the remaing space of the first 128 GB of the drive:
@@ -125,7 +125,7 @@ New in Definitive Patch v2.11:
 - Removed [POPS](#popstarter-and-virtual-memory-cards) installer (now handled by the Game Installer script)  
 - Code has been significantly cleaned up and optimized  
 
-### `03-Game-Installer.sh`:
+**`03-Game-Installer.sh`:**
 
 - Added a warning for users running PSBBN Definitive Patch below version 2.10
 - The PS2 drive is now auto-detected  
@@ -142,17 +142,17 @@ New in Definitive Patch v2.11:
 - `ELF` files are now installed in folders and include a `title.cfg`  
 - Code has been significantly cleaned up and optimized  
 
-### `list-builder.py`:
+**`list-builder.py`:**
 
 - Merged `list-builder-ps1.py` and `list-builder-ps2.py` into a single script  
 - Now extracts game IDs for both PS1 and PS2 games  
 
-### `list-sorter.py`:
+**`list-sorter.py`:**
 
 - Game sorting logic has been moved here from the previous list builder scripts  
 - Sorting has been significantly improved  
 
-### General
+**General**
 
 - PSBBN Installer and Game Installer scripts now prevent the PC from sleeping during execution  
 - Added a check in each script to ensure it is run using Bash  
@@ -163,7 +163,7 @@ New in Definitive Patch v2.11:
 ## May 01, 2025 - SAS, HDD-OSD, PS2BBL & More! - [Click to Watch](https://www.youtube.com/watch?v=vpbHlS8nY58)
 
 <details>
-<summary>Release Notes:</summary>
+<summary><b>Release Notes:</b></summary>
 
 - Added support for the [Save Application System (SAS)](#save-application-system-sas). `PSU` files can now also be placed in the local `games/APPS` folder on your PC and will be installed by the `03-Game-Installer.sh` script
 - Added support for HDD-OSD to the `03-Game-Installer.sh` script. 3D icons are now downloaded from the [HDD-OSD Icon Database](https://github.com/cosmicscale/hdd-osd-icon-database)
@@ -176,7 +176,7 @@ New in Definitive Patch v2.11:
 ## Mar 28, 2025 - Homebrew Launcher & More! - [Click to Watch](https://www.youtube.com/watch?v=q9LvE_OPIPo)
 
 <details>
-<summary>Release Notes:</summary>
+<summary><b>Release Notes:</b></summary>
 
 - [Open PS2 Loader](#open-ps2-loader-opl) updated to version 1.2.0-Beta-2201-4b6cc21:
   - Limited max BDM UDMA mode to UDMA4 to avoid compatibility issues with various SATA/IDE2SD adapters
@@ -197,7 +197,7 @@ New in Definitive Patch v2.11:
 ## Feb 19, 2025 - BBN Launcher, Neutrino & NHDDL - [Click to Watch](https://www.youtube.com/watch?v=0vpSiAa6ITc)
 
 <details>
-<summary>Release Notes:</summary>
+<summary><b>Release Notes:</b></summary>
 
 - [OPL-Launcher-BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) has been replaced by [BBN Launcher (BBNL)](https://github.com/pcm720/bbnl)
 - Added [Neutrino](#neutrino-and-nhddl) support. You can now choose between [Open PS2 Loader](#open-ps2-loader-opl) and [Neutrino](#neutrino-and-nhddl) as your game launcher
@@ -208,7 +208,7 @@ New in Definitive Patch v2.11:
 ## Jan 22, 2025 - Game ID, PSBBN Art Database, Updated Tutorial & More! – [Click to Watch](https://www.youtube.com/watch?v=sHz0yKYybhk)
 
 <details>
-<summary>Release Notes:</summary>
+<summary><b>Release Notes:</b></summary>
 
 - Added [Game ID](#game-id) support for the Pixel FX Retro GEM, as well as MemCard Pro 2 and SD2PSX. Works for both PS1 and PS2 games
 - PS2 games now launch up to 5 seconds faster
@@ -235,7 +235,7 @@ New in Definitive Patch v2.11:
 ## Dec 11, 2024 - PSBBN Definitive English Patch 2.0 – [Click to Watch](https://www.youtube.com/watch?v=ooH0FjltsyE)
 
 <details>
-<summary>Release Notes:</summary>
+<summary><b>Release Notes:</b></summary>
 
 - Initial release of patch version 2.0
 - Bandai and SCEI online channels have been added to the Game Channel
