@@ -52,6 +52,7 @@ def sort_games_list(games_list_path):
             "secret agent clank": "ratchet & clank",
             "sly cooper and the thievius raccoonus": "sly",
             "document of metal gear solid 2": "metal gear solid 2",
+            "forbidden siren": "siren",
             "forbidden siren 2": "siren 2",
             "we love katamari": "katamari damacy 2",
             "final fantasy x international": "final fantasy 10",
