@@ -260,13 +260,14 @@ New in Definitive Patch v2.11:
 
 # Installation scripts
 
-These scripts are essential for unlocking all the new features exclusive to version 2.0 and above. The scripts require an x86-64 Linux environment. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive, Windows users can also use [Windows Subsystem for Linux (WSL)](https://gist.github.com/Dam-0/de0d41eeabea2aac6eb84fb3bbf433f1). Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based distributions using `dnf` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
+These scripts are essential for unlocking all the new features exclusive to version 2.0 and above. The scripts require an x86-64 Linux environment. If Linux is not installed on your PC, you can use a live Linux environment on a bootable USB drive, Windows users can also use [Windows Subsystem for Linux (WSL)](#installing-on-windows-with-the-windows-subsystem-for-linux-wsl). Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based distributions using `dnf` are supported. You will require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. I highly recommend a SSD for better performance. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
 
 When run, the scripts automatically update to the latest version if an update is available.
 
 ## Video Tutorial
 
-[![PSBBN Definitive English Patch 2.0](https://github.com/user-attachments/assets/d60dc4ff-85f8-4fb4-8acb-201b063545b0)](https://www.youtube.com/watch?v=sHz0yKYybhk)
+[![PSBBN Definitive English Patch 2.0](https://github.com/user-attachments/assets/d60dc4ff-85f8-4fb4-8acb-201b063545b0)](https://www.youtube.com/watch?v=sHz0yKYybhk)  
+**Note: The tutorial in the video is slightly out of date. An updated version will be available soon.**
 
 ## Installing the scripts
 <span style="font-size: 17px; font-weight: bold;">It is highly recommended to install the scripts using the following command to enable automatic updates:</span>
@@ -329,6 +330,45 @@ In the PSBBN Game Collection, items are grouped into PS1 games, PS2 games, and h
 3. Install [PlayStation 2 Basic Boot Loader (PS2BBL)](#playstation-2-basic-boot-loader-ps2bbl) - a simple PS2 bootloader that handles system initialisation and `ELF` programs execution. With this bootloader, holding a button on the controller during startup determines which application is launched.
 4. Uninstall [PlayStation 2 Basic Boot Loader (PS2BBL)](#playstation-2-basic-boot-loader-ps2bbl).
 
+## Installing on Windows with the Windows Subsystem for Linux (WSL)
+If you are running Microsoft Windows 10 or 11, it is recommended to install the PSBBN Definitive Patch using WSL. WSL is a feature of Windows that allows you to run a Linux environment directly within Windows.
+
+To install WSL and Debian, launch PowerShell as administrator and run:
+```
+wsl --install --distribution Debian
+```
+If you receive an error, it most likely means your hypervisor is disabled. Open “Turn Windows features on or off” and enable the following:
+- Hyper-V
+- Virtual Machine Platform
+- Windows Subsystem for Linux
+
+It may also be necessary to enable `SVM Mode` (for AMD CPUs) or `VT-x` (for Intel CPUs) in your BIOS settings. After making these changes, re-run the command above.
+
+To mount your PS2 Drive, from PowerShell as administrator, run:
+```
+wmic diskdrive list brief
+```
+This will display a list of drives connected to your PC. Identify the appropriate drive and note the physical drive number (e.g., PHYSICALDRIVE3).
+
+Then run the following command, substituting `x` with the correct drive number:
+```
+wsl --mount \\.\PHYSICALDRIVEx --bare
+```
+From the Linux command line, you can now run the [installation scripts](#installation-scripts):
+```
+sudo apt update
+sudo apt install git
+git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
+cd PSBBN-Definitive-English-Patch
+./01-Setup.sh
+./02-PSBBN-Installer.sh
+./03-Game-Installer.sh
+./04-Extras.sh
+```
+When complete, don’t forget to unmount the drive in PowerShell, replacing `x` with the drive number:
+```
+wsl --unmount \\.\PHYSICALDRIVEx
+```
 # Notes
 ## General Notes
 - PSBBN requires a Fat PS2 console (SCPH-3000x to SCPH-500xx) with an expansion bay and an [official Sony Network Adapter](#known-issueslimitations-of-psbbn), or a PS2 Slim SCPH-700xx model with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar mod. It is also compatible with the SCPH-10000 to SCPH-18000 models with an official external HDD, as long as the drive in the enclosure has been replaced with one that is 200 GB or larger.
