@@ -2067,46 +2067,49 @@ if [ -f "$ALL_GAMES" ]; then
     exec 3<&-
 
     echo | tee -a "${LOG_FILE}"
-    echo "Downloading VMC icons:"  | tee -a "${LOG_FILE}"
 
-    exec 3< "$PS1_LIST"
-    while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
-            ico_file="${ICONS_DIR}/ico/vmc/$game_id.ico"
+    if [ -f "$PS1_LIST" ]; then
+        echo "Downloading VMC icons:"  | tee -a "${LOG_FILE}"
+
+        exec 3< "$PS1_LIST"
+        while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+                ico_file="${ICONS_DIR}/ico/vmc/$game_id.ico"
         
-            if [[ ! -s "$ico_file" ]]; then
-                # Attempt to download icon using wget
-                echo -n "VMC icon not found locally for $game_id. Attempting to download from the HDD-OSD icon database..." | tee -a "${LOG_FILE}"
-                echo | tee -a "${LOG_FILE}"
-                wget --quiet --timeout=10 --tries=3 --output-document="$ico_file" \
-                "https://raw.githubusercontent.com/CosmicScale/HDD-OSD-Icon-Database/main/vmc/${game_id}.ico"
-                if [[ -s "$ico_file" ]]; then
-                    echo "Successfully downloaded VMC icon for ${game_id}." | tee -a "${LOG_FILE}"
+                if [[ ! -s "$ico_file" ]]; then
+                    # Attempt to download icon using wget
+                    echo -n "VMC icon not found locally for $game_id. Attempting to download from the HDD-OSD icon database..." | tee -a "${LOG_FILE}"
                     echo | tee -a "${LOG_FILE}"
-                else
-                    # If wget fails, run the art downloader
-                    [[ -f "$ico_file" ]] && rm -f "$ico_file"
+                    wget --quiet --timeout=10 --tries=3 --output-document="$ico_file" \
+                    "https://raw.githubusercontent.com/CosmicScale/HDD-OSD-Icon-Database/main/vmc/${game_id}.ico"
+                    if [[ -s "$ico_file" ]]; then
+                        echo "Successfully downloaded VMC icon for ${game_id}." | tee -a "${LOG_FILE}"
+                        echo | tee -a "${LOG_FILE}"
+                    else
+                        # If wget fails, run the art downloader
+                        [[ -f "$ico_file" ]] && rm -f "$ico_file"
 
-                    png_file_lgo="${TOOLKIT_PATH}/icons/ico/tmp/${game_id}_LGO.png"
+                        png_file_lgo="${TOOLKIT_PATH}/icons/ico/tmp/${game_id}_LGO.png"
 
-                    echo -n "VMC icon not found on database. Downloading icon assets for $game_id..." | tee -a "${LOG_FILE}"
+                        echo -n "VMC icon not found on database. Downloading icon assets for $game_id..." | tee -a "${LOG_FILE}"
 
-                    wget --quiet --timeout=10 --tries=3 --output-document="${png_file_lgo}" \
-                    "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS1/${game_id}/${game_id}_LGO.png"
+                        wget --quiet --timeout=10 --tries=3 --output-document="${png_file_lgo}" \
+                        "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS1/${game_id}/${game_id}_LGO.png"
+                    fi
+
+                    if [[ -s "$png_file_lgo" ]]; then
+                        echo| tee -a "${LOG_FILE}"
+                        echo -n "Creating VMC icon for $game_id..." | tee -a "${LOG_FILE}"
+                        "${HELPER_DIR}/ps2iconmaker.sh" $game_id -t 8
+                        echo | tee -a "${LOG_FILE}"
+                    elif [[ ! -s "$ico_file" ]] && [[ ! -s "$png_file_lgo" ]]; then
+                        echo | tee -a "${LOG_FILE}"
+                        echo "Insufficient assets to create VMC icon for $game_id." | tee -a "${LOG_FILE}"
+                        echo | tee -a "${LOG_FILE}"
+                    fi
                 fi
-
-                if [[ -s "$png_file_lgo" ]]; then
-                    echo| tee -a "${LOG_FILE}"
-                    echo -n "Creating VMC icon for $game_id..." | tee -a "${LOG_FILE}"
-                    "${HELPER_DIR}/ps2iconmaker.sh" $game_id -t 8
-                    echo | tee -a "${LOG_FILE}"
-                else
-                    echo | tee -a "${LOG_FILE}"
-                    echo "Insufficient assets to create VMC icon for $game_id." | tee -a "${LOG_FILE}"
-                    echo | tee -a "${LOG_FILE}"
-                fi
-            fi
-    done
-    exec 3<&-
+        done
+        exec 3<&-
+    fi
 
     cp "${ICONS_DIR}/ico/tmp/"*.ico "${ICONS_DIR}/ico/" >/dev/null 2>&1
     cp "${ICONS_DIR}/ico/tmp/vmc/"*.ico "${ICONS_DIR}/ico/vmc" >/dev/null 2>&1
@@ -2273,7 +2276,9 @@ echo -n "Unmounting OPL partition..." | tee -a "${LOG_FILE}"
 UNMOUNT_OPL
 echo | tee -a "${LOG_FILE}"
 
-CREATE_VMC
+if [ -f "$PS1_LIST" ]; then
+    CREATE_VMC
+fi
 
 ################################### Create BBNL Partitions ###################################
 
