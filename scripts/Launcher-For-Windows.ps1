@@ -67,7 +67,7 @@ function main {
   wsl -- type git `&`> /dev/null `|`| `(sudo apt update `&`& sudo apt install git`)
   
   # clone the PSBBN repo into ~, or pull if it's already there
-  wsl --cd "~" -- [ -d PSBBN-Definitive-English-Patch/.git ] `&`& `(cd PSBBN-Definitive-English-Patch/ `&`& git pull --ff-only`) `|`| git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
+  wsl --cd "~" -- [ -d PSBBN-Definitive-English-Patch/.git ] `&`& `(cd PSBBN-Definitive-English-Patch/ `&`& git pull --ff-only`) `|`| git clone -b test --single-branch https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
   
   # give the user the opportunity to put games/homebrew in the PSBBN folder
   Write-Host "`nOpening the PSBBN folder in the Explorer...`t" -NoNewline
