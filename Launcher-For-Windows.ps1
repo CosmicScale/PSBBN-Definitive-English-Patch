@@ -10,16 +10,15 @@ function main {
   Write-Host "Make sure the drive you want to use is connected and press a key to continue.`n" -ForegroundColor Green
   $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 
-  # check if wsl exists
-  if (-Not (Get-Command wsl -errorAction SilentlyContinue)) {
-    exitScript("WSL is not available on this computer.")
-  }
-
   # check if mandatory windows features are enabled
   Write-Host "Checking if the mandatory features are enabled..." -NoNewline
+  $wslFeature = Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
   $hyperVFeature = Get-WindowsOptionalFeature -Online -FeatureName HypervisorPlatform
   $virtualMachineFeature = Get-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
   printOK
+
+  # enable WSL as needed
+  enableFeature($wslFeature)
 
   # enable Hyper V as needed
   enableFeature($hyperVFeature)
@@ -29,6 +28,11 @@ function main {
   
   # detect if virtualization is enabled in BIOS
   detectVirtualization
+
+  # check if wsl exists
+  if (-Not (Get-Command wsl -errorAction SilentlyContinue)) {
+    exitScript("WSL is not available on this computer.")
+  }
   
   # fetch the latest wsl update
   Write-Host "Check the latest WSL updates...`t`t`t" -NoNewline
