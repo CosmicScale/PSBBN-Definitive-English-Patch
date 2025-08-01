@@ -4,6 +4,8 @@
 # User must open its execution policy by running
 # `Set-ExecutionPolicy -ExecutionPolicy Unrestricted`
 
+$version = "0.1.1"
+
 function main {
   printTitle
   Write-Host "Prepare Windows to run the PSBBN scripts."
@@ -159,7 +161,7 @@ function printTitle {
        |  \ |___ |___ | |\ | |  |  | |  | |___    |__] |__|  |  |    |__|  
        |__/ |___ |    | | \| |  |  |  \/  |___    |    |  |  |  |___ |  |  
                                                                            
-                          Launcher for Windows                             
+                       Launcher for Windows v$version                            
                             Written by Yornn                               
                                                                            
 "
