@@ -95,20 +95,13 @@ option_two() {
 }
 
 option_three() {
-    exit
-}
-
-option_four() {
     "${TOOLKIT_PATH}/scripts/Game-Installer.sh"
 }
 
-option_five() {
-    exit
+option_four() {
+    "${TOOLKIT_PATH}/scripts/Extras.sh"
 }
 
-option_six() {
-"${TOOLKIT_PATH}/scripts/Extras.sh"
-}
 
 # Function to display the menu
 display_menu() {
@@ -125,10 +118,9 @@ ______  _________________ _   _  ______      __ _       _ _   _            _____
 
                                      1) System Setup
                                      2) Install PSBBN
-                                     3) 
-                                     4) Install Games
-                                     5) 
-                                     6) Install Optional Extras
+                                     3) Install Games
+                                     4) Install Optional Extras
+
                                      q) Quit
 
 EOF
@@ -153,12 +145,6 @@ while true; do
             ;;
         4)
             option_four
-            ;;
-        5)
-            option_five
-            ;;
-        6)
-            option_six
             ;;
         q|Q)
             echo
