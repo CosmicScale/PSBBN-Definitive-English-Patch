@@ -38,7 +38,10 @@ function main {
   # check if a wsl distro is installed already
   $isWslInstalled = wsl --list --verbose | Select-String -SimpleMatch -Quiet '* Debian'
   if (-Not $isWslInstalled) {
-    Write-Host "`nThe WSL installer will prompt you to set a username and a password. After this is done, you can type 'exit' to return to this script.`n" -ForegroundColor Yellow
+    Write-Host "`nThe WSL installer will prompt you to set a username and a password." -ForegroundColor Yellow
+    Write-Host "/!\ The username must start with a lowercase letter, and only contain letters and numbers." -ForegroundColor Red
+    Write-Host "/!\ A password must be set." -ForegroundColor Red
+    Write-Host "After this is done, you can type 'exit' and press enter to return to this script.`n" -ForegroundColor Yellow
     Write-Host "------- Linux magic starts ---------"
     wsl --install --distribution Debian
     Write-Host "------- Linux magic finishes ---------`n"
@@ -48,7 +51,7 @@ function main {
   Write-Host "`nList of available disks:"
   $diskList = Get-Disk 
   $diskList | Format-Table -Property Number, FriendlyName, Size
-  $selectedDisk = "\\.\PHYSICALDRIVE" + (handleDiskSelection($diskList.Count))
+  $selectedDisk = "\\.\PHYSICALDRIVE" + (handleDiskSelection($diskList.Count - 1))
   Write-Host "`nMounting $($selectedDisk) on wsl...`t`t" -NoNewline
   try {
     # will try to mount the disk
