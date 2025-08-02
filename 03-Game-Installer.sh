@@ -959,6 +959,15 @@ EOL
     fi
 }
 
+check_python_packages() {
+  for pkg in "$@"; do
+    if ! python -m pip show "$pkg" >/dev/null 2>&1; then
+      return 1
+    fi
+  done
+  return 0
+}
+
 activate_python() {
     echo >> "${LOG_FILE}"
     echo "Activating Python virtual environment..." >> "${LOG_FILE}"
@@ -967,14 +976,16 @@ activate_python() {
     sleep 5
     echo | tee -a "${LOG_FILE}"
 
-    # Try activating the virtual environment twice before failing
-    if ! source "${TOOLKIT_PATH}/venv/bin/activate" 2>>"${LOG_FILE}"; then
-        echo -n "Failed to activate the Python virtual environment. Retrying..." | tee -a "${LOG_FILE}"
-        sleep 2
-        echo | tee -a "${LOG_FILE}"
-    
+    if ! check_python_packages lz4 natsort; then
+        # Try activating the virtual environment twice before failing
         if ! source "${TOOLKIT_PATH}/venv/bin/activate" 2>>"${LOG_FILE}"; then
-            error_msg "Error" "Failed to activate the Python virtual environment."
+            echo -n "Failed to activate the Python virtual environment. Retrying..." | tee -a "${LOG_FILE}"
+            sleep 2
+            echo | tee -a "${LOG_FILE}"
+        
+            if ! source "${TOOLKIT_PATH}/venv/bin/activate" 2>>"${LOG_FILE}"; then
+                error_msg "Error" "Python does not have the required dependencies installed. Run 01-Setup.sh and try again."
+            fi
         fi
     fi
 }
@@ -1265,6 +1276,8 @@ fi
 # Check if the Python virtual environment exists
 if [ -f "./venv/bin/activate" ]; then
     echo "The Python virtual environment exists." >> "${LOG_FILE}"
+elif check_python_packages lz4 natsort; then
+    echo "The Python dependencies are installed." >> "${LOG_FILE}"
 else
     error_msg "Error" "The Python virtual environment does not exist. Run 01-Setup.sh and try again."
 fi
