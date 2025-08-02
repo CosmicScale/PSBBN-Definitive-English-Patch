@@ -22,6 +22,8 @@ games/APPS/PSBBN.ELF
 *.ZSO
 *.vcd
 *.VCD
+*.bin
+*.cue
 *.json
 IOPRP252.IMG
 POPS.ELF
