@@ -3,8 +3,14 @@
 
 # User must open its execution policy by running
 # `Set-ExecutionPolicy -ExecutionPolicy Unrestricted`
+# and choose "Yes to All"
 
-$version = "0.1.1"
+# the version of this script itself, useful to know if a user is running the latest version
+$version = "0.1.2"
+
+# the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
+# machine created by this script and not some pre-existing Debian the user had.
+$wslLabel = "PSBBN"
 
 function main {
   printTitle
@@ -42,14 +48,14 @@ function main {
   printOK
 
   # check if a wsl distro is installed already
-  $isWslInstalled = wsl --list --verbose | Select-String -SimpleMatch -Quiet '* Debian'
+  $isWslInstalled = wsl --list --verbose | Select-String -SimpleMatch -Quiet $wslLabel
   if (-Not $isWslInstalled) {
     Write-Host "`nThe WSL installer will prompt you to set a username and a password." -ForegroundColor Yellow
     Write-Host "/!\ The username must start with a lowercase letter, and only contain letters and numbers." -ForegroundColor Red
     Write-Host "/!\ A password must be set." -ForegroundColor Red
     Write-Host "After this is done, you can type 'exit' and press enter to return to this script.`n" -ForegroundColor Yellow
     Write-Host "------- Linux magic starts ---------"
-    wsl --install --distribution Debian
+    wsl --install --distribution Debian --name $wslLabel
     Write-Host "------- Linux magic finishes ---------`n"
   }
 
@@ -61,30 +67,30 @@ function main {
   Write-Host "`nMounting $($selectedDisk) on wsl...`t`t" -NoNewline
   try {
     # will try to mount the disk
-    # if the disk is already mounted, it does NOT trigger the catch block
-    $mountOutput = wsl --mount $selectedDisk --bare
+    $mountError = $( $mountOutput = & wsl -d $wslLabel --mount $selectedDisk --bare ) 2>&1
   } catch {
     printNG
     # display any other error and stop the script
-    Write-Host $mountOutput
+    Write-Host $mountError -ForegroundColor Red
     Exit
   }
   printOK
   Write-Host
   
   # install git if it is missing
-  wsl -- type git `&`> /dev/null `|`| `(sudo apt update `&`& sudo apt install git`)
+  wsl -d $wslLabel -- type git `&`> /dev/null `|`| `(sudo apt update `&`& sudo apt -y install git`)
   
   # clone the PSBBN repo into ~, or pull if it's already there
-  wsl --cd "~" -- [ -d PSBBN-Definitive-English-Patch/.git ] `&`& `(cd PSBBN-Definitive-English-Patch/ `&`& git pull --ff-only`) `|`| git clone -b test --single-branch https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
+  wsl -d $wslLabel --cd "~" -- [ -d PSBBN-Definitive-English-Patch/.git ] `&`& `(cd PSBBN-Definitive-English-Patch/ `&`& git pull --ff-only`) `|`| git clone -b test --single-branch https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
   
   # give the user the opportunity to put games/homebrew in the PSBBN folder
   Write-Host "`nOpening the PSBBN folder in the Explorer...`t" -NoNewline
-  $user = wsl -- whoami
-  explorer \\wsl`$\Debian\home\$user\PSBBN-Definitive-English-Patch
+  $user = wsl -d $wslLabel -- whoami
+  explorer "\\wsl`$\$wslLabel\home\$user\PSBBN-Definitive-English-Patch"
   printOK
   Write-Host "
   Before you continue, you can put your games and homebrews in the PSBBN folder.
+  If the explorer doesnt open automatically, paste \\wsl`$\$wslLabel\home\$user\PSBBN-Definitive-English-Patch in the adress bar.
   You can refer to the PSBBN Readme to know more about how and where to put your games and homebrews.
   https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
 " -ForegroundColor Yellow
@@ -95,7 +101,7 @@ function main {
   clear
   
   # run PSBBN regular steps
-  wsl --cd "~/PSBBN-Definitive-English-Patch" -- ./PSBBN-Definitive-Patch.sh
+  wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- ./PSBBN-Definitive-Patch.sh
   
   # clear the terminal to get rid of the wsl-run scripts
   clear
@@ -105,15 +111,15 @@ function main {
   Write-Host "Unmounting $($selectedDisk)...`t`t" -NoNewline
   try {
     # try to unmount the disk
-    # like --mount, if the disk is already unmounted, it does NOT trigger the catch block
-    $unmountOutput = wsl --unmount $selectedDisk
+    $unmountOutput = wsl -d $wslLabel --unmount $selectedDisk
+    $mountError = $( $mountOutput = & wsl -d $wslLabel --unmount $selectedDisk ) 2>&1
   } catch {
     Write-Host $mountOutput
     Exit
   }
   printOK
   
-  Write-Host "Have fun exploring PSBBN!" -ForegroundColor Green
+  Write-Host "`nHave fun exploring PSBBN!`n" -ForegroundColor Green
 }
 
 function printOK {
