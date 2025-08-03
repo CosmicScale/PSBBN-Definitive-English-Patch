@@ -6,11 +6,14 @@
 # and choose "Yes to All"
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.1.3"
+$version = "0.1.4"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
 $wslLabel = "PSBBN"
+
+# this make wsl commands output utf8 instead of utf16_LE
+$env:WSL_UTF8 = 1
 
 function main {
   printTitle
@@ -48,7 +51,8 @@ function main {
   printOK
 
   # check if a wsl distro is installed already
-  if (-Not (isWSLDistroInstalled)) {
+  $isWslInstalled = wsl --list | Select-String -SimpleMatch -Quiet $wslLabel
+  if (-Not ($isWslInstalled)) {
     Write-Host "`nThe WSL distro will prompt you to set a username and a password." -ForegroundColor Yellow
     Write-Host "/!\ The username must start with a lowercase letter, and only contain letters and numbers." -ForegroundColor Red
     Write-Host "/!\ A password must be set." -ForegroundColor Red
@@ -66,19 +70,13 @@ function main {
   # list available disks and pick the one to be mounted
   Write-Host "`nList of available disks:"
   $diskList = Get-Disk 
-  $diskList | Format-Table -Property Number, FriendlyName, Size
+  $diskList | Sort -Property Number | Format-Table -Property Number, FriendlyName, Size
   $selectedDisk = "\\.\PHYSICALDRIVE" + (handleDiskSelection($diskList.Count - 1))
+  
+  # mount the disk
   Write-Host "`nMounting $($selectedDisk) on wsl...`t`t" -NoNewline
-  try {
-    # will try to mount the disk
-    $mountError = $( $mountOutput = & wsl -d $wslLabel --mount $selectedDisk --bare ) 2>&1
-  } catch {
-    printNG
-    # display any other error and stop the script
-    Write-Host $mountError -ForegroundColor Red
-    Exit
-  }
-  printOK
+  $mountOut = wsl -d $wslLabel --mount $selectedDisk --bare
+  handleMountOutput($mountOut)
   Write-Host
   
   # install git if it is missing
@@ -113,15 +111,8 @@ function main {
   
   # unmount the disk before exiting
   Write-Host "Unmounting $($selectedDisk)...`t`t" -NoNewline
-  try {
-    # try to unmount the disk
-    $unmountOutput = wsl -d $wslLabel --unmount $selectedDisk
-    $mountError = $( $mountOutput = & wsl -d $wslLabel --unmount $selectedDisk ) 2>&1
-  } catch {
-    Write-Host $mountOutput
-    Exit
-  }
-  printOK
+  $mountOut = wsl -d $wslLabel --unmount $selectedDisk
+  handleMountOutput($mountOut)
   
   Write-Host "`nHave fun exploring PSBBN!`n" -ForegroundColor Green
 }
@@ -215,14 +206,23 @@ function detectVirtualization {
   }
 }
 
-function isWSLDistroInstalled {
-  $out = wsl --list
-  foreach ($distro in $out) {
-    if ($distro -eq $wslLabel) {
-      return $true
-    }
+function handleMountOutput ($mountOut) {
+  if ($mountOut -like "*Wsl/Service/AttachDisk/MountDisk/WSL_E_DISK_ALREADY_ATTACHED*") {
+    # in the case where the disk was already attached, we just carry on and treat it as a happy path
+    printOK
+    Write-Host "The disk was already mounted." -ForegroundColor Green
+    return
+  } elseif ($mountOut -like "*Wsl/Service/DetachDisk/ERROR_FILE_NOT_FOUND*") {
+    # in the case where the disk was already detached, we just carry on and treat it as a happy path
+    printOK
+    Write-Host "The disk was already unmounted." -ForegroundColor Green
+    return
+  } elseif ($mountOut -like "*Error code*") {
+    printNG
+    Write-Host $mountOut -ForegroundColor Red
+    Exit
   }
-  return $false
+  printOK
 }
 
 main
