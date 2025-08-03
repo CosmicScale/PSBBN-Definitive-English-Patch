@@ -6,7 +6,7 @@
 # and choose "Yes to All"
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.1.2"
+$version = "0.1.3"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -48,15 +48,19 @@ function main {
   printOK
 
   # check if a wsl distro is installed already
-  $isWslInstalled = wsl --list --verbose | Select-String -SimpleMatch -Quiet $wslLabel
-  if (-Not $isWslInstalled) {
-    Write-Host "`nThe WSL installer will prompt you to set a username and a password." -ForegroundColor Yellow
+  if (-Not (isWSLDistroInstalled)) {
+    Write-Host "`nThe WSL distro will prompt you to set a username and a password." -ForegroundColor Yellow
     Write-Host "/!\ The username must start with a lowercase letter, and only contain letters and numbers." -ForegroundColor Red
     Write-Host "/!\ A password must be set." -ForegroundColor Red
     Write-Host "After this is done, you can type 'exit' and press enter to return to this script.`n" -ForegroundColor Yellow
     Write-Host "------- Linux magic starts ---------"
+
     wsl --install --distribution Debian --name $wslLabel
+
     Write-Host "------- Linux magic finishes ---------`n"
+  } else {
+    Write-Host "The WSL distro is already present, skipping.`t" -NoNewline
+    printOK
   }
 
   # list available disks and pick the one to be mounted
@@ -209,6 +213,16 @@ function detectVirtualization {
   } else {
     printOK
   }
+}
+
+function isWSLDistroInstalled {
+  $out = wsl --list
+  foreach ($distro in $out) {
+    if ($distro -eq $wslLabel) {
+      return $true
+    }
+  }
+  return $false
 }
 
 main
