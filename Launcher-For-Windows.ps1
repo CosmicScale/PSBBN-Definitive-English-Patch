@@ -6,7 +6,7 @@
 # and choose "Yes to All"
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.1.6"
+$version = "0.1.7"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -91,7 +91,7 @@ function main {
   # list available disks and pick the one to be mounted
   Write-Host "`nList of available disks:"
   $diskList = Get-Disk 
-  $diskList | Sort -Property Number | Format-Table -Property Number, FriendlyName, Size
+  $diskList | Sort -Property Number | Format-Table -Property Number, FriendlyName, @{Label="Size";Expression={("{0:N2}" -f ($_.Size / 1GB)).ToString() + " GB"}}
   $selectedDisk = "\\.\PHYSICALDRIVE" + (handleDiskSelection($diskList.Count - 1))
   
   # mount the disk
