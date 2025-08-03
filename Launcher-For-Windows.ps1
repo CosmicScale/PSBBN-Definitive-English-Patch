@@ -5,8 +5,13 @@
 # `Set-ExecutionPolicy -ExecutionPolicy Unrestricted`
 # and choose "Yes to All"
 
+param(
+  [Alias("logs", "log")]
+  [switch]$LogsEnabled = $false
+)
+
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.1.7"
+$version = "0.1.8"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -241,4 +246,13 @@ function handleMountOutput ($mountOut) {
   printOK
 }
 
-main
+if ($LogsEnabled) {
+  try { $null = Start-Transcript -Path "~\psbbn-windows-launcher.log" }  catch {}
+  try {
+    main
+  } finally {
+    try { $null = Stop-Transcript } catch {}
+  }
+} else {
+  main
+}
