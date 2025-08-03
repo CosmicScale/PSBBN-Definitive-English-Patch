@@ -19,6 +19,8 @@ games/APPS/PSBBN.ELF
 *.ISO
 *.zso
 *.ZSO
+*.cue
+*.bin
 *.vcd
 *.VCD
 *.json
