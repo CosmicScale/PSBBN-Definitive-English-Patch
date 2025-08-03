@@ -6,7 +6,7 @@
 # and choose "Yes to All"
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.1.5"
+$version = "0.1.6"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -14,6 +14,9 @@ $wslLabel = "PSBBN"
 
 # this make wsl commands output utf8 instead of utf16_LE
 $env:WSL_UTF8 = 1
+
+# flag potentially raised when enabling features, signaling a reboot is necessary to finish the install
+$global:IsRestartRequired = $false
 
 function main {
   printTitle
@@ -39,10 +42,20 @@ function main {
   
   # detect if virtualization is enabled in BIOS
   detectVirtualization
+  
+  if ($isRestartRequired) {
+    Write-Host "
+    You need to restart your computer in order for some newly installed features to work properly.
+    Once you have restarted, just run this script again.
+" -ForegroundColor Yellow
+    Restart-Computer -Confirm
+    Exit
+  }
 
   # check if wsl exists
   if (-Not (Get-Command wsl -errorAction SilentlyContinue)) {
-    exitScript("WSL is not available on this computer.")
+    Write-Host "WSL is not available on this computer." -ForegroundColor Yellow
+    Exit
   }
   
   # fetch the latest wsl update
@@ -131,20 +144,21 @@ function printNG {
   Write-Host " ]"
 }
 
-function exitScript ($message) {
-  Write-Host $message -ForegroundColor Yellow
-  Write-Host "Press any key to continue...";
-  $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown');
-  Exit
+function printRestartRequired {
+  Write-Host "    `t`t[ " -NoNewline
+  Write-Host "Restart required" -NoNewline -ForegroundColor Yellow
+  Write-Host " ]"
 }
 
 function enableFeature ($feature) {
   if (($null -ne $feature.FeatureName) -and ($feature.State -ne "Enabled")) {
     Write-Host "  └ Enabling" $feature.DisplayName "..." -NoNewline;
-    $enabled = Enable-WindowsOptionalFeature -Online -FeatureName $feature.FeatureName -All
-    printOK
+    $enabled = Enable-WindowsOptionalFeature -Online -FeatureName $feature.FeatureName -All -NoRestart -WarningAction:SilentlyContinue
     if ($enabled.RestartNeeded) {
-      exitScript("Restart is required. You can then launch this script again to resume.")
+      $global:IsRestartRequired = $true
+      printRestartRequired
+    } else {
+      printOK
     }
   } elseif ($feature.State -eq "Enabled"){
     Write-Host "  └" $feature.DisplayName 'already enabled.' -NoNewline
