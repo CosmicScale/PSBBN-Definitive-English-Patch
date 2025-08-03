@@ -6,7 +6,7 @@
 # and choose "Yes to All"
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.1.4"
+$version = "0.1.5"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -60,13 +60,21 @@ function main {
     Write-Host "------- Linux magic starts ---------"
 
     wsl --install --distribution Debian --name $wslLabel
-
-    Write-Host "------- Linux magic finishes ---------`n"
   } else {
     Write-Host "The WSL distro is already present, skipping.`t" -NoNewline
     printOK
   }
-
+  
+  # install git if it is missing
+  wsl -d $wslLabel -- type git `&`> /dev/null `|`| `(sudo apt update `&`& sudo apt -y install git`)
+  
+  # clone the PSBBN repo into ~, or pull if it's already there
+  wsl -d $wslLabel --cd "~" -- [ -d PSBBN-Definitive-English-Patch/.git ] `&`& `(cd PSBBN-Definitive-English-Patch/ `&`& git pull --ff-only`) `|`| git clone -b test --single-branch https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
+  
+  if (-Not ($isWslInstalled)) {
+    Write-Host "------- Linux magic finishes ---------`n"
+  }
+  
   # list available disks and pick the one to be mounted
   Write-Host "`nList of available disks:"
   $diskList = Get-Disk 
@@ -78,12 +86,6 @@ function main {
   $mountOut = wsl -d $wslLabel --mount $selectedDisk --bare
   handleMountOutput($mountOut)
   Write-Host
-  
-  # install git if it is missing
-  wsl -d $wslLabel -- type git `&`> /dev/null `|`| `(sudo apt update `&`& sudo apt -y install git`)
-  
-  # clone the PSBBN repo into ~, or pull if it's already there
-  wsl -d $wslLabel --cd "~" -- [ -d PSBBN-Definitive-English-Patch/.git ] `&`& `(cd PSBBN-Definitive-English-Patch/ `&`& git pull --ff-only`) `|`| git clone -b test --single-branch https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
   
   # give the user the opportunity to put games/homebrew in the PSBBN folder
   Write-Host "`nOpening the PSBBN folder in the Explorer...`t" -NoNewline
