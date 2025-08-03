@@ -116,6 +116,18 @@ def sort_games_list(games_list_path):
             "lara croft tomb raider: legend": "tomb raider 7",
             "lara croft tomb raider: anniversary": "tomb raider 8",
             "tomb raider: underworld": "tomb raider 9",
+            "super robot taisen impact": "super robot taisen 1",
+            "super robot taisen impact (genteiban)": "super robot taisen 1",
+            "dai-2-ji super robot taisen alpha": "super robot taisen 2",
+            "dai-2-ji super robot taisen alpha (genteiban)": "super robot taisen 2",
+            "super robot taisen: scramble commander": "super robot taisen 3",
+            "super robot taisen mx": "super robot taisen 4",
+            "dai-3-ji super robot taisen alpha: shuuen no ginga e": "super robot taisen 5",
+            "super robot taisen og: original generations": "super robot taisen 6",
+            "super robot taisen: scramble commander the 2nd": "super robot taisen 7",
+            "super robot taisen og gaiden": "super robot taisen 8",
+            "super robot taisen z": "super robot taisen 9",
+            "super robot taisen z: special disc": "super robot taisen 10",
 
         }
 
