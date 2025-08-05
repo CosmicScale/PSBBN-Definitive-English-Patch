@@ -1,5 +1,4 @@
 #Requires -Version 5.1
-#Requires -RunAsAdministrator
 
 # User must open its execution policy by running
 # `Set-ExecutionPolicy -ExecutionPolicy Unrestricted`
@@ -11,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.1.8"
+$version = "0.2.0"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -24,6 +23,7 @@ $env:WSL_UTF8 = 1
 $global:IsRestartRequired = $false
 
 function main {
+  clear
   printTitle
   Write-Host "Prepare Windows to run the PSBBN scripts."
   Write-Host "Make sure the drive you want to use is connected and press a key to continue.`n" -ForegroundColor Green
@@ -246,8 +246,32 @@ function handleMountOutput ($mountOut) {
   printOK
 }
 
+function restartAsAdminIfNeeded {
+  if (([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    # already running as admin, so we just carry on
+    return
+  }
+  
+  # if powershell 7 is installed, launch that one instead of 5.1
+  $shell = "powershell"
+  if (Get-Command pwsh -errorAction SilentlyContinue) {
+    $shell = "pwsh"
+  }
+  
+  # relaunch the script as admin, this should trigger a UAC prompt
+  Start-Process $shell -Verb RunAs -ArgumentList "-NoLogo -NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+  
+  # close the initial shell to avoid confusion
+  exit
+}
+
+restartAsAdminIfNeeded
+
+# necessary to ensure the CWD is where the script is located, in case the script was restarted as admin
+cd $PSScriptRoot
+
 if ($LogsEnabled) {
-  try { $null = Start-Transcript -Path "~\psbbn-windows-launcher.log" }  catch {}
+  try { $null = Start-Transcript -Path ".\psbbn-windows-launcher.log" }  catch {}
   try {
     main
   } finally {
