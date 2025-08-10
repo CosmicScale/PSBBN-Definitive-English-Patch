@@ -2602,6 +2602,7 @@ SIPS_600.04|espn-street-games
 SLES_017.15|eagle-one-harrier-attack
 SLUS_009.43|eagle-one-harrier-attack
 SLES_003.43|earthworm-jim-2
+SLUS_003.43|earthworm-jim-2
 SLPS_005.25|east-end-x-yuri-eexy-life
 SLUS_015.51|easter-bunnys-big-day
 SLPS_008.44|eberouge
@@ -3471,9 +3472,9 @@ SLPM_863.07|forsaken
 SLPS_014.88|forsaken
 SLUS_004.58|forsaken
 SLED_012.63|forsaken
-SLUS_001.01|fox-hunt
-SLUS_001.75|fox-hunt
-SLUS_001.76|fox-hunt
+SLUS_001.01|fox-hunt-interactive-comedy-spy-thriller
+SLUS_001.75|fox-hunt-interactive-comedy-spy-thriller
+SLUS_001.76|fox-hunt-interactive-comedy-spy-thriller
 SLPS_013.55|fox-junction
 SLUS_006.36|fox-sports-golf-99
 SLUS_006.35|fox-sports-soccer-99
@@ -5765,9 +5766,9 @@ SLPS_012.77|misa-no-mahou-monogatari
 SLPS_012.75|misa-no-mahou-monogatari
 SLPS_014.74|misaki-aggressive
 SLUS_011.23|miss-spiders-tea-party
-SLES_022.45|missile-command
-SLES_024.82|missile-command
-SLUS_009.92|missile-command
+SLES_022.45|missile-command-1999
+SLES_024.82|missile-command-1999
+SLUS_009.92|missile-command-1999
 SLES_019.06|mission-impossible
 SLUS_010.16|mission-impossible
 SLPS_000.47|missland
@@ -6021,7 +6022,7 @@ SLES_022.99|nba-basketball-2000
 SLUS_009.26|nba-basketball-2000
 SLES_010.03|nba-fastbreak-98
 SLUS_004.92|nba-fastbreak-98
-SLUS_003.29|nba-hangtime
+SLUS_003.29|nba-hang-time
 SLES_033.62|nba-hoopz
 SLUS_013.31|nba-hoopz
 SLES_005.29|nba-jam-extreme
@@ -8196,10 +8197,10 @@ SLPS_021.20|shiritsu-justice-gakuen-nekketsu-seishun-nikki-2
 SLPS_016.48|shisenfuu-gekikara-mahjong
 SLPS_004.19|shock-wave
 SLPS_005.16|shock-wave-operation-jumpgate
-SLES_000.71|shockwave-assault-shockwave-invasion-earth
-SLUS_000.28|shockwave-assault-shockwave-invasion-earth
-SLES_100.71|shockwave-assault-shockwave-operation-jumpgate
-SLUS_001.37|shockwave-assault-shockwave-operation-jumpgate
+SLES_000.71|shockwave-assault
+SLUS_000.28|shockwave-assault
+SLES_100.71|shockwave-assault
+SLUS_001.37|shockwave-assault
 SLES_038.07|one-piece-grand-battle
 SLES_041.76|shoot
 SLPS_001.39|shougi-joryuu-meijinisen
@@ -8819,7 +8820,7 @@ SCES_000.34|starblade-a
 SLPS_000.22|starblade-a
 SLUS_000.57|starblade-a
 SLPS_009.58|starborders
-SLUS_013.02|starfighter-sanvein
+SLUS_013.02|shooter-starfighter-sanvein
 SLPS_014.07|starlight-scramble-renai-kouhosei
 SLPM_868.09|startling-adventures-kuusou-3x-daibouken
 SLPS_020.43|startling-odyssey-1-blue-evolution
@@ -9687,7 +9688,7 @@ SLPS_011.99|the-star-bowling-dx
 SLES_029.56|the-sword-of-camelot
 LSP90317.401|the-three-decoders-1-riddle-of-the-ring
 LSP90318.101|the-three-decoders-2-key-to-the-carousel
-SLUS_014.86|the-three-stooges
+SLUS_014.86|the-three-stooges-2002
 SLPS_005.08|the-tower-bonus-edition
 SLPS_006.06|the-tower-bonus-edition
 SLES_013.00|unholy-war
@@ -10742,8 +10743,8 @@ SLUS_008.88|worms-armageddon
 SLES_004.83|worms-pinball
 SLES_038.04|worms-world-party
 SLUS_014.48|worms-world-party
-SLES_004.89|wreckin-crew-drive-dangerously
-SLUS_005.87|wreckin-crew-drive-dangerously
+SLES_004.89|wreckin-crew
+SLUS_005.87|wreckin-crew
 LSP17011.001|write-away-1
 LSP99011.901|write-away-10
 LSP17011.101|write-away-2
@@ -13307,7 +13308,7 @@ SLES_506.32|dragon-rage
 SLUS_201.95|dragon-rage
 SLPS_257.35|dragon-shadow-spell
 SLES_544.60|dragon-sisters
-SLES_516.96|dragons-lair-3d
+SLES_516.96|dragons-lair-3d-return-to-the-lair
 SCES_500.06|drakan-the-ancients-gates
 SCUS_971.28|drakan-the-ancients-gates
 SCUS_971.69|drakan-the-ancients-gates
@@ -14249,9 +14250,10 @@ SLPM_664.58|fuuraiki
 SLPM_669.91|fuuraiki
 SLPM_661.63|fuuraiki-2
 SLPM_669.92|fuuraiki-2
-SLPM_658.13|fuuun-bakumatsuden
-SLPM_742.28|fuuun-bakumatsuden
-SLPM_610.96|fuuun-bakumatsuden
+SLPM_658.13|fu-un-bakumatsu-den
+SLPM_742.28|fu-un-bakumatsu-den
+SLKA_252.57|fu-un-bakumatsu-den
+SLPM_610.96|fu-un-bakumatsu-den
 SLPM_654.94|fuuun-shinsengumi
 SLPM_742.02|fuuun-shinsengumi
 SLPM_602.25|fuuun-shinsengumi
@@ -15166,6 +15168,7 @@ SLES_511.08|hitman-2-silent-assassin
 SLES_511.09|hitman-2-silent-assassin
 SLES_511.10|hitman-2-silent-assassin
 SLUS_203.74|hitman-2-silent-assassin
+SLKA_250.55|hitman-2-silent-assassin
 SLES_530.29|hitman-blood-money
 SLES_530.30|hitman-blood-money
 SLES_530.31|hitman-blood-money
@@ -15297,7 +15300,8 @@ SLPM_627.21|ichigeki-satchuu-hoihoi-san
 SLPM_623.90|ichigeki-satchuu-hoihoi-san
 SLPM_658.22|ichigo-100-percent-strawberry-diary
 SLPM_663.35|ichigo-100-percent-strawberry-diary
-SLPS_255.46|ichigo-marshmallow
+SLPS_255.46|ichigo-mashimaro
+SLPS_255.47|ichigo-mashimaro
 SCAJ_200.99|ico
 SCCS_400.05|ico
 SCES_507.60|ico
@@ -15712,6 +15716,7 @@ SLKA_250.63|kaido-battle
 SLES_531.91|kaido-racer
 SLES_539.00|kaido-racer-2
 SLPM_655.14|kaidou-battle-2-chain-reaction
+SLKA_251.46|kaidou-battle-2-chain-reaction
 SLPM_602.28|kaidou-battle-2-chain-reaction
 SLPM_652.46|kaidou-battle-nikko-haruna-rokko-hakone
 SLPM_601.95|kaidou-battle-nikko-haruna-rokko-hakone
@@ -17430,6 +17435,7 @@ SLPM_552.23|nadepro-kisama-mo-seiyuu-yatte-miro
 SLPS_255.00|namco-museum-50th-anniversary
 SLUS_202.73|namco-museum-2001
 SLES_539.57|namco-museum-50th-anniversary
+SLUS_211.64|namco-museum-50th-anniversary
 SLPS_255.90|namco-museum-arcade-hits
 SLUS_291.34|namco-transmission-vol-2
 SLUS_290.71|namco-transmission-v1-03
@@ -18327,6 +18333,7 @@ SLED_519.61|prince-of-persia-the-sands-of-time
 SLUS_290.69|prince-of-persia-the-sands-of-time
 SLES_537.77|prince-of-persia-the-two-thrones
 SLUS_212.87|prince-of-persia-the-two-thrones
+SLKA_253.46|prince-of-persia-the-two-thrones
 SLES_528.22|prince-of-persia-warrior-within
 SLKA_252.47|prince-of-persia-warrior-within
 SLPM_660.02|prince-of-persia-warrior-within
@@ -19419,6 +19426,7 @@ SLPM_668.03|shikaku-tantei-sora-no-sekai-thousand-dreams
 SLPM_621.65|shikigami-no-shiro
 SLPM_625.23|shikigami-no-shiro
 SLPM_624.61|shikigami-no-shiro-ii
+SLKA_150.03|shikigami-no-shiro-ii
 SLPM_660.69|shikigami-no-shiro-nanayozuki-gensoukyoku
 SLPM_658.16|shin-bakusou-dekotora-densetsu-tenka-touitsu-choujou-kessen
 SLPM_663.87|shin-bakusou-dekotora-densetsu-tenka-touitsu-choujou-kessen
@@ -19554,6 +19562,7 @@ SLUS_212.06|shining-force-neo
 SLPM_657.73|shining-tears
 SLPM_742.18|shining-tears
 SLUS_210.63|shining-tears
+SLKA_252.17|shining-tears
 SLPM_666.71|shining-wind
 SLPM_742.61|shining-wind
 SLPS_259.16|shinjuku-no-ookami
@@ -19578,6 +19587,7 @@ SLUS_280.16|shinobi-2002
 SLPM_663.58|shinobido-takumi
 SLPM_660.91|shinobido-imashime
 SLPM_665.56|shinobido-imashime
+SLKA_253.89|shinobido-imashime
 SCES_539.31|shinobido-way-of-the-ninja
 SLPM_658.21|shinseiki-yuusha-taisen
 SLPM_658.23|shinsengumi-gunrouden
@@ -19589,6 +19599,7 @@ SLPM_664.93|shinten-makai-generation-of-chaos-v
 SLPM_660.54|shinten-makai-generation-of-chaos-v
 SLPM_653.28|shirachuu-tankenbu
 SLPM_656.60|shirachuu-tankenbu
+SLKA_251.09|shirachuu-tankenbu
 SLPM_550.26|shirogane-no-soleil-contract-to-the-future-mirai-e-no-keiyaku
 SLPM_552.01|shirogane-no-soleil-contract-to-the-future-mirai-e-no-keiyaku
 SLPM_661.50|shirogane-no-torikago-the-angels-with-strange-wings
@@ -19724,6 +19735,7 @@ SLPM_620.93|love-smash
 SLPM_625.42|love-mahjong-2
 SLPM_625.58|kenka-joutou-yankee-banchou-shouwa-99-nen-no-densetsu
 SLPM_625.71|stylish-mahjong-usagi-yasei-no-touhai-usagi-yasei-no-touhai-the-arcade-double-pack
+SLPM_658.73|project-minerva-professional
 SLPM_626.16|chou-saisoku-zokusha-king-bore-up-no-bore-up-butchigiri-densetsu-2-kai
 SLPM_626.35|love-smash-5-1-tennis-robo-no-hanran
 SLPM_655.79|houkago-no-love-beat
@@ -20858,6 +20870,7 @@ SLPS_732.52|tales-of-the-abyss
 SLUS_213.86|tales-of-the-abyss
 SLPM_620.73|tam-tam-paradise
 SLPS_250.54|tamamayu-monogatari-2-horobi-no-mushi
+SLKA_250.42|tamamayu-monogatari-2-horobi-no-mushi
 SLPM_601.50|tamamayu-monogatari-2-horobi-no-mushi
 SLPM_664.32|tamayura-mitama-okuri-no-uta
 SCED_514.54|tango-game-on-demo-disc-1
@@ -20866,7 +20879,9 @@ SCED_516.44|tango-game-on-demo-disc-3
 SLES_518.55|tank-elite
 SLPM_654.50|tantei-gakuen-q-kioukan-no-satsui
 SLPM_651.73|tantei-jinguuji-saburou-innocent-black
+SLKA_250.71|tantei-jinguuji-saburou-innocent-black
 SLPM_655.76|tantei-jinguuji-saburou-kind-of-blue
+SLKA_252.24|tantei-jinguuji-saburou-kind-of-blue
 SLES_513.77|taxi-3
 SLES_534.02|taxi-rider
 SLES_506.49|taz-wanted
@@ -22357,6 +22372,7 @@ SLKA_150.11|xii-stag
 SLPM_623.18|xii-stag
 SLES_512.44|xiii
 SLUS_206.77|xiii
+SLKA_251.05|xiii
 SLED_520.14|xiii
 SLUS_290.70|xiii
 PAPX_902.35|xiii

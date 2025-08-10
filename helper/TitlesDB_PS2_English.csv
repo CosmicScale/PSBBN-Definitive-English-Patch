@@ -3237,8 +3237,9 @@ SLPM_664.58|Fuuraiki|Fog
 SLPM_669.91|Fuuraiki|Fog
 SLPM_661.63|Fuuraiki 2|Fog
 SLPM_669.92|Fuuraiki 2|Fog
-SLPM_658.13|Fuuun Bakumatsuden|
-SLPM_742.28|Fuuun Bakumatsuden|
+SLPM_658.13|Fu-un Bakumatsu-den|
+SLPM_742.28|Fu-un Bakumatsu-den|
+SLKA_252.57|Fu-un Bakumatsu-den|
 SLPM_610.96|Fuuun Bakumatsuden (Taikenban)|
 SLPM_654.94|Fuuun Shinsengumi|
 SLPM_742.02|Fuuun Shinsengumi|
@@ -4155,6 +4156,7 @@ SLES_511.08|Hitman 2: Silent Assassin|IO Interactive
 SLES_511.09|Hitman 2: Silent Assassin|IO Interactive
 SLES_511.10|Hitman 2: Silent Assassin|IO Interactive
 SLUS_203.74|Hitman 2: Silent Assassin|IO Interactive
+SLKA_250.55|Hitman 2: Silent Assassin|IO Interactive
 SLES_530.29|Hitman: Blood Money|Eidos Interactive
 SLES_530.30|Hitman: Blood Money|Eidos Interactive
 SLES_530.31|Hitman: Blood Money|Eidos Interactive
@@ -4286,7 +4288,8 @@ SLPM_627.21|Ichigeki Satchuu!! Hoihoi-san|
 SLPM_623.90|Ichigeki Satchuu!! Hoihoi-san (Genteiban)|
 SLPM_658.22|Ichigo 100 Percent Strawberry Diary|Alpha Unit
 SLPM_663.35|Ichigo 100 Percent Strawberry Diary|Alpha Unit
-SLPS_255.46|Ichigo Marshmallow (Shokai Genteiban)|
+SLPS_255.46|Ichigo Mashimaro (Shokai Genteiban)|
+SLPS_255.47|Ichigo Mashimaro|
 SCAJ_200.99|Ico|Sony Computer Entertainment
 SCCS_400.05|Ico|Sony Computer Entertainment
 SCES_507.60|Ico|Sony Computer Entertainment
@@ -4701,6 +4704,7 @@ SLKA_250.63|Kaido Battle|
 SLES_531.91|Kaido Racer|Genki
 SLES_539.00|Kaido Racer 2|Genki
 SLPM_655.14|Kaidou Battle 2: Chain Reaction|
+SLKA_251.46|Kaidou Battle 2: Chain Reaction|
 SLPM_602.28|Kaidou Battle 2: Chain Reaction (Taikenban)|
 SLPM_652.46|Kaidou Battle: Nikko, Haruna, Rokko, Hakone|
 SLPM_601.95|Kaidou Battle: Nikko, Haruna, Rokko, Hakone (Taikenban)|
@@ -6419,6 +6423,7 @@ SLPM_552.23|NadePro!! Kisama mo Seiyuu Yatte Miro!|
 SLPS_255.00|Namco 50 Anniversary: namCollection|
 SLUS_202.73|Namco Museum|
 SLES_539.57|Namco Museum 50th Anniversary|Digital Eclipse
+SLUS_211.64|Namco Museum 50th Anniversary|Digital Eclipse
 SLPS_255.90|Namco Museum Arcade Hits!|
 SLUS_291.34|Namco Transmission Vol. 2|
 SLUS_290.71|Namco Transmission v1.03|
@@ -7664,6 +7669,7 @@ SLED_519.61|Prince of Persia: The Sands of Time (Demo)|Ubisoft.
 SLUS_290.69|Prince of Persia: The Sands of Time (Demo)|Ubisoft.
 SLES_537.77|Prince of Persia: The Two Thrones|Ubisoft.
 SLUS_212.87|Prince of Persia: The Two Thrones|Ubisoft.
+SLKA_253.46|Prince of Persia: The Two Thrones|Ubisoft.
 SLES_528.22|Prince of Persia: Warrior Within|Ubisoft.
 SLKA_252.47|Prince of Persia: Warrior Within|Ubisoft.
 SLPM_660.02|Prince of Persia: Warrior Within|Ubisoft.
@@ -8756,6 +8762,7 @@ SLPM_668.03|Shikaku Tantei Sora no Sekai: Thousand Dreams|
 SLPM_621.65|Shikigami no Shiro|Alfa System
 SLPM_625.23|Shikigami no Shiro|Alfa System
 SLPM_624.61|Shikigami no Shiro II (Shokai Gentei)|Alfa System
+SLKA_150.03|Shikigami no Shiro II
 SLPM_660.69|Shikigami no Shiro: Nanayozuki Gensoukyoku|
 SLPM_658.16|Shin Bakusou Dekotora Densetsu: Tenka Touitsu Choujou Kessen|
 SLPM_663.87|Shin Bakusou Dekotora Densetsu: Tenka Touitsu Choujou Kessen|
@@ -8891,6 +8898,7 @@ SLUS_212.06|Shining Force Neo|Sega
 SLPM_657.73|Shining Tears|Sega
 SLPM_742.18|Shining Tears|Sega
 SLUS_210.63|Shining Tears|Sega
+SLKA_252.17|Shining Tears|Sega
 SLPM_666.71|Shining Wind|Sega
 SLPM_742.61|Shining Wind|Sega
 SLPS_259.16|Shinjuku no Ookami|
@@ -8915,6 +8923,7 @@ SLUS_280.16|Shinobi (Trade Demo)|
 SLPM_663.58|Shinobido Takumi|
 SLPM_660.91|Shinobido: Imashime|
 SLPM_665.56|Shinobido: Imashime|
+SLKA_253.89|Shinobido: Imashime|
 SCES_539.31|Shinobido: Way of the Ninja|
 SLPM_658.21|Shinseiki Yuusha Taisen|
 SLPM_658.23|Shinsengumi Gunrouden|
@@ -8926,6 +8935,7 @@ SLPM_664.93|Shinten Makai: Generation of Chaos V|
 SLPM_660.54|Shinten Makai: Generation of Chaos V (Genteiban)|
 SLPM_653.28|Shirachuu Tankenbu|
 SLPM_656.60|Shirachuu Tankenbu|
+SLKA_251.09|Shirachuu Tankenbu|
 SLPM_550.26|Shirogane no Soleil: Contract to the Future: Mirai e no Keiyaku|
 SLPM_552.01|Shirogane no Soleil: Contract to the Future: Mirai e no Keiyaku|
 SLPM_661.50|Shirogane no Torikago: The Angels with Strange Wings|
@@ -9061,6 +9071,7 @@ SLPM_620.93|Simple 2000 Series Ultimate Vol. 1: Love * Smash!|
 SLPM_625.42|Simple 2000 Series Ultimate Vol. 20: Love * Mahjong! 2|
 SLPM_625.58|Simple 2000 Series Ultimate Vol. 21: Kenka Joutou! Yankee Banchou: Shouwa 99-nen no Densetsu|
 SLPM_625.71|Simple 2000 Series Ultimate Vol. 22: Stylish Mahjong: Usagi: Yasei no Touhai & Usagi: Yasei no Touhai: The Arcade Double Pack|
+SLPM_658.73|Simple 2000 Series Ultimate Vol. 23: Project Minerva Professional
 SLPM_626.16|Simple 2000 Series Ultimate Vol. 25: Chou Saisoku! Zokusha King Bore Up no Bore Up: Butchigiri Densetsu 2 Kai|
 SLPM_626.35|Simple 2000 Series Ultimate Vol. 26: Love * Smash! 5.1: Tennis Robo no Hanran|
 SLPM_655.79|Simple 2000 Series Ultimate Vol. 27: Houkago no Love Beat|
@@ -10193,6 +10204,7 @@ SLPS_732.52|Tales of the Abyss|Bandai Namco
 SLUS_213.86|Tales of the Abyss|Bandai Namco
 SLPM_620.73|Tam Tam Paradise|
 SLPS_250.54|Tamamayu Monogatari 2: Horobi no Mushi|
+SLKA_250.42|Tamamayu Monogatari 2: Horobi no Mushi|
 SLPM_601.50|Tamamayu Monogatari 2: Horobi no Mushi (Taikenban)|
 SLPM_664.32|Tamayura: Mitama Okuri no Uta (Shokai Genteiban)|
 SCED_514.54|Tango: Game On Demo Disc 1|
@@ -10201,7 +10213,9 @@ SCED_516.44|Tango: Game On Demo Disc 3 (Demo)|
 SLES_518.55|Tank Elite|Bigben Interactive
 SLPM_654.50|Tantei Gakuen Q: Kioukan no Satsui (Shokai Seisanban)|
 SLPM_651.73|Tantei Jinguuji Saburou: Innocent Black|
+SLKA_250.71|Tantei Jinguuji Saburou: Innocent Black|
 SLPM_655.76|Tantei Jinguuji Saburou: Kind of Blue|
+SLKA_252.24|Tantei Jinguuji Saburou: Kind of Blue|
 SLES_513.77|Taxi 3|
 SLES_534.02|Taxi Rider|505 Games
 SLES_506.49|Taz: Wanted|Blitz Games
@@ -11691,6 +11705,7 @@ SLKA_150.11|XII Stag|Taito
 SLPM_623.18|XII Stag|Taito
 SLES_512.44|XIII|
 SLUS_206.77|XIII|
+SLKA_251.05|XIII|
 SLED_520.14|XIII (Demo)|Ubisoft
 SLUS_290.70|XIII (Demo)|Ubisoft
 PAPX_902.35|XIII (Taikenban)|
