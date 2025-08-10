@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.2.0"
+$version = "0.3.0"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -95,7 +95,7 @@ function main {
   
   # list available disks and pick the one to be mounted
   Write-Host "`nList of available disks:"
-  $diskList = Get-Disk 
+  $diskList = Get-Disk
   $diskList | Sort -Property Number | Format-Table -Property Number, FriendlyName, @{Label="Size";Expression={("{0:N2}" -f ($_.Size / 1GB)).ToString() + " GB"}}
   $selectedDisk = "\\.\PHYSICALDRIVE" + (handleDiskSelection($diskList.Count - 1))
   
@@ -103,27 +103,13 @@ function main {
   Write-Host "`nMounting $($selectedDisk) on wsl...`t`t" -NoNewline
   $mountOut = wsl -d $wslLabel --mount $selectedDisk --bare
   handleMountOutput($mountOut)
-  Write-Host
   
   # give the user the opportunity to put games/homebrew in the PSBBN folder
-  Write-Host "`nOpening the PSBBN folder in the Explorer...`t" -NoNewline
-  $user = wsl -d $wslLabel -- whoami
-  explorer "\\wsl`$\$wslLabel\home\$user\PSBBN-Definitive-English-Patch"
-  printOK
-  Write-Host "
-  Before you continue, you can put your games and homebrews in the PSBBN folder.
-  If the explorer doesnt open automatically, paste \\wsl`$\$wslLabel\home\$user\PSBBN-Definitive-English-Patch in the adress bar.
-  You can refer to the PSBBN Readme to know more about how and where to put your games and homebrews.
-  https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
-" -ForegroundColor Yellow
-  Write-Host "Once you are done, press ENTER to continue." -ForegroundColor Green
-  while ($keypress.VirtualKeyCode -ne 13) {
-    $keypress = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-  }
+  $path = getTargetFolder
   clear
   
   # run PSBBN regular steps
-  wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- ./PSBBN-Definitive-Patch.sh
+  wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- ./PSBBN-Definitive-Patch.sh $path
   
   # clear the terminal to get rid of the wsl-run scripts
   clear
@@ -263,6 +249,54 @@ function restartAsAdminIfNeeded {
   
   # close the initial shell to avoid confusion
   exit
+}
+
+function getTargetFolder {
+  Write-Host "`nNext you will be asked to pick a folder where to put all your games, movies, photos, and music." -ForegroundColor Yellow
+
+  pause
+
+  Add-Type -AssemblyName System.Windows.Forms
+  $folderselection = New-Object System.Windows.Forms.OpenFileDialog -Property @{
+    InitialDirectory = [Environment]::GetFolderPath('Desktop')
+    CheckFileExists = 0
+    ValidateNames = 0
+    FileName = "Choose Folder"
+  }
+  $result = $folderselection.ShowDialog()
+
+  if($result -ne "OK") {
+    Write-Host "No folder was picked, you will have to do it manually later." -ForegroundColor Yellow
+    return ""
+  }
+
+  $pickedPath = Split-Path -Parent $folderselection.FileName
+  $driveLetter = $pickedPath.Split(":\")[0].ToLower()
+  $path = $pickedPath.Split(":\")[1].Replace("\", "/")
+
+  @('DVD', 'CD', 'POPS', 'APPS', 'music', 'movie', 'photo').ForEach({
+    if (-Not (Test-Path -Path "$pickedPath\$PSItem")) {
+      New-Item -Path $pickedPath -Name $PSItem -ItemType Directory | Out-Null
+    }
+  })
+
+  Write-Host "The following path was chosen: $pickedPath" -ForegroundColor Green
+  Write-Host "
+Before you continue, you can fill this folder with your games and other media:
+    • put PS2 games in /DVD or /CD (.iso or .zso files)
+    • put PS1 games in /POPS (must be .vcd files)
+    • put homebrew in /APPS (.elf or SAS-compliant .psu files)
+    • put music in /music
+    • put videos files in /movie
+    • put image files in /photo
+
+You can refer to the PSBBN Readme to know more.
+https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
+" -ForegroundColor Yellow
+
+  pause
+
+  return "/mnt/$driveLetter/$path"
 }
 
 restartAsAdminIfNeeded
