@@ -601,7 +601,7 @@ If, after doing so, the console freezes at the `PlayStation 2` logo, the most li
 ## Problems Launching Games
 If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL](#open-ps2-loader-opl) after modifying the OPL settings as described [above](#open-ps2-loader-opl), and fail to launch from the PSBBN Game Collection, try the following:
 
-1. If you have a [mod chip](#known-issueslimitations-of-psbbn), disable it
+1. If you have a [mod chip](#known-issues), disable it
 2. Re-run `03-Game-Installer.sh` and select a different game launcher
 3. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then re-run `02-PSBBN-Installer.sh`
 4. Try using a different HDD/SSD and re-run `02-PSBBN-Installer.sh`

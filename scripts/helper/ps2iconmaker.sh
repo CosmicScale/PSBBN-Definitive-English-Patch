@@ -18,7 +18,7 @@ Usage: ps2iconmaker <gameid> [-t icon type] [-?]
 
 If an icon type is not given, a PS2 DVD NTSC case icon will be generated"
 
-template_path="./assets/Icon-templates"
+template_path="./scripts/assets/Icon-templates"
 image_path="./icons/ico/tmp"
 
 if [ -z $1 ]; then

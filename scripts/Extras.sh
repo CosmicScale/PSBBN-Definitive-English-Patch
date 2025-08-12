@@ -1,20 +1,19 @@
 #!/usr/bin/env bash
 
-# Check if the shell is bash
-if [ -z "$BASH_VERSION" ]; then
-    echo "Error: This script must be run using Bash. Try running it with: bash $0" >&2
-    exit 1
-fi
-
-# Set terminal size: 100 columns and 40 rows
-echo -e "\e[8;40;100t"
-
 # Set paths
 TOOLKIT_PATH="$(pwd)"
-HELPER_DIR="${TOOLKIT_PATH}/helper"
-ASSETS_DIR="${TOOLKIT_PATH}/assets"
-OPL="${TOOLKIT_PATH}/OPL"
-LOG_FILE="${TOOLKIT_PATH}/extras.log"
+HELPER_DIR="${TOOLKIT_PATH}/scripts/helper"
+ASSETS_DIR="${TOOLKIT_PATH}/scripts/assets"
+OPL="${TOOLKIT_PATH}/scripts/storage/OPL"
+LOG_FILE="${TOOLKIT_PATH}/logs/extras.log"
+
+path_arg="$1"
+
+copy_log() {
+    if [[ -n "$path_arg" ]]; then
+        cp "${LOG_FILE}" "$path_arg" > /dev/null 2>&1
+    fi
+}
 
 error_msg() {
     type=$1
@@ -39,6 +38,9 @@ error_msg() {
     fi
 }
 
+trap 'echo; exit 130' INT
+trap copy_log EXIT
+
 cd "${TOOLKIT_PATH}"
 
 echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
@@ -54,55 +56,9 @@ if [ $? -ne 0 ]; then
     fi
 fi
 
-# Check if the current directory is a Git repository
-if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-  echo "This is not a Git repository. Skipping update check." | tee -a "${LOG_FILE}"
-else
-  # Fetch updates from the remote
-  git fetch >> "${LOG_FILE}" 2>&1
-
-  # Check the current status of the repository
-  LOCAL=$(git rev-parse @)
-  REMOTE=$(git rev-parse @{u})
-  BASE=$(git merge-base @ @{u})
-
-  if [ "$LOCAL" = "$REMOTE" ]; then
-    echo "The repository is up to date." | tee -a "${LOG_FILE}"
-  else
-    echo "Downloading updates..."
-    # Get a list of files that have changed remotely
-    UPDATED_FILES=$(git diff --name-only "$LOCAL" "$REMOTE")
-
-    if [ -n "$UPDATED_FILES" ]; then
-      echo "Files updated in the remote repository:" | tee -a "${LOG_FILE}"
-      echo "$UPDATED_FILES" | tee -a "${LOG_FILE}"
-
-      # Reset only the files that were updated remotely (discard local changes to them)
-      echo "$UPDATED_FILES" | xargs git checkout -- >> "${LOG_FILE}" 2>&1
-
-      # Pull the latest changes
-      if ! git pull --ff-only >> "${LOG_FILE}" 2>&1; then
-        error_msg "Error" "Update failed. Delete the PSBBN-Definitive-English-Patch directory and run the command:" " " "git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git" " " "Then try running the script again."
-      fi
-      echo
-      echo "The repository has been successfully updated." | tee -a "${LOG_FILE}"
-      read -n 1 -s -r -p "Press any key to exit, then run the script again."
-      echo
-      exit 0
-    fi
-  fi
-fi
-
 date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
-
-if [[ "$(uname -m)" != "x86_64" ]]; then
-  echo "Error: This script requires an x86-64 CPU architecture. Detected: $(uname -m)" | tee -a "${LOG_FILE}"
-  read -n 1 -s -r -p "Press any key to exit..."
-  echo
-  exit 1
-fi
 
 # Function to detect PS2 HDD
 
@@ -112,7 +68,7 @@ detect_drive() {
     if [[ -z "$DEVICE" ]]; then
         echo | tee -a "${LOG_FILE}"
         echo "Error: Unable to detect PS2 drive." | tee -a "${LOG_FILE}"
-        read -n 1 -s -r -p "Press any key to return to the main menu..."
+        read -n 1 -s -r -p "Press any key to return to the extras menu..."
         return 1
     fi
 
@@ -130,7 +86,7 @@ detect_drive() {
         else
             echo
             echo "Failed to unmount $mount_point. Please unmount manually." | tee -a "${LOG_FILE}"
-            read -n 1 -s -r -p "Press any key to return to the main menu..."
+            read -n 1 -s -r -p "Press any key to return to the extras menu..."
             return 1
         fi
     done
@@ -138,7 +94,7 @@ detect_drive() {
     if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc $DEVICE >> "${LOG_FILE}" 2>&1; then
         echo
         echo "Error: APA partition is broken on ${DEVICE}." | tee -a "${LOG_FILE}"
-        read -n 1 -s -r -p "Press any key to return to the main menu..."
+        read -n 1 -s -r -p "Press any key to return to the extras menu..."
         return 1
     else
         echo "PS2 HDD detected as $DEVICE" >> "${LOG_FILE}"
@@ -175,7 +131,7 @@ MOUNT_OPL() {
     echo "Mounting OPL partition..." >> "${LOG_FILE}"
 
     if ! mkdir -p "${OPL}" 2>>"${LOG_FILE}"; then
-        read -n 1 -s -r -p "Failed to create ${OPL}. Press any key to return to the main menu..."
+        read -n 1 -s -r -p "Failed to create ${OPL}. Press any key to return to the extras menu..."
         return 1
     fi
 
@@ -191,132 +147,14 @@ MOUNT_OPL() {
         error_msg "Error" "Failed to mount ${DEVICE}3"
     fi
 
-    # Create necessary folders if they don't exist
-    for folder in APPS ART CFG CHT LNG THM VMC CD DVD bbnl; do
-        dir="${OPL}/${folder}"
-        [[ -d "$dir" ]] || mkdir -p "$dir" || { 
-            error_msg "Error" "Failed to create $dir."
-        }
-    done
 }
 
 UNMOUNT_OPL() {
     sync
-    if ! sudo umount -l "${TOOLKIT_PATH}/OPL" >> "${LOG_FILE}" 2>&1; then
-        read -n 1 -s -r -p "Failed to unmount $DEVICE. Press any key to return to the main menu..."
+    if ! sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1; then
+        read -n 1 -s -r -p "Failed to unmount $DEVICE. Press any key to return to the extras menu..."
         return 1;
     fi
-}
-
-DOWNLOAD_BNUPDATE() {
-    # URL of the webpage
-    URL="https://archive.org/download/psbbn-definitive-english-patch-v2"
-    echo -n "Checking for latest version of the PSBBN Definitive English patch..." | tee -a "${LOG_FILE}"
-    echo | tee -a "${LOG_FILE}"
-
-    # Download the HTML of the page
-    HTML_FILE=$(mktemp)
-    wget -O "$HTML_FILE" "$URL" >> "${LOG_FILE}" 2>&1
-
-    # Extract .zip filenames from the HTML
-    COMBINED_LIST=$(grep -oP 'bnupdate-v[0-9]+\.[0-9]+\.tar.gz' "$HTML_FILE")
-
-    # Extract version numbers and sort them
-    VERSION_LIST=$(echo "$COMBINED_LIST" | \
-        grep -oP 'v[0-9]+\.[0-9]+' | \
-        sed 's/v//' | \
-        sort -V)
-
-    # Determine the latest version from the sorted list
-    LATEST_VERSION=$(echo "$VERSION_LIST" | tail -n 1)
-
-    if [ -z "$LATEST_VERSION" ]; then
-        echo "Could not find the latest version." | tee -a "${LOG_FILE}"
-        # If $LATEST_VERSION is empty, check for bnupdate.zip files
-        IMAGE_FILE=$(ls "${ASSETS_DIR}"/bnupdate*.tar.gz 2>/dev/null)
-        if [ -n "$IMAGE_FILE" ]; then
-            # If image file exists, set LATEST_FILE to the image file name
-            LATEST_FILE=$(basename "$IMAGE_FILE")
-            LATEST_VERSION=$(echo "$IMAGE_FILE" | sed -E 's/.*-v([0-9.]+)\.tar.gz/\1/')
-            echo "Found local file: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
-        else
-            rm -f "$HTML_FILE"
-            echo "Failed to download PSBBN update file. Aborting." | tee -a "${LOG_FILE}"
-            echo
-            read -n 1 -s -r -p "Press any key to return to the main menu..."
-            return 1
-        fi
-    else
-        # Set the default latest file based on remote version
-        LATEST_FILE="bnupdate-v${LATEST_VERSION}.tar.gz"
-        echo "Latest version of PSBBN Definitive English patch is v${LATEST_VERSION}" | tee -a "${LOG_FILE}"
-
-        # Check if any local file is newer than the remote version
-        IMAGE_FILE=$(ls "${ASSETS_DIR}"/bnupdate*.tar.gz 2>/dev/null | sort -V | tail -n1)
-        if [ -n "$IMAGE_FILE" ]; then
-            LOCAL_VERSION=$(echo "$IMAGE_FILE" | sed -E 's/.*-v([0-9.]+)\.tar.gz/\1/')
-            # Compare local vs remote version
-            if [ "$(printf '%s\n' "$LATEST_VERSION" "$LOCAL_VERSION" | sort -V | tail -n1)" != "$LATEST_VERSION" ]; then
-                LATEST_VERSION="$LOCAL_VERSION"
-                LATEST_FILE=$(basename "$IMAGE_FILE")
-                echo "Newer local file found: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
-            fi
-        fi
-    fi
-
-    echo
-    echo "Latest version: $LATEST_VERSION"
-    echo "Current version: $psbbn_version"
-    
-    if [ "$(printf '%s\n' "$LATEST_VERSION" "$psbbn_version" | sort -V | tail -n1)" = "$psbbn_version" ]; then
-        UNMOUNT_OPL
-        echo "You are already running the latest version" | tee -a "${LOG_FILE}"
-        echo
-        read -n 1 -s -r -p "Press any key to return to the main menu..."
-        return 1
-    fi
-
-    echo
-    echo "To finalize this update, you will need:"
-    echo
-    echo "- A FAT32-formatted USB drive, 128 GB or smaller"
-    echo "- A USB keyboard"
-    echo
-    read -n 1 -r -p "Do you wish to continue? [y/n] " choice
-    echo  # move to a new line after the user's input
-    echo
-    if [[ ! "$choice" =~ ^[Yy]$ ]]; then
-        read -n 1 -s -r -p "Update cancelled. Press any key to return to the main menu..."
-        return 1
-    fi
-    # Check if the latest file exists in ${ASSETS_DIR}
-    if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
-        echo "File ${LATEST_FILE} exists in ${ASSETS_DIR}." >> "${LOG_FILE}"
-        echo "Skipping download." >> "${LOG_FILE}"
-    else
-        # Check for and delete older files
-        for file in "${ASSETS_DIR}"/bnupdate*.tar.gz; do
-            if [[ -f "$file" && "$(basename "$file")" != "$LATEST_FILE" ]]; then
-                echo "Deleting old file: $file" | tee -a "${LOG_FILE}"
-                rm -f "$file"
-            fi
-        done
-
-        # Construct the full URL for the .zip file and download it
-        ZIP_URL="$URL/$LATEST_FILE"
-        echo "Downloading ${LATEST_FILE}..." | tee -a "${LOG_FILE}"
-        axel -n 8 -a "$ZIP_URL" -o "${ASSETS_DIR}"
-
-        # Check if the file was downloaded successfully
-        if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
-            echo "Download completed: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
-        else
-            echo "Download failed for ${LATEST_FILE}. Please check your internet connection and try again." | tee -a "${LOG_FILE}"
-            read -n 1 -s -r -p "Press any key to return to the main menu..."
-            return 1
-        fi
-    fi
-
 }
 
 hdd_osd_files_present() {
@@ -369,132 +207,14 @@ download_files() {
         else
             echo | tee -a "${LOG_FILE}"
             echo "Error: One or more files are missing after extraction." | tee -a "${LOG_FILE}"
-            read -n 1 -s -r -p "Press any key to return to the main menu..."
+            read -n 1 -s -r -p "Press any key to return to the extras menu..."
             return 1
         fi
     fi
 }
 
-# Function for Option 1 - Update PSBBN Software
-option_one() {
-    clear
-
-    if ! detect_drive; then
-        return
-    fi
-
-    MOUNT_OPL
-
-    version_check="2.10"
-    psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
-
-    # Compare using sort -V
-    if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
-        UNMOUNT_OPL
-        echo "Error: PSBBN Definitive Patch version lower than 2.10 cannot be updated."
-        echo "Please run the '02-PSBBN-Installer.sh' script to update to the latest version."
-        echo
-        read -n 1 -s -r -p "Press any key to return to the main menu..."
-        return
-    fi
-
-    if ! DOWNLOAD_BNUPDATE; then
-        return
-    fi
-
-    if [ "$psbbn_version" = "2.10" ]; then
-
-        download_files
-
-        COMMANDS="device ${DEVICE}\n"
-        COMMANDS+="mount __sysconf\n"
-        COMMANDS+="ls\n"
-        COMMANDS+="umount\n"
-        COMMANDS+="exit"
-        BBL_FOLDER=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" 2>/dev/null)
-        echo "$BBL_FOLDER" >> "${LOG_FILE}"
-
-        if echo "$BBL_FOLDER" | grep -q "PS2BBL/"; then
-            BBL="TRUE"
-            echo  >> "${LOG_FILE}"
-            echo "BBL is installed." >> "${LOG_FILE}"
-        else
-            BBL="FALSE"
-            echo >> "${LOG_FILE}"
-            echo "BBL not installed." >> "${LOG_FILE}"
-        fi
-
-        # Copy HDD-OSD files to __system
-        COMMANDS="device ${DEVICE}\n"
-        COMMANDS+="mount __system\n"
-        COMMANDS+="cd p2lboot\n"
-        COMMANDS+="lcd '${ASSETS_DIR}/kernel'\n"
-        COMMANDS+="rm vmlinux\n"
-        COMMANDS+="put vmlinux\n"
-        COMMANDS+="lcd '${ASSETS_DIR}/extras'\n"
-        
-        if [ "$BBL" = "TRUE" ]; then
-            COMMANDS+="rm PSBBN.ELF\n"
-            COMMANDS+="put PSBBN.ELF\n"
-        else
-            COMMANDS+="rm osdboot.elf\n"
-            COMMANDS+="put osdboot.elf\n"
-        fi
-        COMMANDS+="cd /\n"
-        COMMANDS+="umount\n"
-        COMMANDS+="exit"
-
-        # Pipe all commands to PFS Shell for mounting, copying, and unmounting
-        PFS_COMMANDS=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1)
-        if echo "$PFS_COMMANDS" | grep -q "Exit code is"; then
-            echo "Error: PFS Shell returned an error. See ${LOG_FILE}"
-            echo
-            read -n 1 -s -r -p "Press any key to return to the main menu..."
-            return
-        else
-            echo "PSBBN kernel and binary sucessfully updated!"
-        fi
-
-        cp "${ASSETS_DIR}/extras/PSBBN.ELF" "${TOOLKIT_PATH}/games/APPS" >> "${LOG_FILE}" 2>&1
-
-        if [ -d "${OPL}/APPS/PSBBN/" ]; then
-            echo "Copying PSBBN.ELF to ${OPL}/APPS/PSBBN/" >> "${LOG_FILE}"
-            cp "${ASSETS_DIR}/extras/PSBBN.ELF" "${OPL}/APPS/PSBBN/"
-        elif [ -d "${OPL}/APPS/BBNAVIGATOR/" ]; then
-            echo "Copying PSBBN.ELF to ${OPL}/APPS/BBNAVIGATOR/" >> "${LOG_FILE}"
-            cp "${ASSETS_DIR}/extras/PSBBN.ELF" "${OPL}/APPS/BBNAVIGATOR/"
-        fi
-    fi
-
-    if cp "${ASSETS_DIR}/$LATEST_FILE" "${TOOLKIT_PATH}/bnupdate.tar.gz"; then
-        echo "$LATEST_VERSION" > "${OPL}/version.txt"
-        echo "eng" >> "${OPL}/version.txt"
-    else
-        echo "Failed generate the update file."
-        echo
-        read -n 1 -s -r -p "Press any key to return to the main menu..."
-        return
-    fi
-
-    echo
-    echo "To complete the update:"
-    echo
-    echo "1. Copy '${TOOLKIT_PATH}/bnupdate.tar.gz' to a USB drive"
-    echo "2. Connect the HDD/SSD to your PS2 console"
-    echo "3. Connect the USB drive and a USB keyboard to the PS2 console"
-    echo "4. Turn on the console and hold any controller button at the "PlayStation 2" logo until Linux boots."
-    echo "5. Log in as 'root' — the password is 'password'"
-    echo "6. Type 'bnupdate' and press Enter to install the update"
-    echo "7. Type 'halt' and press Enter to shut down the console"
-
-    UNMOUNT_OPL
-    echo
-    read -n 1 -s -r -p "Press any key to return to the main menu..."
-
-}
-
 # Function for Option 2 - Install HDD-OSD
-option_two() {
+option_one() {
 
     clear
 
@@ -539,11 +259,11 @@ option_two() {
     echo "Please run '03-Game-Installer.sh' to add HDD-OSD to the PSBBN Game Channel and update the icons"
     echo "for your game collection."
     echo
-    read -n 1 -s -r -p "Press any key to return to the main menu..."
+    read -n 1 -s -r -p "Press any key to return to the extras menu..."
 }
 
 # Function for Option 3 - Install PlayStation 2 Basic Boot Loader (PS2BBL)
-option_three() {
+option_two() {
     clear
     
     if ! download_files; then
@@ -579,12 +299,12 @@ option_three() {
     echo | tee -a "${LOG_FILE}"
     echo "PS2BBL installed sucessfully."
     echo
-    read -n 1 -s -r -p "Press any key to return to the main menu..."
+    read -n 1 -s -r -p "Press any key to return to the extras menu..."
 
 }
 
 # Function for Option 4 - Uninstall PlayStation 2 Basic Boot Loader (PS2BBL)
-option_four() {
+option_three() {
     clear
 
     if ! download_files; then
@@ -618,38 +338,37 @@ option_four() {
     echo | tee -a "${LOG_FILE}"
     echo "PS2BBL sucessfully uninstalled."
     echo
-    read -n 1 -s -r -p "Press any key to return to the main menu..."
+    read -n 1 -s -r -p "Press any key to return to the extras menu..."
 }
 
 
 # Function to display the menu
 display_menu() {
     clear
+    cat << "EOF"
+                                     _____     _                 
+                                    |  ___|   | |                
+                                    | |____  _| |_ _ __ __ _ ___ 
+                                    |  __\ \/ / __| '__/ _` / __|
+                                    | |___>  <| |_| | | (_| \__ \
+                                    \____/_/\_\\__|_|  \__,_|___/
+                        
 
-    echo "                                     _____     _                 "
-    echo "                                    |  ___|   | |                "
-    echo "                                    | |____  _| |_ _ __ __ _ ___"
-    echo "                                    |  __\\ \\/ / __| '__/ _\` / __|"
-    echo "                                    | |___>  <| |_| | | (_| \\__ \\"
-    echo "                                    \\____/_/\\_\\\\__|_|  \\__,_|___/"                      
-    echo ""
-    echo "                                        Written by CosmicScale"
-    echo ""
-    echo ""
-    echo "     1) Update PSBBN Software"
-    echo "     2) Install HDD-OSD/Browser 2.0"
-    echo "     3) Install PlayStation 2 Basic Boot Loader (PS2BBL)"
-    echo "     4) Uninstall PlayStation 2 Basic Boot Loader (PS2BBL)"
-    echo "     q) Quit"
-    echo ""
-    echo ""
+
+                         1) Install HDD-OSD/Browser 2.0
+                         2) Install PlayStation 2 Basic Boot Loader (PS2BBL)
+                         3) Uninstall PlayStation 2 Basic Boot Loader (PS2BBL)
+
+                         b) Back to Main Menu
+
+EOF
 }
 
 # Main loop
 
 while true; do
     display_menu
-    read -p "     Select an option: " choice
+    read -p "                         Select an option: " choice
 
     case $choice in
         1)
@@ -661,15 +380,12 @@ while true; do
         3)
             option_three
             ;;
-        4)
-            option_four
-            ;;
-        q|Q)
+        b|B)
             break
             ;;
         *)
             echo
-            echo "     Invalid option, please try again."
+            echo "                         Invalid option, please try again."
             sleep 2
             ;;
     esac

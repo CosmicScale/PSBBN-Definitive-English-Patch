@@ -61,7 +61,7 @@ def process_files(folder, extensions):
 
                 command = (
                     f'echo "Converting {image} from .zso to .iso..." && '
-                    f"python3 ./helper/ziso.py -c 0 {shlex.quote(zso_path)} {shlex.quote(iso_path)}"
+                    f"python3 ./scripts/helper/ziso.py -c 0 {shlex.quote(zso_path)} {shlex.quote(iso_path)}"
                 )
 
                 try:
@@ -227,10 +227,10 @@ def main(arg1, arg2):
 
         # Set correct TitlesDB path based on output list name
         if games_list_path.endswith("ps2.list"):
-            gameid_file_path = "./helper/TitlesDB_PS2_English.csv"
+            gameid_file_path = "./scripts/helper/TitlesDB_PS2_English.csv"
             folders_to_scan = [('/DVD', ['.iso', '.zso']), ('/CD', ['.iso', '.zso'])]
         elif games_list_path.endswith("ps1.list"):
-            gameid_file_path = "./helper/TitlesDB_PS1_English.csv"
+            gameid_file_path = "./scripts/helper/TitlesDB_PS1_English.csv"
             folders_to_scan = [('/POPS', ['.vcd', '.VCD'])]
         else:
             print("Error: Output list must end with either 'ps2.list' or 'ps1.list'.")

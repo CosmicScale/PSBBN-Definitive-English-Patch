@@ -4,21 +4,7 @@ const readline = require('readline');
 const path = require('path');
 const { execSync } = require('child_process');
 
-// Check if Puppeteer is installed, and install it if not
-try {
-    require.resolve('puppeteer');
-} catch (e) {
-    console.log("Puppeteer not found. Installing...");
-    try {
-        execSync('npm install puppeteer', { stdio: 'inherit' });
-        console.log("Puppeteer installed successfully.");
-    } catch (installError) {
-        console.error("Failed to install Puppeteer. Ensure you have npm installed and try again.");
-        process.exit(1);
-    }
-}
-
-const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's installed
+const puppeteer = require('./scripts/node_modules/puppeteer'); // Import Puppeteer after ensuring it's installed
 
 (async () => {
     // Get the game ID from the command-line arguments
@@ -29,7 +15,7 @@ const puppeteer = require('puppeteer'); // Import Puppeteer after ensuring it's 
         process.exit(1); // Exit if no game ID is provided
     }
 
-    const csvFilePath = './helper/ArtDB.csv';
+    const csvFilePath = './scripts/helper/ArtDB.csv';
     const outputDir = './icons/art/tmp';
 
     // Ensure the output directory exists
