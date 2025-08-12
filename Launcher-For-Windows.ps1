@@ -10,13 +10,14 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.4.0"
+$version = "0.4.1"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
 $wslLabel = "PSBBN"
 
 # the name of the exfat volume created by the psbbn installer with apajail
+# this is used to attempt to detect which disks have an install of PSBBN
 $oplVolumeName = "OPL"
 
 # this make wsl commands output utf8 instead of utf16_LE
@@ -25,6 +26,7 @@ $env:WSL_UTF8 = 1
 # flag potentially raised when enabling features, signaling a reboot is necessary to finish the install
 $global:IsRestartRequired = $false
 
+# stores the disk number (obtained with Get-Disk) that was selected via diskPicker
 $global:selectedDisk = -1
 
 function main {
@@ -126,24 +128,28 @@ function main {
   Write-Host "`nHave fun exploring PSBBN!`n" -ForegroundColor Green
 }
 
+# print colored `[ OK ]`
 function printOK {
   Write-Host "    `t`t[ " -NoNewline
   Write-Host "OK" -NoNewline -ForegroundColor Green
   Write-Host " ]"
 }
 
+# print colored `[ NG ]`
 function printNG {
   Write-Host "`t`t[ " -NoNewline
   Write-Host "NG" -NoNewline -ForegroundColor Red
   Write-Host " ]"
 }
 
+# print colored `[ Restart required ]`
 function printRestartRequired {
   Write-Host "    `t`t[ " -NoNewline
   Write-Host "Restart required" -NoNewline -ForegroundColor Yellow
   Write-Host " ]"
 }
 
+# takes a feature as parameter and enable it if needed
 function enableFeature ($feature) {
   if (($null -ne $feature.FeatureName) -and ($feature.State -ne "Enabled")) {
     Write-Host "  └ Enabling" $feature.DisplayName "..." -NoNewline;
@@ -160,6 +166,7 @@ function enableFeature ($feature) {
   }
 }
 
+# prints the big psbbn logo and the version number
 function printTitle {
   Write-Host "
                      ______  _________________ _   _                       
@@ -178,13 +185,18 @@ function printTitle {
 "
 }
 
+# display the available disks and prompt user for choice
 function diskPicker {
   # list available disks and pick the one to be mounted
   $lineStart = $Host.UI.RawUI.CursorPosition.Y
   Write-Host "`nList of available disks:"
   $diskList = Get-Disk
   $disksWithOplVolume = detectOplVolume($diskList)
-  $diskList | Sort -Property Number | Format-Table -Property Number, FriendlyName, @{Label="Size";Expression={("{0:N2}" -f ($_.Size / 1GB)).ToString() + " GB"}}, @{Label="";Expression={if ($disksWithOplVolume -contains $_.Number) { "<- PSBBN install detected on this disk"}}}
+  $diskList | Sort -Property Number | Format-Table -Property `
+    Number, `
+    @{Label="Name";Expression={$_.FriendlyName}}, `
+    @{Label="Size";Expression={("{0:N2}" -f ($_.Size / 1GB)).ToString() + " GB"}}, `
+    @{Label="";Expression={if ($disksWithOplVolume -contains $_.Number) { "<- PSBBN install detected on this disk" } else { "   " }}}
 
   $availableNumbers = $diskList | Foreach-Object {$_.Number}
 
@@ -198,6 +210,8 @@ function diskPicker {
   }
 }
 
+# handles the input logic of the diskpicker
+# this function calls itself recursively as long an invalid input is provided
 function handleDiskSelection ($availableNumbers) {
   Write-Host "Select a disk to use by typing its number or press `"r`" to refresh the list: " -NoNewline
   $keyPressed = $Host.UI.RawUI.ReadKey("IncludeKeyDown")
@@ -222,6 +236,7 @@ function handleDiskSelection ($availableNumbers) {
   return $selectedDisk
 }
 
+# detects if bios-level virtualization is enabled or not, and display messages
 function detectVirtualization {
   Write-Host "Checking if virtualization is enabled in BIOS..." -NoNewline
   
@@ -244,6 +259,7 @@ function detectVirtualization {
   }
 }
 
+# handles the error code returned by `wsl --mount` or wsl --unmount` and display human friendly messages
 function handleMountOutput ($mountOut) {
   if ($mountOut -like "*Wsl/Service/AttachDisk/MountDisk/WSL_E_DISK_ALREADY_ATTACHED*") {
     # in the case where the disk was already attached, we just carry on and treat it as a happy path
@@ -263,6 +279,7 @@ function handleMountOutput ($mountOut) {
   printOK
 }
 
+# checks if the script is running as admin, and if not launches itself in powershell instance running as admin
 function restartAsAdminIfNeeded {
   if (([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     # already running as admin, so we just carry on
@@ -282,6 +299,7 @@ function restartAsAdminIfNeeded {
   exit
 }
 
+# handles the folder picker and return a wsl compatible path as a string
 function getTargetFolder {
   Write-Host "`nNext you will be asked to pick a folder where to put all your games, movies, photos, and music." -ForegroundColor Yellow
 
@@ -330,6 +348,7 @@ https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
   return "/mnt/$driveLetter/$path"
 }
 
+# clears $count lines with spaces and move the cursor back
 function clearLines ($count) {
   $currentLine  = $Host.UI.RawUI.CursorPosition.Y
   $consoleWidth = $Host.UI.RawUI.BufferSize.Width
@@ -342,6 +361,8 @@ function clearLines ($count) {
   [Console]::SetCursorPosition(0,($CurrentLine - $count))
 }
 
+# walks through each disk -> partition -> volume to find which disks have
+# volumes named $oplVolumeName, and return an array of disk numbers
 function detectOplVolume ($diskList) {
   $disksWithOplVolume = @()
   $diskList | ForEach-Object {
