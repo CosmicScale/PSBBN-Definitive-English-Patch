@@ -10,11 +10,14 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.3.0"
+$version = "0.4.0"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
 $wslLabel = "PSBBN"
+
+# the name of the exfat volume created by the psbbn installer with apajail
+$oplVolumeName = "OPL"
 
 # this make wsl commands output utf8 instead of utf16_LE
 $env:WSL_UTF8 = 1
@@ -22,12 +25,12 @@ $env:WSL_UTF8 = 1
 # flag potentially raised when enabling features, signaling a reboot is necessary to finish the install
 $global:IsRestartRequired = $false
 
+$global:selectedDisk = -1
+
 function main {
   clear
   printTitle
-  Write-Host "Prepare Windows to run the PSBBN scripts."
-  Write-Host "Make sure the drive you want to use is connected and press a key to continue.`n" -ForegroundColor Green
-  $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+  Write-Host "Prepare Windows to run the PSBBN scripts.`n"
 
   # check if mandatory windows features are enabled
   Write-Host "Checking if the mandatory features are enabled..." -NoNewline
@@ -93,15 +96,12 @@ function main {
     Write-Host "------- Linux magic finishes ---------`n"
   }
   
-  # list available disks and pick the one to be mounted
-  Write-Host "`nList of available disks:"
-  $diskList = Get-Disk
-  $diskList | Sort -Property Number | Format-Table -Property Number, FriendlyName, @{Label="Size";Expression={("{0:N2}" -f ($_.Size / 1GB)).ToString() + " GB"}}
-  $selectedDisk = "\\.\PHYSICALDRIVE" + (handleDiskSelection($diskList.Count - 1))
+  # prompt user to choose a disk
+  diskPicker
   
   # mount the disk
-  Write-Host "`nMounting $($selectedDisk) on wsl...`t`t" -NoNewline
-  $mountOut = wsl -d $wslLabel --mount $selectedDisk --bare
+  Write-Host "`nMounting \\.\PHYSICALDRIVE$selectedDisk on wsl...`t`t" -NoNewline
+  $mountOut = wsl -d $wslLabel --mount "\\.\PHYSICALDRIVE$selectedDisk" --bare
   handleMountOutput($mountOut)
   
   # give the user the opportunity to put games/homebrew in the PSBBN folder
@@ -109,17 +109,20 @@ function main {
   clear
   
   # run PSBBN regular steps
-  wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- ./PSBBN-Definitive-Patch.sh $path
-  
+  wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- ./PSBBN-Definitive-Patch.sh -wsl $diskList[$selectedDisk].SerialNumber $path
+
   # clear the terminal to get rid of the wsl-run scripts
   clear
   printTitle
-  
+
   # unmount the disk before exiting
-  Write-Host "Unmounting $($selectedDisk)...`t`t" -NoNewline
+  Write-Host "Unmounting \\.\PHYSICALDRIVE$selectedDisk...`t`t" -NoNewline
   $mountOut = wsl -d $wslLabel --unmount $selectedDisk
   handleMountOutput($mountOut)
   
+  # ensures wsl doesnt run out of resources if this script is ran repeatedly
+  wsl --shutdown
+
   Write-Host "`nHave fun exploring PSBBN!`n" -ForegroundColor Green
 }
 
@@ -175,19 +178,47 @@ function printTitle {
 "
 }
 
-function handleDiskSelection ($maxDiskNumber) {
-  Write-Host "Select a disk to use by typing its number (between 0 and $($maxDiskNumber)): " -NoNewline
+function diskPicker {
+  # list available disks and pick the one to be mounted
+  $lineStart = $Host.UI.RawUI.CursorPosition.Y
+  Write-Host "`nList of available disks:"
+  $diskList = Get-Disk
+  $disksWithOplVolume = detectOplVolume($diskList)
+  $diskList | Sort -Property Number | Format-Table -Property Number, FriendlyName, @{Label="Size";Expression={("{0:N2}" -f ($_.Size / 1GB)).ToString() + " GB"}}, @{Label="";Expression={if ($disksWithOplVolume -contains $_.Number) { "<- PSBBN install detected on this disk"}}}
+
+  $availableNumbers = $diskList | Foreach-Object {$_.Number}
+
+  $selectedDisk = handleDiskSelection($availableNumbers)
+
+  if ($selectedDisk -eq "r") {
+    clearLines($Host.UI.RawUI.CursorPosition.Y - $lineStart)
+    diskPicker
+  } else {
+    $global:selectedDisk = $selectedDisk
+  }
+}
+
+function handleDiskSelection ($availableNumbers) {
+  Write-Host "Select a disk to use by typing its number or press `"r`" to refresh the list: " -NoNewline
   $keyPressed = $Host.UI.RawUI.ReadKey("IncludeKeyDown")
   try {
     $selectedDisk = [int][string]$keyPressed.Character
   } catch {
-      $selectedDisk = -1
+    $selectedDisk = -1
   }
-  if (($selectedDisk -lt 0) -or ($selectedDisk -gt $maxDiskNumber)) {
-    Write-Host " - Invalid input, try again."
-    handleDiskSelection($maxDiskNumber)
+
+  if ($keyPressed.Character -eq "r") {
+    Write-Host $(" " * 45) -NoNewline
+    return "r"
   }
-  Write-Host
+
+  if ((-Not ($availableNumbers -contains $selectedDisk)) -or ($keyPressed.VirtualKeyCode -eq 13)) {
+    Write-Host " - Invalid input, try again.`r" -NoNewline -ForegroundColor Red
+    $selectedDisk = handleDiskSelection($maxDiskNumber)
+  } else {
+    # erase the "invalid output" message
+    Write-Host $(" " * 45) -NoNewline
+  }
   return $selectedDisk
 }
 
@@ -280,7 +311,7 @@ function getTargetFolder {
     }
   })
 
-  Write-Host "The following path was chosen: $pickedPath" -ForegroundColor Green
+  Write-Host "`nThe following path was chosen: $pickedPath" -ForegroundColor Green
   Write-Host "
 Before you continue, you can fill this folder with your games and other media:
     • put PS2 games in /DVD or /CD (.iso or .zso files)
@@ -297,6 +328,34 @@ https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
   pause
 
   return "/mnt/$driveLetter/$path"
+}
+
+function clearLines ($count) {
+  $currentLine  = $Host.UI.RawUI.CursorPosition.Y
+  $consoleWidth = $Host.UI.RawUI.BufferSize.Width
+
+  $i = 0
+  for ($i; $i -le $count; $i++) {
+      [Console]::SetCursorPosition(0,($currentLine - $i))
+      [Console]::Write("{0,-$consoleWidth}" -f " ")
+  }
+  [Console]::SetCursorPosition(0,($CurrentLine - $count))
+}
+
+function detectOplVolume ($diskList) {
+  $disksWithOplVolume = @()
+  $diskList | ForEach-Object {
+    $diskNumber = $_.Number
+    Get-Partition -disknumber $diskNumber | ForEach-Object {
+      Get-Volume -partition $_ | ForEach-Object {
+        $_.FileSystemLabel.GetType()
+        if ($_.FileSystemLabel -eq $oplVolumeName) {
+          $disksWithOplVolume += $diskNumber
+        }
+      }
+    } | Out-Null
+  }
+  return $disksWithOplVolume
 }
 
 restartAsAdminIfNeeded
