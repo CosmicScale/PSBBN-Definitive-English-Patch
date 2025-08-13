@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.4.1"
+$version = "0.4.2"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -19,6 +19,9 @@ $wslLabel = "PSBBN"
 # the name of the exfat volume created by the psbbn installer with apajail
 # this is used to attempt to detect which disks have an install of PSBBN
 $oplVolumeName = "OPL"
+
+# the specific git branch to be checked out
+$gitBranch = "test"
 
 # this make wsl commands output utf8 instead of utf16_LE
 $env:WSL_UTF8 = 1
@@ -92,7 +95,15 @@ function main {
   wsl -d $wslLabel -- type git `&`> /dev/null `|`| `(sudo apt update `&`& sudo apt -y install git`)
   
   # clone the PSBBN repo into ~, or pull if it's already there
-  wsl -d $wslLabel --cd "~" -- [ -d PSBBN-Definitive-English-Patch/.git ] `&`& `(cd PSBBN-Definitive-English-Patch/ `&`& git pull --ff-only`) `|`| git clone -b test --single-branch https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
+  Write-Host
+  wsl -d $wslLabel --cd "~" -- [ -d PSBBN-Definitive-English-Patch/.git ] `
+    `&`& `( `
+      cd PSBBN-Definitive-English-Patch/ `
+      `&`& git fetch origin $gitBranch `
+      `&`& git checkout $gitBranch `
+      `&`& git pull --ff-only `
+    `) `
+    `|`| git clone -b $gitBranch https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
   
   if (-Not ($isWslInstalled)) {
     Write-Host "------- Linux magic finishes ---------`n"
@@ -111,7 +122,8 @@ function main {
   clear
   
   # run PSBBN regular steps
-  wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- ./PSBBN-Definitive-Patch.sh -wsl $diskList[$selectedDisk].SerialNumber $path
+  wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- `
+    ./PSBBN-Definitive-Patch.sh -wsl $diskList[$selectedDisk].SerialNumber $path
 
   # clear the terminal to get rid of the wsl-run scripts
   clear
