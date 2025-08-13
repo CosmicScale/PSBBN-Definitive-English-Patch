@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.4.2"
+$version = "0.4.3"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -22,6 +22,9 @@ $oplVolumeName = "OPL"
 
 # the specific git branch to be checked out
 $gitBranch = "test"
+
+# in case $gitBranch no longer exists on the remote, use this as fallback
+$fallbackGitBranch = "main"
 
 # this make wsl commands output utf8 instead of utf16_LE
 $env:WSL_UTF8 = 1
@@ -94,6 +97,11 @@ function main {
   # install git if it is missing
   wsl -d $wslLabel -- type git `&`> /dev/null `|`| `(sudo apt update `&`& sudo apt -y install git`)
   
+  # check if the git branch exists on the remote, and if not, use the fallback
+  if (-Not (wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- git branch -r --list origin/$gitBranch)) {
+    $gitBranch = $fallbackGitBranch
+  }
+
   # clone the PSBBN repo into ~, or pull if it's already there
   Write-Host
   wsl -d $wslLabel --cd "~" -- [ -d PSBBN-Definitive-English-Patch/.git ] `
@@ -108,7 +116,7 @@ function main {
   if (-Not ($isWslInstalled)) {
     Write-Host "------- Linux magic finishes ---------`n"
   }
-  
+
   # prompt user to choose a disk
   diskPicker
   
