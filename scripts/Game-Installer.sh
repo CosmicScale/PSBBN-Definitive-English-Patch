@@ -25,6 +25,17 @@ PS1_LIST="${TOOLKIT_PATH}/scripts/tmp/ps1.list"
 PS2_LIST="${TOOLKIT_PATH}/scripts/tmp/ps2.list"
 ALL_GAMES="${TOOLKIT_PATH}/scripts/tmp/master.list"
 
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
+    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
+    echo "and clone the main repository."
+    echo
+    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
+    rm -rf "${TOOLKIT_PATH}/scripts"
+    echo
+fi
+
 path_arg="$1"
 
 prevent_sleep_start() {
@@ -91,15 +102,15 @@ clean_up() {
         fi
     done
 
-    # Remove all directories inside ${GAMES_PATH}/APPS in reverse sorted order
-    find "${GAMES_PATH}/APPS" -mindepth 1 -maxdepth 1 -type d | sort -r | while IFS= read -r dir; do
+    # Remove all directories inside ${GAMES_PATH}/APPS
+    find "${GAMES_PATH}/APPS" -mindepth 1 -maxdepth 1 -type d | while IFS= read -r dir; do
         sudo rm -rf -- "$dir"
     done
 
     sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1
 
     # Remove listed files
-    sudo rm -rf "${ARTWORK_DIR}/tmp"/* "${ICONS_DIR}/ico/tmp/"* "${TOOLKIT_PATH}/scripts/tmp/"* 2>>"$LOG_FILE" \
+    sudo rm -rf "${ARTWORK_DIR}/tmp" "${ICONS_DIR}/ico/tmp" "${TOOLKIT_PATH}/scripts/tmp" 2>>"$LOG_FILE" \
         || { echo "Error: Cleanup failed. See ${LOG_FILE} for details."; exit 1; }
 }
 
@@ -129,11 +140,11 @@ error_msg() {
     echo
     if [ "$type" = "Error" ]; then
         sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1
-        read -n 1 -s -r -p "Press any key to return to the main menu..."
+        read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
         echo
         exit 1;
     else
-        read -n 1 -s -r -p "Press any key to continue..."
+        read -n 1 -s -r -p "Press any key to continue..." </dev/tty
         echo
     fi
 }
@@ -1064,11 +1075,11 @@ create_icon_sys() {
 PS2X
 title0=$title
 title1=$publisher
-bgcola=0
-bgcol0=0,0,0
-bgcol1=0,0,0
-bgcol2=0,0,0
-bgcol3=0,0,0
+bgcola=58
+bgcol0=0,3,43
+bgcol1=0,0,10
+bgcol2=1,0,9
+bgcol3=0,1,19
 lightdir0=1.0,-1.0,1.0
 lightdir1=-1.0,1.0,-1.0
 lightdir2=0.0,0.0,0.0
@@ -1164,6 +1175,8 @@ echo >> "${LOG_FILE}"
 echo "Tootkit path: $TOOLKIT_PATH" >> "${LOG_FILE}"
 echo  >> "${LOG_FILE}"
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
+echo >> "${LOG_FILE}"
+echo "Path: $path_arg" >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 
 clear
@@ -1329,9 +1342,9 @@ while true; do
 done
 
 if [ "$INSTALL_TYPE" = "sync" ] && \
-   ! find "${GAMES_PATH}/POPS" -maxdepth 1 -type f -iname "*.vcd" | grep -q . && \
-   ! find "${GAMES_PATH}/CD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) | grep -q . && \
-   ! find "${GAMES_PATH}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) | grep -q .; then
+   ! find "${GAMES_PATH}/POPS" -maxdepth 1 -type f -iname "*.vcd" -print -quit | grep -q . && \
+   ! find "${GAMES_PATH}/CD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) -print -quit | grep -q . && \
+   ! find "${GAMES_PATH}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) -print -quit | grep -q .; then
     echo
     echo "Warning: No games found in the games folder: ${GAMES_PATH}"
     echo "All games on the PS2 drive will be deleted."
@@ -1370,12 +1383,72 @@ while true; do
     esac
 done
 
+ps1_games_found=false
+
+# Only populate ps1_games if INSTALL_TYPE=copy
+if [ "$INSTALL_TYPE" = "copy" ]; then
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="mount __.POPS\n"
+    COMMANDS+="ls -l\n"
+    COMMANDS+="umount\n"
+    COMMANDS+="exit"
+    ps1_games=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" 2>/dev/null)
+    if echo "$ps1_games" | grep -qi '\.vcd$'; then
+        ps1_games_found=true
+    fi
+fi
+
+# Check conditions for sync or copy
+if { [ "$INSTALL_TYPE" = "sync" ] && find "${GAMES_PATH}/POPS" -maxdepth 1 -type f -iname "*.vcd" -print -quit 2>/dev/null | grep -q .; } \
+   || { [ "$INSTALL_TYPE" = "copy" ] && { find "${GAMES_PATH}/POPS" -maxdepth 1 -type f -iname "*.vcd" -print -quit 2>/dev/null | grep -q . || [ "$ps1_games_found" = true ]; }; }; then
+    
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="mount __common\n"
+    COMMANDS+="cd POPS\n"
+    COMMANDS+="lcd '${ASSETS_DIR}/POPStarter'\n"
+
+    SPLASH
+    echo "Would you like to enable 'HDTVFIX' for PS1 games?"
+    echo
+    echo "Enable this if your TV cannot display 240p and PS1 games show a blank screen."
+    echo
+    while true; do
+        read -p "Yes or No (y/n): " HDTVFIX
+        case "$HDTVFIX" in
+            [Yy])
+                COMMANDS+="rm CHEATS.TXT\n"
+                COMMANDS+="put CHEATS.TXT\n"
+                break
+                ;;
+            [Nn])
+                COMMANDS+="rm CHEATS.TXT\n"
+                break
+                ;;
+            *)
+                echo
+                echo "Please enter y or n."
+                ;;
+        esac
+    done
+
+    COMMANDS+="umount\n"
+    COMMANDS+="exit"
+    PFS_COMMANDS
+fi
+
 SPLASH
 
-echo "PS2 drive detected: $DEVICE" | tee -a "${LOG_FILE}"
-echo "Games folder: $GAMES_PATH" | tee -a "${LOG_FILE}"
-echo "Install type: $DESC1" | tee -a "${LOG_FILE}"
-echo "Game launcher: $DESC2" | tee -a "${LOG_FILE}"
+echo "PS2 Drive Detected: $DEVICE" | tee -a "${LOG_FILE}"
+echo "Games Folder: $GAMES_PATH" | tee -a "${LOG_FILE}"
+echo "Install Type: $DESC1" | tee -a "${LOG_FILE}"
+echo "Game Launcher: $DESC2" | tee -a "${LOG_FILE}"
+if [ -n "$HDTVFIX" ]; then
+    case "$HDTVFIX" in
+        [Yy]) HDTVFIX="Yes" ;;
+        [Nn]) HDTVFIX="No" ;;
+    esac
+    echo "HDTV fix for PS1 Games: $HDTVFIX"
+fi
 echo
 read -n 1 -s -r -p "Press any key to continue..."
 echo
@@ -1767,6 +1840,8 @@ else
             echo "Created: $dir/del.ico" | tee -a "${LOG_FILE}"
         elif [[ "$title_id" == "BBNAVIGATOR" ]]; then
             cp "${ICONS_DIR}/ico/psbbn.ico" "$dir/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
+            cp "${ICONS_DIR}/ico/psbbn-del.ico" "$dir/del.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
+            cp 
             echo "Created: $dir/list.ico" | tee -a "${LOG_FILE}"
         elif [[ "$title_id" == "HDDOSD" ]]; then
             cp "${ICONS_DIR}/ico/hdd-osd.ico" "$dir/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
@@ -2484,5 +2559,5 @@ rm -f "$hdl_output"
 echo | tee -a "${LOG_FILE}"
 echo "Game installer script complete." | tee -a "${LOG_FILE}"
 echo
-read -n 1 -s -r -p "Press any key to return to the main menu..."
+read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
 echo

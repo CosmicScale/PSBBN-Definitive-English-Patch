@@ -11,6 +11,17 @@ TOOLKIT_PATH="$(pwd)"
 HELPER_DIR="${TOOLKIT_PATH}/scripts/helper"
 LOG_FILE="${TOOLKIT_PATH}/logs/setup.log"
 
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
+    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
+    echo "and clone the main repository."
+    echo
+    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
+    rm -rf "${TOOLKIT_PATH}/scripts"
+    echo
+fi
+
 # Initialize variable
 wsl=false
 
@@ -33,7 +44,7 @@ error_msg() {
   [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
   [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
   echo
-  read -n 1 -s -r -p "Press any key to exit..."
+  read -n 1 -s -r -p "Press any key to exit..." </dev/tty
   echo
   exit 1
 }
@@ -77,7 +88,7 @@ git_update() {
                 fi
                 echo
                 echo "The repository has been successfully updated." | tee -a "${LOG_FILE}"
-                read -n 1 -s -r -p "Press any key to exit, then run the script again."
+                read -n 1 -s -r -p "Press any key to exit, then run the script again." </dev/tty
                 echo
                 exit 0
             fi
@@ -92,7 +103,6 @@ check_required_files() {
     local required_files=(
         "./scripts/Extras.sh"
         "./scripts/Game-Installer.sh"
-        "./scripts/Media-Installer.sh"
         "./scripts/PSBBN-Installer.sh"
         "./scripts/Setup.sh"
         "./scripts/helper/AppDB.csv"
@@ -106,13 +116,11 @@ check_required_files() {
         "./scripts/helper/mkfs.ext2"
         "./scripts/helper/mkfs.vfat"
         "./scripts/helper/mkswap"
-        "./scripts/helper/music-installer.py"
         "./scripts/helper/PFS Fuse.elf"
         "./scripts/helper/PFS Shell.elf"
         "./scripts/helper/PS2 APA Header Checksum Fixer.elf"
         "./scripts/helper/ps2iconmaker.sh"
         "./scripts/helper/PSU Extractor.elf"
-        "./scripts/helper/sqlite"
         "./scripts/helper/TitlesDB_PS1_English.csv"
         "./scripts/helper/TitlesDB_PS2_English.csv"
         "./scripts/helper/txt_to_icon_sys.py"
@@ -241,9 +249,9 @@ option_three() {
 
 option_four() {
     if [ "$wsl" = "true" ]; then
-        "${TOOLKIT_PATH}/scripts/Media-Installer.sh" $path_arg
+        exit 0
     else
-        "${TOOLKIT_PATH}/scripts/Media-Installer.sh"
+        exit 0
     fi
 }
 
@@ -271,7 +279,7 @@ ______  _________________ _   _  ______      __ _       _ _   _            _____
                                      1) Install PSBBN
                                      2) Update PSBBN Software
                                      3) Install Games
-                                     4) Install Media
+                                     4)
                                      5) Optional Extras
                                      
                                      q) Quit
@@ -300,6 +308,10 @@ echo >> "${LOG_FILE}"
 echo "Tootkit path: $TOOLKIT_PATH" >> "${LOG_FILE}"
 echo  >> "${LOG_FILE}"
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
+echo >> "${LOG_FILE}"
+echo "WSL: $wsl" >> "${LOG_FILE}"
+echo "Disk Serial: $serialnumber" >> "${LOG_FILE}"
+echo "Path: $path_arg" >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 
 if [[ "$(uname -m)" != "x86_64" ]]; then

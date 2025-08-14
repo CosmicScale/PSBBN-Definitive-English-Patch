@@ -7,6 +7,17 @@ ASSETS_DIR="${TOOLKIT_PATH}/scripts/assets"
 OPL="${TOOLKIT_PATH}/scripts/storage/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/extras.log"
 
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
+    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
+    echo "and clone the main repository."
+    echo
+    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
+    rm -rf "${TOOLKIT_PATH}/scripts"
+    echo
+fi
+
 path_arg="$1"
 
 copy_log() {
@@ -29,11 +40,11 @@ error_msg() {
     [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
     echo
     if [ "$type" = "Error" ]; then
-        read -n 1 -s -r -p "Press any key to exit..."
+        read -n 1 -s -r -p "Press any key to exit..." </dev/tty
         echo
         exit 1;
     else
-        read -n 1 -s -r -p "Press any key to continue..."
+        read -n 1 -s -r -p "Press any key to continue..." </dev/tty
         echo
     fi
 }
@@ -50,7 +61,7 @@ if [ $? -ne 0 ]; then
     if [ $? -ne 0 ]; then
         echo
         echo "Error: Cannot to create log file."
-        read -n 1 -s -r -p "Press any key to exit..."
+        read -n 1 -s -r -p "Press any key to exit..." </dev/tty
         echo
         exit 1
     fi
@@ -68,7 +79,7 @@ detect_drive() {
     if [[ -z "$DEVICE" ]]; then
         echo | tee -a "${LOG_FILE}"
         echo "Error: Unable to detect PS2 drive." | tee -a "${LOG_FILE}"
-        read -n 1 -s -r -p "Press any key to return to the extras menu..."
+        read -n 1 -s -r -p "Press any key to return to the extras menu..." </dev/tty
         return 1
     fi
 
@@ -86,7 +97,7 @@ detect_drive() {
         else
             echo
             echo "Failed to unmount $mount_point. Please unmount manually." | tee -a "${LOG_FILE}"
-            read -n 1 -s -r -p "Press any key to return to the extras menu..."
+            read -n 1 -s -r -p "Press any key to return to the extras menu..." </dev/tty
             return 1
         fi
     done
@@ -94,7 +105,7 @@ detect_drive() {
     if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc $DEVICE >> "${LOG_FILE}" 2>&1; then
         echo
         echo "Error: APA partition is broken on ${DEVICE}." | tee -a "${LOG_FILE}"
-        read -n 1 -s -r -p "Press any key to return to the extras menu..."
+        read -n 1 -s -r -p "Press any key to return to the extras menu..." </dev/tty
         return 1
     else
         echo "PS2 HDD detected as $DEVICE" >> "${LOG_FILE}"
@@ -131,7 +142,7 @@ MOUNT_OPL() {
     echo "Mounting OPL partition..." >> "${LOG_FILE}"
 
     if ! mkdir -p "${OPL}" 2>>"${LOG_FILE}"; then
-        read -n 1 -s -r -p "Failed to create ${OPL}. Press any key to return to the extras menu..."
+        read -n 1 -s -r -p "Failed to create ${OPL}. Press any key to return to the extras menu..." </dev/tty
         return 1
     fi
 
@@ -152,7 +163,7 @@ MOUNT_OPL() {
 UNMOUNT_OPL() {
     sync
     if ! sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1; then
-        read -n 1 -s -r -p "Failed to unmount $DEVICE. Press any key to return to the extras menu..."
+        read -n 1 -s -r -p "Failed to unmount $DEVICE. Press any key to return to the extras menu..." </dev/tty
         return 1;
     fi
 }
@@ -207,7 +218,7 @@ download_files() {
         else
             echo | tee -a "${LOG_FILE}"
             echo "Error: One or more files are missing after extraction." | tee -a "${LOG_FILE}"
-            read -n 1 -s -r -p "Press any key to return to the extras menu..."
+            read -n 1 -s -r -p "Press any key to return to the extras menu..." </dev/tty
             return 1
         fi
     fi
@@ -259,7 +270,7 @@ option_one() {
     echo "Please run '03-Game-Installer.sh' to add HDD-OSD to the PSBBN Game Channel and update the icons"
     echo "for your game collection."
     echo
-    read -n 1 -s -r -p "Press any key to return to the extras menu..."
+    read -n 1 -s -r -p "Press any key to return to the extras menu..." </dev/tty
 }
 
 # Function for Option 3 - Install PlayStation 2 Basic Boot Loader (PS2BBL)
@@ -299,7 +310,7 @@ option_two() {
     echo | tee -a "${LOG_FILE}"
     echo "PS2BBL installed sucessfully."
     echo
-    read -n 1 -s -r -p "Press any key to return to the extras menu..."
+    read -n 1 -s -r -p "Press any key to return to the extras menu..." </dev/tty
 
 }
 
@@ -338,7 +349,7 @@ option_three() {
     echo | tee -a "${LOG_FILE}"
     echo "PS2BBL sucessfully uninstalled."
     echo
-    read -n 1 -s -r -p "Press any key to return to the extras menu..."
+    read -n 1 -s -r -p "Press any key to return to the extras menu..." </dev/tty
 }
 
 

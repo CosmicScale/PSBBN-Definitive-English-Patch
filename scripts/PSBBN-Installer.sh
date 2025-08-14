@@ -10,6 +10,17 @@ STORAGE_DIR="${SCRIPTS_DIR}/storage"
 OPL="${STORAGE_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/PSBBN-installer.log"
 
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
+    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
+    echo "and clone the main repository."
+    echo
+    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
+    rm -rf "${TOOLKIT_PATH}/scripts"
+    echo
+fi
+
 serialnumber="$2"
 path_arg="$3"
 
@@ -46,7 +57,7 @@ error_msg() {
     [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
     [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
     echo
-    read -n 1 -s -r -p "Press any key to return to the main menu..."
+    read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
     echo
     if [[ -n "$path_arg" ]]; then
         cp "${LOG_FILE}" "$path_arg" > /dev/null 2>&1
@@ -226,7 +237,7 @@ if [ $? -ne 0 ]; then
     if [ $? -ne 0 ]; then
         echo
         echo "Error: Cannot to create log file."
-        read -n 1 -s -r -p "Press any key to return to the main menu..."
+        read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
         echo
         exit 1
     fi
@@ -236,9 +247,14 @@ cd "${TOOLKIT_PATH}"
 
 date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
+echo "Tootkit path: $TOOLKIT_PATH" >> "${LOG_FILE}"
+echo  >> "${LOG_FILE}"
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
 echo >> "${LOG_FILE}"
-echo "Path set to: $TOOLKIT_PATH" >> "${LOG_FILE}"
+echo "Type: $MODE" >> "${LOG_FILE}"
+echo "Disk Serial: $serialnumber" >> "${LOG_FILE}"
+echo "Path: $path_arg" >> "${LOG_FILE}"
+echo >> "${LOG_FILE}"
 
 clean_up
 trap 'echo; exit 130' INT
@@ -291,7 +307,7 @@ EOF
                 else
                     echo "Aborted." | tee -a "${LOG_FILE}"
                     echo
-                    read -n 1 -s -r -p "Press any key to return to the main menu..."
+                    read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
                     echo
                     exit 1
                 fi
@@ -417,7 +433,7 @@ if [ "$MODE" = "update" ]; then
         echo
         echo "You are already running the latest version. No need to update." | tee -a "${LOG_FILE}"
         echo
-        read -n 1 -s -r -p "Press any key to return to the main menu..."
+        read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
         echo
         exit 0
     fi
@@ -591,7 +607,7 @@ if [ "$MODE" = "install" ]; then
     PFS_COMMANDS
 fi
 
-echo -n "Installing PSBBN files..." | tee -a "${LOG_FILE}"
+echo -n "Installing PSBBN..." | tee -a "${LOG_FILE}"
 
 mapper_probe
 mount_cfs
@@ -700,8 +716,10 @@ if [ "$MODE" = "install" ]; then
     echo "PSBBN successfully installed." | tee -a "${LOG_FILE}"
 else
     echo "PSBBN successfully updated." | tee -a "${LOG_FILE}"
+    echo
+    echo "Now connect the drive to your PS2 console and boot into PSBBN to finish the installation."
 fi
 echo
-read -n 1 -s -r -p "Press any key to return to the main menu..."
+read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
 echo
 
