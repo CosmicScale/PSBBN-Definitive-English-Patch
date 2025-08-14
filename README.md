@@ -369,6 +369,63 @@ When complete, don’t forget to unmount the drive in PowerShell, replacing `x` 
 ```
 wsl --unmount \\.\PHYSICALDRIVEx
 ```
+## Using Nix
+
+The Nix flake can be used to automatically set up the environment. The setup script `01-Setup.sh` is therefore not needed if nix is used. Do **not** try to execute the setup script when using nix. all tools and scripts are available through `nix run` or `nix develop`.
+
+---
+
+### Running scripts directly
+
+When you're in the root of this project, you can run the available scripts using `nix run`:
+
+```bash
+nix run .#psbbn-installer
+```
+
+Sets up the hard drive and installs PSBBN.
+
+```bash
+nix run .#game-installer
+```
+
+Adds or syncs games to the prepared hard drive.
+
+```bash
+nix run .#extras
+```
+
+Applies additional patches or tools.
+
+---
+
+### Development shell
+
+To enter a shell environment where the scripts and required tools are available:
+
+```bash
+nix develop
+```
+
+Once inside the shell, you can run the scripts as regular commands:
+
+```bash
+psbbn-installer
+game-installer
+extras
+```
+
+---
+
+### Automatic activation with Direnv
+
+If you use [direnv](https://direnv.net/) and have flakes enabled, you can automatically load the environment when entering the project directory:
+
+```bash
+direnv allow
+```
+
+From then on, the environment will activate each time you `cd` into the folder.
 # Notes
 ## General Notes
 - PSBBN requires a Fat PS2 console (SCPH-3000x to SCPH-500xx) with an expansion bay and an [official Sony Network Adapter](#known-issueslimitations-of-psbbn), or a PS2 Slim SCPH-700xx model with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar mod. It is also compatible with the SCPH-10000 to SCPH-18000 models with an official external HDD, as long as the drive in the enclosure has been replaced with one that is 200 GB or larger.
