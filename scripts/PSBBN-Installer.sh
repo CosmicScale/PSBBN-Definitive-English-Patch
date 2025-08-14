@@ -68,29 +68,33 @@ error_msg() {
 clean_up() {
     failure=0
 
-    # Find existing dmsetup maps for __ partitions or +OPL
-    existing_maps=$(sudo dmsetup ls | awk '/-(__|+OPL)/ {print $1}')
+    # Build list of partitions we care about
+    targets=("${LINUX_PARTITIONS[@]}" "${APA_PARTITIONS[@]}")
+    if [ "$MODE" = "install" ]; then
+        targets+=("__linux.2")
+    fi
 
-    # Unmount partitions only if they're mounted
-    for PARTITION_NAME in "${LINUX_PARTITIONS[@]}" "${APA_PARTITIONS[@]}"; do
-        if df | grep -q "${PARTITION_NAME}"; then
-            MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
-            if ! sudo umount "${MOUNT_PATH}" 2>/dev/null; then
+    # Unmount if mounted
+    for PARTITION_NAME in "${targets[@]}"; do
+        MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
+        if mountpoint -q "$MOUNT_PATH"; then
+            if ! sudo umount "$MOUNT_PATH" 2>/dev/null; then
                 echo "Error: Failed to unmount ${PARTITION_NAME}." >> "${LOG_FILE}"
                 failure=1
             fi
         fi
     done
 
-    # Remove existing dmsetup maps
-    if [ -n "${existing_maps}" ]; then
-        for map in $existing_maps; do
-            if ! sudo dmsetup remove "$map" 2>/dev/null; then
-                echo "Error: Failed to delete mapper ${map}." >> "${LOG_FILE}"
+    # Force-remove any existing dmsetup maps for just our partitions
+    for PARTITION_NAME in "${targets[@]}"; do
+        map_name=$(sudo dmsetup ls | awk -v devcut="$(basename "$DEVICE")" -v part="$PARTITION_NAME" '$1 == devcut"-"part {print $1}')
+        if [ -n "$map_name" ]; then
+            if ! sudo dmsetup remove -f "$map_name" 2>/dev/null; then
+                echo "Error: Failed to delete mapper ${map_name}." >> "${LOG_FILE}"
                 failure=1
             fi
-        done
-    fi
+        fi
+    done
 
     # Clean up directories and temp files
     sudo rm -rf /tmp/{apa_header_checksum.bin,apa_header_full.bin,apajail_magic_number.bin,apa_index.xz,gpt_2nd.xz} >> "${LOG_FILE}" 2>&1
@@ -113,13 +117,35 @@ fi
 }
 
 mapper_probe() {
-  DEVICE_CUT=$(basename "${DEVICE}")
-  existing_maps=$(sudo dmsetup ls | grep -o "^${DEVICE_CUT}-[^ ]*" || true)
-  for map in $existing_maps; do
-    sudo dmsetup remove "$map" 2>/dev/null
-  done
-  sudo "${HELPER_DIR}/HDL Dump.elf" toc "${DEVICE}" --dm | sudo dmsetup create --concise
-  MAPPER="/dev/mapper/${DEVICE_CUT}-"
+    DEVICE_CUT=$(basename "${DEVICE}")
+
+    # 1) Remove existing maps for this device
+    existing_maps=$(sudo dmsetup ls 2>/dev/null | awk -v p="^${DEVICE_CUT}-" '$1 ~ p {print $1}')
+    for map in $existing_maps; do
+        sudo dmsetup remove "$map" 2>/dev/null
+    done
+
+    # 2) Build keep list
+    keep_partitions=( "${LINUX_PARTITIONS[@]}" "${APA_PARTITIONS[@]}" )
+    if [ "$MODE" = "install" ]; then
+        keep_partitions+=("__linux.2")
+    fi
+
+    # 3) Get HDL Dump --dm output, split semicolons into lines
+    dm_output=$(sudo "${HELPER_DIR}/HDL Dump.elf" toc "${DEVICE}" --dm | tr ';' '\n')
+
+    # 4) Create each kept partition individually
+    while IFS= read -r line; do
+        for part in "${keep_partitions[@]}"; do
+            if [[ "$line" == "${DEVICE_CUT}-${part},"* ]]; then
+                echo "$line" | sudo dmsetup create --concise
+                break
+            fi
+        done
+    done <<< "$dm_output"
+
+    # 5) Export base mapper path
+    MAPPER="/dev/mapper/${DEVICE_CUT}-"
 }
 
 mount_cfs() {
@@ -256,7 +282,6 @@ echo "Disk Serial: $serialnumber" >> "${LOG_FILE}"
 echo "Path: $path_arg" >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 
-clean_up
 trap 'echo; exit 130' INT
 trap clean_up EXIT
 
@@ -368,7 +393,6 @@ EOF
     UNMOUNT_OPL
 fi
 
-
 # URL of the webpage
 URL="https://archive.org/download/psbbn-definitive-patch-v3"
 echo | tee -a "${LOG_FILE}"
@@ -376,7 +400,7 @@ echo -n "Checking for latest version of the PSBBN Definitive Patch..." | tee -a 
 
 # Download the HTML of the page
 HTML_FILE=$(mktemp)
-timeout 20 wget -O "$HTML_FILE" "$URL" -o "${LOG_FILE}"
+timeout 20 wget -O "$HTML_FILE" "$URL" -o - 2>&1 >> "${LOG_FILE}"
 
 # Extract .gz filenames from the HTML
 COMBINED_LIST=$(grep -oP 'psbbn-definitive-patch-v[0-9]+\.[0-9]+\.tar.gz' "$HTML_FILE")
@@ -469,6 +493,8 @@ fi
 rm -f "$HTML_FILE"
 
 PSBBN_PATCH="${ASSETS_DIR}/${LATEST_FILE}"
+
+clean_up
 
 if [ "$MODE" = "install" ]; then
     echo | tee -a "${LOG_FILE}"
@@ -722,4 +748,3 @@ fi
 echo
 read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
 echo
-
