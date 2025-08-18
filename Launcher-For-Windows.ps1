@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "0.4.3"
+$version = "1.0.0"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -20,10 +20,14 @@ $wslLabel = "PSBBN"
 # this is used to attempt to detect which disks have an install of PSBBN
 $oplVolumeName = "OPL"
 
+# a list of subfolders to be created in the main folder if missing
+$defaultFolders = @('DVD', 'CD', 'POPS', 'APPS', 'music', 'movie', 'photo')
+
 # the specific git branch to be checked out
-$gitBranch = "test"
+$gitBranch = "main"
 
 # in case $gitBranch no longer exists on the remote, use this as fallback
+# DO NOT change this unless the repo has deleted the main branch or is using another branch as release
 $fallbackGitBranch = "main"
 
 # this make wsl commands output utf8 instead of utf16_LE
@@ -207,8 +211,10 @@ function printTitle {
 
 # display the available disks and prompt user for choice
 function diskPicker {
-  # list available disks and pick the one to be mounted
+  # store the current cursor position to help clear the console upon refreshing the list of disks
   $lineStart = $Host.UI.RawUI.CursorPosition.Y
+
+  # list available disks and pick the one to be mounted
   Write-Host "`nList of available disks:"
   $diskList = Get-Disk
   $disksWithOplVolume = detectOplVolume($diskList)
@@ -218,6 +224,7 @@ function diskPicker {
     @{Label="Size";Expression={("{0:N2}" -f ($_.Size / 1GB)).ToString() + " GB"}}, `
     @{Label="";Expression={if ($disksWithOplVolume -contains $_.Number) { "<- PSBBN install detected on this disk" } else { "   " }}}
 
+  # generate a list of disk number to validate user input
   $availableNumbers = $diskList | Foreach-Object {$_.Number}
 
   $selectedDisk = handleDiskSelection($availableNumbers)
@@ -266,13 +273,12 @@ function detectVirtualization {
   # the property is null if the feature is enabled, false otherwise
   if ($property.$propertyName -eq $false) {
     printNG
-    Write-Host @"
-    
+    Write-Host "`n
     Virtualization is not enabled. It is mandatory to run PSBBN scripts.
     If you have an AMD CPU, enable SVM in your BIOS.
     If you have an Intel CPU, enable VT-x in your BIOS.
     Check the manual of your motherboard if you have troubles finding this setting.
-"@
+"
     Exit
   } else {
     printOK
@@ -315,7 +321,7 @@ function restartAsAdminIfNeeded {
   # relaunch the script as admin, this should trigger a UAC prompt
   Start-Process $shell -Verb RunAs -ArgumentList "-NoLogo -NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
   
-  # close the initial shell to avoid confusion
+  # close the initial non-admin shell to avoid confusion
   exit
 }
 
@@ -343,7 +349,8 @@ function getTargetFolder {
   $driveLetter = $pickedPath.Split(":\")[0].ToLower()
   $path = $pickedPath.Split(":\")[1].Replace("\", "/")
 
-  @('DVD', 'CD', 'POPS', 'APPS', 'music', 'movie', 'photo').ForEach({
+  # create default folders if missing
+  $defaultFolders.ForEach({
     if (-Not (Test-Path -Path "$pickedPath\$PSItem")) {
       New-Item -Path $pickedPath -Name $PSItem -ItemType Directory | Out-Null
     }
@@ -355,9 +362,7 @@ Before you continue, you can fill this folder with your games and other media:
     • put PS2 games in /DVD or /CD (.iso or .zso files)
     • put PS1 games in /POPS (must be .vcd files)
     • put homebrew in /APPS (.elf or SAS-compliant .psu files)
-    • put music in /music
-    • put videos files in /movie
-    • put image files in /photo
+    • put music in /music (.mp3, .m4a, .flac, or .ogg files)
 
 You can refer to the PSBBN Readme to know more.
 https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
