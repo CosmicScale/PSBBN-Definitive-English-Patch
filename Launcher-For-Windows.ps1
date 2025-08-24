@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.0.0"
+$version = "1.0.1"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -35,6 +35,9 @@ $env:WSL_UTF8 = 1
 
 # flag potentially raised when enabling features, signaling a reboot is necessary to finish the install
 $global:IsRestartRequired = $false
+
+# stores Get-Disk's result to avoid multiple calls
+$global:diskList = $null
 
 # stores the disk number (obtained with Get-Disk) that was selected via diskPicker
 $global:selectedDisk = -1
@@ -135,7 +138,7 @@ function main {
   
   # run PSBBN regular steps
   wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- `
-    ./PSBBN-Definitive-Patch.sh -wsl $diskList[$selectedDisk].SerialNumber $path
+    ./PSBBN-Definitive-Patch.sh -wsl $global:diskList[$selectedDisk].SerialNumber $path
 
   # clear the terminal to get rid of the wsl-run scripts
   clear
@@ -216,16 +219,16 @@ function diskPicker {
 
   # list available disks and pick the one to be mounted
   Write-Host "`nList of available disks:"
-  $diskList = Get-Disk
-  $disksWithOplVolume = detectOplVolume($diskList)
-  $diskList | Sort -Property Number | Format-Table -Property `
+  $global:diskList = Get-Disk
+  $disksWithOplVolume = detectOplVolume($global:diskList)
+  $global:diskList | Sort -Property Number | Format-Table -Property `
     Number, `
     @{Label="Name";Expression={$_.FriendlyName}}, `
     @{Label="Size";Expression={("{0:N2}" -f ($_.Size / 1GB)).ToString() + " GB"}}, `
     @{Label="";Expression={if ($disksWithOplVolume -contains $_.Number) { "<- PSBBN install detected on this disk" } else { "   " }}}
 
   # generate a list of disk number to validate user input
-  $availableNumbers = $diskList | Foreach-Object {$_.Number}
+  $availableNumbers = $global:diskList | Foreach-Object {$_.Number}
 
   $selectedDisk = handleDiskSelection($availableNumbers)
 
