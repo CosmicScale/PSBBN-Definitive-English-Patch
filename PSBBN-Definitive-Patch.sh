@@ -283,6 +283,9 @@ EOF
 # Function to display the menu
 display_menu() {
     SPLASH
+    echo "WSL: $wsl"
+    echo "Serial: $serialnumber"
+    echo "Path: $path_arg"
     cat << "EOF"
                                      1) Install PSBBN
                                      2) Update PSBBN Software
