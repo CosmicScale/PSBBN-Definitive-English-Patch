@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.0.1"
+$version = "1.0.2"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -350,7 +350,7 @@ function getTargetFolder {
 
   $pickedPath = Split-Path -Parent $folderselection.FileName
   $driveLetter = $pickedPath.Split(":\")[0].ToLower()
-  $path = $pickedPath.Split(":\")[1].Replace("\", "/")
+  $path = $pickedPath.Split(":")[1].Replace("\", "/")
 
   # create default folders if missing
   $defaultFolders.ForEach({
@@ -362,10 +362,10 @@ function getTargetFolder {
   Write-Host "`nThe following path was chosen: $pickedPath" -ForegroundColor Green
   Write-Host "
 Before you continue, you can fill this folder with your games and other media:
-    • put PS2 games in /DVD or /CD (.iso or .zso files)
-    • put PS1 games in /POPS (must be .vcd files)
-    • put homebrew in /APPS (.elf or SAS-compliant .psu files)
-    • put music in /music (.mp3, .m4a, .flac, or .ogg files)
+    - put PS2 games in /DVD or /CD (.iso or .zso files)
+    - put PS1 games in /POPS (must be .vcd files)
+    - put homebrew in /APPS (.elf or SAS-compliant .psu files)
+    - put music in /music (.mp3, .m4a, .flac, or .ogg files)
 
 You can refer to the PSBBN Readme to know more.
 https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
@@ -373,7 +373,7 @@ https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
 
   pause
 
-  return "/mnt/$driveLetter/$path"
+  return "/mnt/$driveLetter$path"
 }
 
 # clears $count lines with spaces and move the cursor back
