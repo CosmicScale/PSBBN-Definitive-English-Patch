@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
 if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
     echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
     echo "and clone the main repository."
