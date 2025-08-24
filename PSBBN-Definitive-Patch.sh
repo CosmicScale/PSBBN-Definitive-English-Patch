@@ -219,6 +219,13 @@ check_dep(){
         check_python_pkg tqdm
     fi
 
+    if ldconfig -p | grep -q "libfuse.so.2"; then
+        echo "✅ FUSE2 (libfuse.so.2) is installed." >> "$LOG_FILE"
+    else
+        echo "❌ FUSE2 (libfuse.so.2) is missing."
+        MISSING=1
+    fi
+
     echo >> "$LOG_FILE"
     echo "--- Node.js packages ---" >> "$LOG_FILE"
     check_node_pkg puppeteer
