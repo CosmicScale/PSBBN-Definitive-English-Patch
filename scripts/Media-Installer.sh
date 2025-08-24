@@ -1,18 +1,5 @@
 #!/bin/bash
 
-current_branch=$(git rev-parse --abbrev-ref HEAD)
-
-if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
-    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
-    echo "and clone the main repository."
-    echo
-    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
-    rm -rf "${TOOLKIT_PATH}/scripts"
-    echo
-fi
-
-clear
-
 TOOLKIT_PATH="$(pwd)"
 SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
 HELPER_DIR="${SCRIPTS_DIR}/helper"
@@ -27,6 +14,19 @@ CONFIG_FILE="${TOOLKIT_PATH}/scripts/media.cfg"
 PARTITION_NAMES=("__linux.7" "__linux.8")
 
 path_arg="$1"
+
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
+    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
+    echo "and clone the main repository."
+    echo
+    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
+    rm -rf "${TOOLKIT_PATH}/scripts"
+    echo
+fi
+
+clear
 
 if [[ -n "$path_arg" ]]; then
     if [[ -d "$path_arg" ]]; then

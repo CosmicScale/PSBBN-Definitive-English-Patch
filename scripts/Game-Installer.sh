@@ -1,16 +1,5 @@
 #!/usr/bin/env bash
 
-current_branch=$(git rev-parse --abbrev-ref HEAD)
-
-if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
-    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
-    echo "and clone the main repository."
-    echo
-    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
-    rm -rf "${TOOLKIT_PATH}/scripts"
-    echo
-fi
-
 version_check="2.10"
 
 # Set paths
@@ -39,6 +28,17 @@ PS2_LIST="${SCRIPTS_DIR}/tmp/ps2.list"
 ALL_GAMES="${SCRIPTS_DIR}/tmp/master.list"
 
 path_arg="$1"
+
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
+    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
+    echo "and clone the main repository."
+    echo
+    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
+    rm -rf "${TOOLKIT_PATH}/scripts"
+    echo
+fi
 
 prevent_sleep_start() {
     if command -v xdotool >/dev/null; then

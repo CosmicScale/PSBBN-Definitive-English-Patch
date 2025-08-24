@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 
+# Set paths
+TOOLKIT_PATH="$(pwd)"
+HELPER_DIR="${TOOLKIT_PATH}/scripts/helper"
+LOG_FILE="${TOOLKIT_PATH}/logs/setup.log"
+
+# Initialize variable
+wsl=false
+
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
@@ -16,14 +24,6 @@ if [ -z "$BASH_VERSION" ]; then
     echo "Error: This script must be run using Bash. Try running it with: bash $0"
     exit 1
 fi
-
-# Set paths
-TOOLKIT_PATH="$(pwd)"
-HELPER_DIR="${TOOLKIT_PATH}/scripts/helper"
-LOG_FILE="${TOOLKIT_PATH}/logs/setup.log"
-
-# Initialize variable
-wsl=false
 
 # Check if first argument is -wsl and at least 2 more arguments follow
 if [[ "$1" == "-wsl" && -n "$2" && -n "$3" ]]; then

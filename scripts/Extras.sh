@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+# Set paths
+TOOLKIT_PATH="$(pwd)"
+SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
+HELPER_DIR="${SCRIPTS_DIR}/helper"
+ASSETS_DIR="${SCRIPTS_DIR}/assets"
+STORAGE_DIR="${SCRIPTS_DIR}/storage"
+OPL="${STORAGE_DIR}/OPL"
+LOG_FILE="${TOOLKIT_PATH}/logs/extras.log"
+
+path_arg="$1"
 
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
@@ -10,17 +20,6 @@ if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/he
     rm -rf "${TOOLKIT_PATH}/scripts"
     echo
 fi
-
-# Set paths
-TOOLKIT_PATH="$(pwd)"
-SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
-HELPER_DIR="${SCRIPTS_DIR}/helper"
-ASSETS_DIR="${SCRIPTS_DIR}/assets"
-STORAGE_DIR="${SCRIPTS_DIR}/storage"
-OPL="${STORAGE_DIR}/OPL"
-LOG_FILE="${TOOLKIT_PATH}/logs/extras.log"
-
-path_arg="$1"
 
 error_msg() {
     error_1="$1"

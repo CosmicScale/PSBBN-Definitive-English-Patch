@@ -1,14 +1,4 @@
 #!/usr/bin/env bash
-current_branch=$(git rev-parse --abbrev-ref HEAD)
-
-if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
-    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
-    echo "and clone the main repository."
-    echo
-    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
-    rm -rf "${TOOLKIT_PATH}/scripts"
-    echo
-fi
 
 # Set paths
 version_check="2.10"
@@ -22,6 +12,17 @@ LOG_FILE="${TOOLKIT_PATH}/logs/PSBBN-installer.log"
 
 serialnumber="$2"
 path_arg="$3"
+
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
+    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
+    echo "and clone the main repository."
+    echo
+    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
+    rm -rf "${TOOLKIT_PATH}/scripts"
+    echo
+fi
 
 case "$1" in
   -install)
