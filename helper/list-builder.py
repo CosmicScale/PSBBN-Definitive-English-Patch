@@ -54,6 +54,11 @@ def process_files(folder, extensions):
                 string = file_name_without_ext[:11].upper()
                 print(f"Filename meets condition. Game ID set directly from filename: {string}")
 
+            # Check if .cue file has accompanying .bin file if not, skip game
+            if image.lower().endswith('.cue') and not os.path.isfile(os.path.join(game_path + folder, f"{file_name_without_ext}.bin")):
+                print(f"Error: {image} failed. Could not find {file_name_without_ext}.bin")
+                continue
+
             # If the file has a .zso extension and no ID was set, convert to .iso
             if image.lower().endswith('.zso') and not string:
                 zso_path = os.path.join(game_path + folder, image)
@@ -228,7 +233,7 @@ def main(arg1, arg2):
         # Set correct TitlesDB path based on output list name
         if games_list_path.endswith("ps2.list"):
             gameid_file_path = "./helper/TitlesDB_PS2_English.csv"
-            folders_to_scan = [('/DVD', ['.iso', '.zso']), ('/CD', ['.iso', '.zso'])]
+            folders_to_scan = [('/DVD', ['.iso', '.zso', '.cue']), ('/CD', ['.iso', '.zso', '.cue'])]
         elif games_list_path.endswith("ps1.list"):
             gameid_file_path = "./helper/TitlesDB_PS1_English.csv"
             folders_to_scan = [('/POPS', ['.vcd', '.VCD'])]
