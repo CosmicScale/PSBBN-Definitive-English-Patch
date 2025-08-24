@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 
+if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
+    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
+    echo "and clone the main repository."
+    echo
+    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
+    rm -rf "${TOOLKIT_PATH}/scripts"
+    echo
+fi
+
 # Check if the shell is bash
 if [ -z "$BASH_VERSION" ]; then
     echo "Error: This script must be run using Bash. Try running it with: bash $0"
@@ -10,17 +19,6 @@ fi
 TOOLKIT_PATH="$(pwd)"
 HELPER_DIR="${TOOLKIT_PATH}/scripts/helper"
 LOG_FILE="${TOOLKIT_PATH}/logs/setup.log"
-
-current_branch=$(git rev-parse --abbrev-ref HEAD)
-
-if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
-    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
-    echo "and clone the main repository."
-    echo
-    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
-    rm -rf "${TOOLKIT_PATH}/scripts"
-    echo
-fi
 
 # Initialize variable
 wsl=false
@@ -39,8 +37,8 @@ error_msg() {
   error_4="$4"
 
   echo
-  echo "Error: $error_1" | tee -a "${LOG_FILE}"
-  [ -n "$error_2" ] && echo "$error_2" | tee -a "${LOG_FILE}"
+  echo "❌ Error: $error_1" | tee -a "${LOG_FILE}"
+  [ -n "$error_2" ] && echo && echo "$error_2" | tee -a "${LOG_FILE}"
   [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
   [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
   echo
@@ -58,7 +56,7 @@ copy_log() {
 git_update() {
     # Check if the current directory is a Git repository
     if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-        echo "This is not a Git repository. Skipping update check." | tee -a "${LOG_FILE}"
+        echo "This is not a Git repository. Skipping update check." >> "${LOG_FILE}"
     else
         # Fetch updates from the remote
         git fetch >> "${LOG_FILE}" 2>&1
@@ -69,9 +67,9 @@ git_update() {
         BASE=$(git merge-base @ @{u})
 
         if [ "$LOCAL" = "$REMOTE" ]; then
-            echo "No updates available — running the latest version." | tee -a "${LOG_FILE}"
+            echo "No updates available — running the latest version." >> "${LOG_FILE}"
         else
-            echo "Downloading updates..."
+            echo "Downloading updates..." | tee -a "${LOG_FILE}"
             # Get a list of files that have changed remotely
             UPDATED_FILES=$(git diff --name-only "$LOCAL" "$REMOTE")
 
@@ -84,10 +82,11 @@ git_update() {
 
                 # Pull the latest changes
                 if ! git pull --ff-only >> "${LOG_FILE}" 2>&1; then
-                    error_msg "Update failed. Delete the PSBBN-Definitive-English-Patch directory and run the command:" " " "git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git" " " "Then try running the script again."
+                    error_msg "Update failed. Delete the PSBBN-Definitive-English-Patch directory and run the command:" "git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git" "Then try running the script again."
                 fi
                 echo
-                echo "The repository has been successfully updated." | tee -a "${LOG_FILE}"
+                echo "✅ The repository has been successfully updated." | tee -a "${LOG_FILE}"
+                echo
                 read -n 1 -s -r -p "Press any key to exit, then run the script again." </dev/tty
                 echo
                 exit 0
@@ -153,7 +152,7 @@ check_required_files() {
 
     # If any were missing, exit with error
     if [[ "$missing" == true ]]; then
-        error_msg "Essential files not found. The script must be from the 'PSBBN-Definitive-English-Patch' directory."
+        error_msg "Essential files not found." "The script must be run from the 'PSBBN-Definitive-English-Patch' directory."
     fi
 }
 
@@ -198,7 +197,7 @@ check_dep(){
     check_cmd bc
     check_cmd rsync
     check_cmd curl
-    check_cmd zip
+    check_cmd unzip
     check_cmd wget
     check_cmd chromium
     check_cmd ffmpeg
@@ -249,9 +248,9 @@ option_three() {
 
 option_four() {
     if [ "$wsl" = "true" ]; then
-        exit 0
+        "${TOOLKIT_PATH}/scripts/Media-Installer.sh" $path_arg
     else
-        exit 0
+        "${TOOLKIT_PATH}/scripts/Media-Installer.sh"
     fi
 }
 
@@ -263,8 +262,8 @@ option_five() {
     fi
 }
 
-# Function to display the menu
-display_menu() {
+SPLASH() {
+    clear
     cat << "EOF"
 ______  _________________ _   _  ______      __ _       _ _   _            ______     _       _     
 | ___ \/  ___| ___ \ ___ \ \ | | |  _  \    / _(_)     (_) | (_)           | ___ \   | |     | |    
@@ -276,10 +275,17 @@ ______  _________________ _   _  ______      __ _       _ _   _            _____
                                        Created by CosmicScale
 
 
+EOF
+}
+
+# Function to display the menu
+display_menu() {
+    SPLASH
+    cat << "EOF"
                                      1) Install PSBBN
                                      2) Update PSBBN Software
                                      3) Install Games
-                                     4)
+                                     4) Install Media
                                      5) Optional Extras
                                      
                                      q) Quit
@@ -291,6 +297,9 @@ trap 'echo; exit 130' INT
 trap copy_log EXIT
 
 echo -e "\e[8;45;100t"
+
+SPLASH
+
 cd "${TOOLKIT_PATH}"
 
 mkdir -p "${TOOLKIT_PATH}/logs" >/dev/null 2>&1
@@ -327,21 +336,21 @@ rmdir "${TOOLKIT_PATH}/OPL" >/dev/null 2>&1
 
 check_required_files
 
+if [ "$wsl" = "false" ]; then
+        git_update
+fi
+
 if ! check_dep; then
     if ! "${TOOLKIT_PATH}/scripts/Setup.sh"; then
         exit 1
+    else
+        check_dep || error_msg "Dependencies still missing after setup." 
     fi
 fi
 
 # Main loop
 
 while true; do
-    clear
-
-    if [ "$wsl" = "false" ]; then
-        git_update
-    fi
-
     display_menu
     read -p "                                     Select an option: " choice
 
