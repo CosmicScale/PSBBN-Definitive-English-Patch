@@ -1,30 +1,5 @@
 #!/usr/bin/env bash
 
-version_check="2.10"
-
-# Set paths
-TOOLKIT_PATH="$(pwd)"
-ICONS_DIR="${TOOLKIT_PATH}/icons"
-ARTWORK_DIR="${ICONS_DIR}/art"
-VMC_ICON_DIR="${ICONS_DIR}/ico/vmc"
-HELPER_DIR="${TOOLKIT_PATH}/scripts/helper"
-ASSETS_DIR="${TOOLKIT_PATH}/scripts/assets"
-POPSTARTER="${ASSETS_DIR}/POPStarter/POPSTARTER.ELF"
-POPS_DIR="${ICONS_DIR}/POPS"
-NEUTRINO_DIR="${ASSETS_DIR}/neutrino"
-LOG_FILE="${TOOLKIT_PATH}/logs/game-installer.log"
-MISSING_ART=${TOOLKIT_PATH}/logs/missing-art.log
-MISSING_APP_ART=${TOOLKIT_PATH}/logs/missing-app-art.log
-MISSING_ICON=${TOOLKIT_PATH}/logs/missing-icon.log
-MISSING_VMC=${TOOLKIT_PATH}/logs/missing-vmc.log
-GAMES_PATH="${TOOLKIT_PATH}/games"
-CONFIG_FILE="${TOOLKIT_PATH}/scripts/gamepath.cfg"
-
-OPL="${TOOLKIT_PATH}/scripts/storage/OPL"
-PS1_LIST="${TOOLKIT_PATH}/scripts/tmp/ps1.list"
-PS2_LIST="${TOOLKIT_PATH}/scripts/tmp/ps2.list"
-ALL_GAMES="${TOOLKIT_PATH}/scripts/tmp/master.list"
-
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
@@ -35,6 +10,33 @@ if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/he
     rm -rf "${TOOLKIT_PATH}/scripts"
     echo
 fi
+
+version_check="2.10"
+
+# Set paths
+TOOLKIT_PATH="$(pwd)"
+ICONS_DIR="${TOOLKIT_PATH}/icons"
+ARTWORK_DIR="${ICONS_DIR}/art"
+VMC_ICON_DIR="${ICONS_DIR}/ico/vmc"
+SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
+HELPER_DIR="${SCRIPTS_DIR}/helper"
+ASSETS_DIR="${SCRIPTS_DIR}/assets"
+POPSTARTER="${ASSETS_DIR}/POPStarter/POPSTARTER.ELF"
+POPS_DIR="${ICONS_DIR}/POPS"
+NEUTRINO_DIR="${ASSETS_DIR}/neutrino"
+LOGS_DIR="${TOOLKIT_PATH}/logs"
+LOG_FILE="${LOGS_DIR}/game-installer.log"
+MISSING_ART="${LOGS_DIR}/missing-art.log"
+MISSING_APP_ART="${LOGS_DIR}/missing-app-art.log"
+MISSING_ICON="${LOGS_DIR}/missing-icon.log"
+MISSING_VMC="${LOGS_DIR}/missing-vmc.log"
+GAMES_PATH="${TOOLKIT_PATH}/games"
+CONFIG_FILE="${SCRIPTS_DIR}/gamepath.cfg"
+
+OPL="${SCRIPTS_DIR}/storage/OPL"
+PS1_LIST="${SCRIPTS_DIR}/tmp/ps1.list"
+PS2_LIST="${SCRIPTS_DIR}/tmp/ps2.list"
+ALL_GAMES="${SCRIPTS_DIR}/tmp/master.list"
 
 path_arg="$1"
 
@@ -110,7 +112,7 @@ clean_up() {
     sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1
 
     # Remove listed files
-    sudo rm -rf "${ARTWORK_DIR}/tmp" "${ICONS_DIR}/ico/tmp" "${TOOLKIT_PATH}/scripts/tmp" 2>>"$LOG_FILE" \
+    sudo rm -rf "${ARTWORK_DIR}/tmp" "${ICONS_DIR}/ico/tmp" "${SCRIPTS_DIR}/tmp" 2>>"$LOG_FILE" \
         || { echo "Error: Cleanup failed. See ${LOG_FILE} for details."; exit 1; }
 }
 
@@ -133,14 +135,19 @@ error_msg() {
     error_4="$5"
 
     echo
-    echo "$type: $error_1" | tee -a "${LOG_FILE}"
+    if [ "$type" = "Error" ]; then
+        echo "❌ $type: $error_1" | tee -a "${LOG_FILE}"
+    else
+        echo "⚠️ $type: $error_1" | tee -a "${LOG_FILE}"
+    fi
+    echo
     [ -n "$error_2" ] && echo "$error_2" | tee -a "${LOG_FILE}"
     [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
     [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
     echo
     if [ "$type" = "Error" ]; then
         sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1
-        read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
+        read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
         echo
         exit 1;
     else
@@ -302,7 +309,7 @@ POPS_SYNC() {
         mapfile -t pops_array < <(echo "$ps1_files")
 
         # Initialize a temporary file
-        temp_list="${TOOLKIT_PATH}/scripts/tmp/ps1.list.tmp"
+        temp_list="${SCRIPTS_DIR}/tmp/ps1.list.tmp"
 
         # Track whether any POPS file is missing from ps1.list
         missing_from_list=false
@@ -396,7 +403,7 @@ POPS_SYNC() {
         echo -n "Copying..."
         PFS_COMMANDS
         echo | tee -a "${LOG_FILE}"
-        echo "PS1 games copied successfully." | tee -a "${LOG_FILE}"
+        echo "✅ PS1 games copied successfully." | tee -a "${LOG_FILE}"
     fi
     cd ${TOOLKIT_PATH} 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to $TOOLKIT_PATH."
 }
@@ -684,7 +691,7 @@ app_success_check() {
         error_msg "Error" "Failed to update $name. See "${LOG_FILE}" for details."
     else
         echo | tee -a "${LOG_FILE}"
-        echo "Successfully updated $name." | tee -a "${LOG_FILE}"
+        echo "✅ Successfully updated $name." | tee -a "${LOG_FILE}"
     fi
 }
 
@@ -696,7 +703,7 @@ ps2_rsync_check() {
         error_msg "Error" "Failed to $INSTALL_TYPE PS2 games. See ${LOG_FILE} for details."
     else
         echo | tee -a "${LOG_FILE}"
-        echo "PS2 games successfully $type." | tee -a "${LOG_FILE}"
+        echo "✅ PS2 games successfully $type." | tee -a "${LOG_FILE}"
     fi
 }
 
@@ -809,7 +816,7 @@ install_pops() {
             fi
             # Check if both POPS.ELF and IOPRP252.IMG exist after extraction
             if [[ -f "${ASSETS_DIR}/POPS-binaries-main/POPS.ELF" && -f "${ASSETS_DIR}/POPS-binaries-main/IOPRP252.IMG" ]]; then
-                echo "POPS binaries successfully extracted." | tee -a "${LOG_FILE}"
+                echo "✅ POPS binaries successfully extracted." | tee -a "${LOG_FILE}"
             else
                 error_msg "Warning" "One or both files (POPS.ELF, IOPRP252.IMG) are missing after extraction." "Without these files PS1 games will not be playable."
             fi
@@ -833,7 +840,7 @@ install_pops() {
 
         PFS_COMMANDS
 
-        echo "POPS-binaries successfully installed." | tee -a "${LOG_FILE}"
+        echo "✅ POPS-binaries successfully installed." | tee -a "${LOG_FILE}"
 
     fi
 }
@@ -977,12 +984,12 @@ activate_python() {
     echo | tee -a "${LOG_FILE}"
 
     # Try activating the virtual environment twice before failing
-    if ! source "${TOOLKIT_PATH}/scripts/venv/bin/activate" 2>>"${LOG_FILE}"; then
+    if ! source "${SCRIPTS_DIR}/venv/bin/activate" 2>>"${LOG_FILE}"; then
         echo -n "Failed to activate the Python virtual environment. Retrying..." | tee -a "${LOG_FILE}"
         sleep 2
         echo | tee -a "${LOG_FILE}"
     
-        if ! source "${TOOLKIT_PATH}/scripts/venv/bin/activate" 2>>"${LOG_FILE}"; then
+        if ! source "${SCRIPTS_DIR}/venv/bin/activate" 2>>"${LOG_FILE}"; then
             error_msg "Error" "Failed to activate the Python virtual environment."
         fi
     fi
@@ -1133,7 +1140,7 @@ APP_ART() {
         "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/apps/${title_id}.png"
         
         if [[ -s "$png_file" ]]; then
-            echo "Successfully downloaded artwork for $title_id" | tee -a "${LOG_FILE}"
+            echo "✅ Successfully downloaded artwork for $title_id" | tee -a "${LOG_FILE}"
             cp "$png_file" "$dir/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/jkt_001.png. See ${LOG_FILE} for details."
             echo "Created: $dir/jkt_001.png"  | tee -a "${LOG_FILE}"
             cp "$png_file" "${GAMES_PATH}/ART/${elf}_COV.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create ${GAMES_PATH}/ART/${elf}_COV.png. See ${LOG_FILE} for details."
@@ -1161,7 +1168,7 @@ SPLASH() {
 EOF
 }
 
-mkdir -p "${TOOLKIT_PATH}/logs" >/dev/null 2>&1
+mkdir -p "${LOGS_DIR}" >/dev/null 2>&1
 
 if ! echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1; then
     sudo rm -f "${LOG_FILE}"
@@ -1184,7 +1191,7 @@ clean_up
 
 sudo rm -f "${MISSING_ART}" "${MISSING_APP_ART}" "${MISSING_ICON}" "${MISSING_VMC}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to remove missing artwork files. See ${LOG_FILE} for details."
 
-mkdir -p "${TOOLKIT_PATH}/scripts/tmp" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create tmp folder. See ${LOG_FILE} for details."
+mkdir -p "${SCRIPTS_DIR}/tmp" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create tmp folder. See ${LOG_FILE} for details."
 
 DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
 
@@ -1205,7 +1212,7 @@ echo "Unmounting volumes associated with $DEVICE..." >> "${LOG_FILE}"
 for mount_point in $mounted_volumes; do
     echo "Unmounting $mount_point..." >> "${LOG_FILE}"
     if sudo umount "$mount_point"; then
-        echo "Successfully unmounted $mount_point." >> "${LOG_FILE}"
+        echo "✅ Successfully unmounted $mount_point." >> "${LOG_FILE}"
     else
         error_msg "Error" "Failed to unmount $mount_point. Please unmount manually."
 
@@ -1483,6 +1490,7 @@ if [ -n "$delete_partition" ]; then
     delete_partition=$(grep -o 'PP\.[^ ]\+' "$hdl_output")
     
     if [ -n "$delete_partition" ]; then
+        echo | tee -a "${LOG_FILE}"
         echo "Unable to delete the following partitions:"
         echo $delete_partition 
         error_msg "Error" "Failed to delete existing PP partitions."
@@ -1490,6 +1498,7 @@ if [ -n "$delete_partition" ]; then
         echo "Existing PP partitions sucessfully deleted." | tee -a "${LOG_FILE}"
     fi
 else
+    echo | tee -a "${LOG_FILE}"
     echo "No PP partitions to delete." | tee -a "${LOG_FILE}"
 fi
 
@@ -1656,7 +1665,7 @@ if [[ -s "${ALL_GAMES}" ]]; then
     echo | tee -a "${LOG_FILE}"
     echo "Number of games to install: $count" | tee -a "${LOG_FILE}"
     echo
-    echo "Games list successfully created."| tee -a "${LOG_FILE}"
+    echo "✅ Games list successfully created."| tee -a "${LOG_FILE}"
     echo >> "${LOG_FILE}"
     echo "master.list:" >> "${LOG_FILE}"
     cat "${ALL_GAMES}" >> "${LOG_FILE}"
@@ -1910,9 +1919,9 @@ if [ -f "$ALL_GAMES" ]; then
 
             if [[ -f "$png_file_cover" || -f "$png_file_disc" ]]; then
                 if [[ ${#missing_files[@]} -eq 0 ]]; then
-                    echo "Successfully downloaded OPL artwork for $game_id" | tee -a "${LOG_FILE}"
+                    echo "✅ Successfully downloaded OPL artwork for $game_id" | tee -a "${LOG_FILE}"
                 else
-                    echo "Successfully downloaded some OPL artwork for $game_id, but missing: ${missing_files[*]}" | tee -a "${LOG_FILE}"
+                    echo "✅ Successfully downloaded some OPL artwork for $game_id, but missing: ${missing_files[*]}" | tee -a "${LOG_FILE}"
                 fi
             else
                 echo "Failed to download OPL artwork for $game_id" | tee -a "${LOG_FILE}"
@@ -1959,7 +1968,7 @@ if [ -f "$ALL_GAMES" ]; then
             wget --quiet --timeout=10 --tries=3 --output-document="$png_file" \
             "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/art/${game_id}.png"
             if [[ -s "$png_file" ]]; then
-                echo "Successfully downloaded artwork for $game_id" | tee -a "${LOG_FILE}"
+                echo "✅ Successfully downloaded artwork for $game_id" | tee -a "${LOG_FILE}"
             else
                 # If wget fails, run the art downloader
                 [[ -f "$png_file" ]] && rm -f "$png_file"
@@ -2029,7 +2038,7 @@ if [ -f "$ALL_GAMES" ]; then
             wget --quiet --timeout=10 --tries=3 --output-document="$ico_file" \
             "https://raw.githubusercontent.com/CosmicScale/HDD-OSD-Icon-Database/main/ico/${game_id}.ico"
             if [[ -s "$ico_file" ]]; then
-                echo "Successfully downloaded icon for ${game_id}." | tee -a "${LOG_FILE}"
+                echo "✅ Successfully downloaded icon for ${game_id}." | tee -a "${LOG_FILE}"
                 echo | tee -a "${LOG_FILE}"
             else
                 # If wget fails, run the art downloader
@@ -2129,7 +2138,7 @@ if [ -f "$ALL_GAMES" ]; then
                     wget --quiet --timeout=10 --tries=3 --output-document="$ico_file" \
                     "https://raw.githubusercontent.com/CosmicScale/HDD-OSD-Icon-Database/main/vmc/${game_id}.ico"
                     if [[ -s "$ico_file" ]]; then
-                        echo "Successfully downloaded VMC icon for ${game_id}." | tee -a "${LOG_FILE}"
+                        echo "✅ Successfully downloaded VMC icon for ${game_id}." | tee -a "${LOG_FILE}"
                         echo | tee -a "${LOG_FILE}"
                     else
                         # If wget fails, run the art downloader
@@ -2536,7 +2545,7 @@ if [ "$(ls -A "${ARTWORK_DIR}/tmp")" ]; then
     upload_url=$(curl -F "reqtype=fileupload" -F "time=72h" -F "fileToUpload=@art.zip" https://litterbox.catbox.moe/resources/internals/api.php)
 
     if [[ "$upload_url" == https://* ]]; then
-        echo "File uploaded successfully: $upload_url" | tee -a "${LOG_FILE}"
+        echo "✅ File uploaded successfully: $upload_url" | tee -a "${LOG_FILE}"
 
     # Send a POST request to Webhook.site with the uploaded file URL
     webhook_url="https://webhook.site/PSBBN"
@@ -2559,5 +2568,5 @@ rm -f "$hdl_output"
 echo | tee -a "${LOG_FILE}"
 echo "Game installer script complete." | tee -a "${LOG_FILE}"
 echo
-read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
+read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
 echo

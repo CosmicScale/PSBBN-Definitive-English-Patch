@@ -4,7 +4,7 @@ const readline = require('readline');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const puppeteer = require('./scripts/node_modules/puppeteer'); // Import Puppeteer after ensuring it's installed
+const puppeteer = require("puppeteer");
 
 (async () => {
     // Get the game ID from the command-line arguments
@@ -178,7 +178,7 @@ const puppeteer = require('./scripts/node_modules/puppeteer'); // Import Puppete
                 console.error(`Error downloading image: ${downloadError.message}`);
             }
         } else {
-            console.log("No image found on either source.");
+            console.log("No image found on any source.");
         }
     } catch (error) {
         console.error(`Failed to fetch the page: ${error.message}`);

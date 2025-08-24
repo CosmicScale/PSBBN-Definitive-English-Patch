@@ -1,5 +1,6 @@
 scripts/venv/
 scripts/node_modules/
+scripts/storage/
 scripts/assets/POPS-binaries-main/
 scripts/assets/OPL/boot.kelf
 scripts/assets/OPL/system.cnf

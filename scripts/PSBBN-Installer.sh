@@ -1,15 +1,4 @@
 #!/usr/bin/env bash
-
-# Set paths
-version_check="2.10"
-TOOLKIT_PATH="$(pwd)"
-SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
-ASSETS_DIR="${SCRIPTS_DIR}/assets"
-HELPER_DIR="${SCRIPTS_DIR}/helper"
-STORAGE_DIR="${SCRIPTS_DIR}/storage"
-OPL="${STORAGE_DIR}/OPL"
-LOG_FILE="${TOOLKIT_PATH}/logs/PSBBN-installer.log"
-
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
@@ -20,6 +9,16 @@ if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/he
     rm -rf "${TOOLKIT_PATH}/scripts"
     echo
 fi
+
+# Set paths
+version_check="2.10"
+TOOLKIT_PATH="$(pwd)"
+SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
+ASSETS_DIR="${SCRIPTS_DIR}/assets"
+HELPER_DIR="${SCRIPTS_DIR}/helper"
+STORAGE_DIR="${SCRIPTS_DIR}/storage"
+OPL="${STORAGE_DIR}/OPL"
+LOG_FILE="${TOOLKIT_PATH}/logs/PSBBN-installer.log"
 
 serialnumber="$2"
 path_arg="$3"
@@ -39,29 +38,26 @@ esac
 
 if [ "$MODE" = "install" ]; then
     LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.6" "__linux.7" "__linux.8" "__linux.9" )
-    APA_PARTITIONS=("__contents" "__system" "__sysconf" "__common" "__.POPS" )
+    APA_PARTITIONS=("__contents" "__system" "__sysconf" "__common" )
 else
-    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.7" "__linux.9" )
+    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.9" )
     APA_PARTITIONS=("__system" "__sysconf" )
 fi
 
 error_msg() {
-    error_1="$1"
+    error_1="❌ Error: $1"
     error_2="$2"
     error_3="$3"
     error_4="$4"
 
     echo
-    echo "Error: $error_1" | tee -a "${LOG_FILE}"
+    echo "$error_1" | tee -a "${LOG_FILE}"
     [ -n "$error_2" ] && echo "$error_2" | tee -a "${LOG_FILE}"
     [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
     [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
     echo
-    read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
+    read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
     echo
-    if [[ -n "$path_arg" ]]; then
-        cp "${LOG_FILE}" "$path_arg" > /dev/null 2>&1
-    fi
     exit 1
 }
 
@@ -98,7 +94,10 @@ clean_up() {
 
     # Clean up directories and temp files
     sudo rm -rf /tmp/{apa_header_checksum.bin,apa_header_full.bin,apajail_magic_number.bin,apa_index.xz,gpt_2nd.xz} >> "${LOG_FILE}" 2>&1
-
+    sudo rm -rf "${STORAGE_DIR}/bootstrap.xin" >> "${LOG_FILE}" 2>&1
+    sudo rm -rf "${STORAGE_DIR}/__linux.7"/* >> "${LOG_FILE}" 2>&1
+    sudo rm -rf "${STORAGE_DIR}/__contents"/* >> "${LOG_FILE}" 2>&1
+    
     # Abort if any failures occurred
     if [ "$failure" -ne 0 ]; then
         error_msg "Cleanup error(s) occurred. Aborting."
@@ -106,6 +105,13 @@ clean_up() {
 
     if [[ -n "$path_arg" ]]; then
         cp "${LOG_FILE}" "$path_arg" > /dev/null 2>&1
+    fi
+}
+
+exit_script() {
+    clean_up
+    if [[ -n "$path_arg" ]]; then
+        cp "${LOG_FILE}" "${path_arg}"
     fi
 }
 
@@ -149,29 +155,32 @@ mapper_probe() {
 }
 
 mount_cfs() {
-  for PARTITION_NAME in "${LINUX_PARTITIONS[@]}"; do
-    MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
-    if [ -e "${MAPPER}${PARTITION_NAME}" ]; then
-        if [[ "$PARTITION_NAME" = "__linux.8" || "$PARTITION_NAME" = "__linux.9" ]]; then
-            if ! sudo "${HELPER_DIR}/mkfs.vfat" -F 32 "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
-                error_msg "Failed to create filesystem ${PARTITION_NAME}."
+    for PARTITION_NAME in "${LINUX_PARTITIONS[@]}"; do
+        MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
+        if [ -e "${MAPPER}${PARTITION_NAME}" ]; then
+            if [[ "$PARTITION_NAME" = "__linux.8" || "$PARTITION_NAME" = "__linux.9" ]]; then
+                if ! sudo "${HELPER_DIR}/mkfs.vfat" -F 32 "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
+                    error_msg "Failed to create filesystem ${PARTITION_NAME}."
+                fi
+            else
+                if ! sudo "${HELPER_DIR}/mkfs.ext2" -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
+                    error_msg "Failed to create filesystem ${PARTITION_NAME}."
+                fi
             fi
-        else
-            if ! sudo "${HELPER_DIR}/mkfs.ext2" -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
-                error_msg "Failed to create filesystem ${PARTITION_NAME}."
-            fi
-        fi
 
-        [ -d "${MOUNT_PATH}" ] || mkdir -p "${MOUNT_PATH}"
-        if ! sudo mount "${MAPPER}${PARTITION_NAME}" "${MOUNT_PATH}" >>"${LOG_FILE}" 2>&1; then
-            error_msg "Failed to mount ${PARTITION_NAME} partition."
+            [ -d "${MOUNT_PATH}" ] || mkdir -p "${MOUNT_PATH}"
+                if ! sudo mount "${MAPPER}${PARTITION_NAME}" "${MOUNT_PATH}" >>"${LOG_FILE}" 2>&1; then
+                    error_msg "Failed to mount ${PARTITION_NAME} partition."
+                fi
+        else
+            error_msg "Partition ${PARTITION_NAME} not found on disk."
         fi
-    else
-      error_msg "Partition ${PARTITION_NAME} not found on disk."
-    fi
-  done
-    if ! sudo "${HELPER_DIR}/mkswap" "${MAPPER}__linux.2" >>"${LOG_FILE}" 2>&1; then
-        error_msg "Failed to create swap filesystem."
+    done
+    
+    if [ "$MODE" = "install" ]; then
+        if ! sudo "${HELPER_DIR}/mkswap" "${MAPPER}__linux.2" >>"${LOG_FILE}" 2>&1; then
+            error_msg "Failed to create swap filesystem."
+        fi
     fi
 }
 
@@ -253,6 +262,19 @@ HDL_TOC() {
     fi
 }
 
+SPLASH(){
+    clear
+        cat << "EOF"
+              ______  _________________ _   _   _____          _        _ _           
+              | ___ \/  ___| ___ \ ___ \ \ | | |_   _|        | |      | | |          
+              | |_/ /\ `--.| |_/ / |_/ /  \| |   | | _ __  ___| |_ __ _| | | ___ _ __ 
+              |  __/  `--. \ ___ \ ___ \ . ` |   | || '_ \/ __| __/ _` | | |/ _ \ '__|
+              | |    /\__/ / |_/ / |_/ / |\  |  _| || | | \__ \ || (_| | | |  __/ |   
+              \_|    \____/\____/\____/\_| \_/  \___/_| |_|___/\__\__,_|_|_|\___|_|   
+
+EOF
+}
+
 clear
 mkdir -p "${TOOLKIT_PATH}/logs" >/dev/null 2>&1
 
@@ -263,7 +285,7 @@ if [ $? -ne 0 ]; then
     if [ $? -ne 0 ]; then
         echo
         echo "Error: Cannot to create log file."
-        read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
+        read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
         echo
         exit 1
     fi
@@ -283,32 +305,20 @@ echo "Path: $path_arg" >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 
 trap 'echo; exit 130' INT
-trap clean_up EXIT
+trap exit_script EXIT
 
 if [ "$MODE" = "install" ]; then
     # Choose the PS2 storage device
-    while true; do
-        clear
-        cat << "EOF"
-              ______  _________________ _   _   _____          _        _ _           
-              | ___ \/  ___| ___ \ ___ \ \ | | |_   _|        | |      | | |          
-              | |_/ /\ `--.| |_/ / |_/ /  \| |   | | _ __  ___| |_ __ _| | | ___ _ __ 
-              |  __/  `--. \ ___ \ ___ \ . ` |   | || '_ \/ __| __/ _` | | |/ _ \ '__|
-              | |    /\__/ / |_/ / |_/ / |\  |  _| || | | \__ \ || (_| | | |  __/ |   
-              \_|    \____/\____/\____/\_| \_/  \___/_| |_|___/\__\__,_|_|_|\___|_|   
-
-EOF
-        if [[ -n "$serialnumber" ]]; then
+    if [[ -n "$serialnumber" ]]; then
             DEVICE=$(lsblk -p -o NAME,SERIAL | awk -v sn="$serialnumber" '$2 == sn {print $1; exit}')
-        fi
-
-        if [[ -z "$DEVICE" ]]; then
+    else
+        while true; do
+        SPLASH
             echo | tee -a "${LOG_FILE}"
             lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT | tee -a "${LOG_FILE}"
             echo | tee -a "${LOG_FILE}"
         
             read -p "Choose your PS2 HDD from the list above (e.g., /dev/sdx): " DEVICE
-        fi
         
         # Check if the device exists
         if [[ -n "$DEVICE" ]] && lsblk -dp -n -o NAME | grep -q "^$DEVICE$"; then
@@ -332,17 +342,18 @@ EOF
                 else
                     echo "Aborted." | tee -a "${LOG_FILE}"
                     echo
-                    read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
+                    read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
                     echo
                     exit 1
                 fi
             fi
         else
             echo
-            echo "Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
+            echo -n "Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
             sleep 3
         fi
-    done
+        done
+    fi
 else
     clear
     DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
@@ -373,9 +384,9 @@ EOF
     for mount_point in $mounted_volumes; do
         echo "Unmounting $mount_point..." >> "${LOG_FILE}"
         if sudo umount "$mount_point"; then
-            echo "Successfully unmounted $mount_point." >> "${LOG_FILE}"
+            echo "✅ Successfully unmounted $mount_point." >> "${LOG_FILE}"
         else
-            error_msg "Error" "Failed to unmount $mount_point. Please unmount manually."
+            error_msg "Failed to unmount $mount_point. Please unmount manually."
 
         fi
     done
@@ -388,9 +399,13 @@ EOF
     # Compare using sort -V
     if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
         UNMOUNT_OPL
-        error_msg "The installed PSBBN Definitive Patch is older than version $version_check and cannot be updated directly." "Please select 'Install PSBBN' from the main menu to perform a full installation."
+        error_msg "The installed PSBBN Definitive Patch is older than version $version_check and cannot be updated" "directly. Please select 'Install PSBBN' from the main menu to perform a full installation."
     fi
     UNMOUNT_OPL
+fi
+
+if [ "$MODE" = "install" ]; then
+    SPLASH
 fi
 
 # URL of the webpage
@@ -457,7 +472,7 @@ if [ "$MODE" = "update" ]; then
         echo
         echo "You are already running the latest version. No need to update." | tee -a "${LOG_FILE}"
         echo
-        read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
+        read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
         echo
         exit 0
     fi
@@ -477,9 +492,9 @@ else
     done
 
     # Construct the full URL for the .gz file and download it
-    ZIP_URL="$URL/$LATEST_FILE"
+    TAR_URL="$URL/$LATEST_FILE"
     echo "Downloading ${LATEST_FILE}..." | tee -a "${LOG_FILE}"
-    axel -n 8 -a "$ZIP_URL" -o "${ASSETS_DIR}"
+    axel -n 8 -a "$TAR_URL" -o "${ASSETS_DIR}"
 
     # Check if the file was downloaded successfully
     if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
@@ -628,7 +643,7 @@ if [ "$MODE" = "install" ]; then
     COMMANDS+="mkpart +OPL 128M PFS\n"
     COMMANDS+="exit"
     echo | tee -a "${LOG_FILE}"
-    echo -n "Creating partitions..." | tee -a "${LOG_FILE}"
+    echo "Creating partitions..." >>"${LOG_FILE}"
     echo
     PFS_COMMANDS
 fi
@@ -645,8 +660,15 @@ if [ "$MODE" = "install" ]; then
     sudo cp "${ASSETS_DIR}/POPStarter/eng"/{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} "${STORAGE_DIR}/__common/POPS/"
 fi
 
-if ! sudo tar zxvpf "${PSBBN_PATCH}" --no-same-owner -C "${STORAGE_DIR}/" >>"${LOG_FILE}" 2>&1; then
+if ! sudo tar zxpf "${PSBBN_PATCH}" --no-same-owner -C "${STORAGE_DIR}/" >>"${LOG_FILE}" 2>&1; then
     error_msg "Failed to extract files. Install Failed."
+fi
+
+if [ "$MODE" = "update" ]; then
+    sudo tee -a "${STORAGE_DIR}/__linux.1/etc/rc.d/rc.sysinit" >/dev/null <<'EOF'
+BUTTON=`cat /proc/ps2pad | awk '$1==0 { print $5; }'`
+[ "$BUTTON" != "" -a "$BUTTON" != "FFFF" ] && /sbin/akload -r /boot/linux
+EOF
 fi
 
 BOOTSTRAP
@@ -655,6 +677,7 @@ clean_up
 if [ "$MODE" = "install" ]; then
     ################################### APA-Jail code by Berion ###################################
 
+    echo
     echo | tee -a "${LOG_FILE}"
     echo -n "Running APA-Jail..." | tee -a "${LOG_FILE}"
 
@@ -712,11 +735,10 @@ if [ $STATUS -ne 0 ]; then
     error_msg "APA partition is broken on ${DEVICE}. Install failed."
 fi
 
-
 if echo "${TOC_OUTPUT}" | grep -Eq '\b(__linux\.(1|4|5|6|7|8|9)|__contents|__system|__sysconf|__.POPS|__common)\b'; then
     echo "All partitions exist." >> "${LOG_FILE}"
 else
-    error_msg "Error" "Some partitions are missing on ${DEVICE}. See log for details."
+    error_msg "Some partitions are missing on ${DEVICE}. See log for details."
 fi
 
 MOUNT_OPL
@@ -739,12 +761,13 @@ lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT >> "${LOG_FILE}"
 
 echo | tee -a "${LOG_FILE}"
 if [ "$MODE" = "install" ]; then
-    echo "PSBBN successfully installed." | tee -a "${LOG_FILE}"
+    echo "✅ PSBBN successfully installed." | tee -a "${LOG_FILE}"
 else
-    echo "PSBBN successfully updated." | tee -a "${LOG_FILE}"
+    echo "✅ PSBBN successfully updated." | tee -a "${LOG_FILE}"
     echo
-    echo "Now connect the drive to your PS2 console and boot into PSBBN to finish the installation."
+    echo "Now connect the drive to your PS2 console and boot into PSBBN to complete the installation."
+    echo "If you had PS2BBL installed before, you’ll need to reinstall it from the Extras menu."
 fi
 echo
-read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
+read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
 echo

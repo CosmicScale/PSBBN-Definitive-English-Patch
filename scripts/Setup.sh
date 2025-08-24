@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 
-trap 'echo; exit 130' INT
+current_branch=$(git rev-parse --abbrev-ref HEAD)
 
-# Check if the shell is bash
-if [ -z "$BASH_VERSION" ]; then
-    echo "Error: This script must be run using Bash. Try running it with: bash $0" >&2
-    exit 1
+if ! git remote | xargs -n1 git ls-remote --heads 2>/dev/null | grep -q "refs/heads/$current_branch$"; then
+    echo "Testing is over. Please delete the ${TOOLKIT_PATH} folder"
+    echo "and clone the main repository."
+    echo
+    read -n 1 -s -r -p "Press any key to exit..." </dev/tty
+    rm -rf "${TOOLKIT_PATH}/scripts"
+    echo
 fi
+
+trap 'echo; exit 130' INT
 
 TOOLKIT_PATH="$(pwd)"
 SOURCES_LIST="/etc/apt/sources.list"
@@ -15,20 +20,31 @@ LOG_FILE="${TOOLKIT_PATH}/logs/setup.log"
 error_msg() {
     echo
     echo
-    echo "Error: $1" | tee -a "${LOG_FILE}"
+    echo "❌ Error: $1" | tee -a "${LOG_FILE}"
     echo
     read -n 1 -s -r -p "Press any key to exit..."
     echo
     exit 1
 }
 
-log_and_run() {
-  echo
-  echo -n "$1..."
-  # Run command, redirect stdout and stderr to LOG_FILE
-  if ! eval "$2" >> "${LOG_FILE}" 2>&1; then
-    error_msg "Failed to $1. Check '${LOG_FILE}' for details."
-  fi
+spinner() {
+    local pid=$1
+    local message=$2
+    local delay=0.1
+    local spinstr='|/-\'
+
+    # Print initial spinner + message
+    printf "\r[%c] %s" "${spinstr:0:1}" "$message"
+
+    while kill -0 "$pid" 2>/dev/null; do
+        for i in $(seq 0 3); do
+            printf "\r[%c] %s" "${spinstr:i:1}" "$message"
+            sleep $delay
+        done
+    done
+
+    # Replace spinner with check mark when done
+    printf "\r✅ %s\n" "$message"
 }
 
 clear
@@ -38,76 +54,88 @@ mkdir -p "${TOOLKIT_PATH}/logs" >/dev/null 2>&1
 # Clean sources.list if needed
 if [[ -f "$SOURCES_LIST" ]]; then
     if grep -q 'deb cdrom' "$SOURCES_LIST"; then
-        echo "Removing 'deb cdrom' line from $SOURCES_LIST..."
+        echo "Removing 'deb cdrom' line from $SOURCES_LIST..." >>"${LOG_FILE}"
         sudo sed -i '/deb cdrom/d' "$SOURCES_LIST" >> "${LOG_FILE}" 2>&1 || error_msg "Failed to clean $SOURCES_LIST"
         echo "'deb cdrom' line removed." >> "${LOG_FILE}"
     fi
 fi
 
-echo "Installing Dependences:"
+cat << "EOF"
+                                    _____      _               
+                                   /  ___|    | |              
+                                   \ `--.  ___| |_ _   _ _ __  
+                                    `--. \/ _ \ __| | | | '_ \ 
+                                   /\__/ /  __/ |_| |_| | |_) |
+                                   \____/ \___|\__|\__,_| .__/ 
+                                                        | |    
+                                                        |_|    
+
+
+Installing Dependences:
+EOF
 
 # Detect package manager and install packages
-if [ -x "$(command -v apt)" ]; then
-    log_and_run "Update package lists" "sudo apt update"
-    log_and_run "Install required packages (apt)" "sudo apt install -y axel imagemagick xxd python3 python3-venv python3-pip nodejs npm bc rsync curl zip wget chromium ffmpeg lvm2"
-    echo
+if [ -x "$(command -v apt-get)" ]; then
+    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip nodejs npm bc rsync curl unzip wget chromium ffmpeg lvm2 | tee -a "${LOG_FILE}"
+# Or if user is on Fedora-based system, do this instead
 elif [ -x "$(command -v dnf)" ]; then
-    log_and_run "Install required packages (dnf)" "sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip nodejs npm bc rsync curl zip wget chromium ffmpeg lvm2"
-    echo
+    sudo dnf check-update -q && sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip nodejs npm bc rsync curl unzip unzip wget chromium ffmpeg lvm2 | tee -a "${LOG_FILE}"
+# Or if user is on Arch-based system, do this instead
 elif [ -x "$(command -v pacman)" ]; then
-    log_and_run "Update archlinux-keyring" "sudo pacman -Sy --needed archlinux-keyring"
-    log_and_run "Install required packages (pacman)" "sudo pacman -S --needed axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync curl zip wget chromium ffmpeg lvm2"
-    echo
+    sudo pacman -Sy --needed --noconfirm --quiet archlinux-keyring && sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync curl unzip unzip wget chromium ffmpeg lvm2 | tee -a "${LOG_FILE}"
 else
-    error_msg "No supported package manager found (apt, dnf, pacman)."
+    error_msg "No supported package manager found (apt-get, dnf, pacman)."
 fi
 
-# Check and install exfat support if needed
+if [ $? -ne 0 ]; then
+    error_msg "Package installation failed." "See $LOG_FILE for details."
+else
+    echo "✅ Packages checked/installed." | tee -a "${LOG_FILE}"
+fi
+
+# Check and install exFAT support if needed
 if ! command -v mkfs.exfat &> /dev/null; then
-    echo "mkfs.exfat not found. Installing exfat driver..."
-    if [ -x "$(command -v apt)" ]; then
-        log_and_run "install exfat-fuse" "sudo apt install -y exfat-fuse"
-        echo
+    echo "mkfs.exfat not found. Installing exFAT driver..."
+    if [ -x "$(command -v apt-get)" ]; then
+        sudo apt-get install -y exfat-fuse | tee -a "${LOG_FILE}"
     elif [ -x "$(command -v dnf)" ]; then
-        log_and_run "install exfatprogs" "sudo dnf install -y exfatprogs"
-        echo
+        sudo dnf install -y exfatprogs | tee -a "${LOG_FILE}"
     elif [ -x "$(command -v pacman)" ]; then
-        log_and_run "install exfatprogs" "sudo pacman -S exfatprogs"
-        echo
+	    sudo pacman -S --needed --noconfirm exfatprogs | tee -a "${LOG_FILE}"
     else
-        error_msg "No supported package manager found for exfat driver installation."
+        error_msg "No supported package manager found (apt-get, dnf, pacman)."
     fi
-    echo "exFAT driver installed successfully." | tee -a "${LOG_FILE}"
+
+    if [ $? -ne 0 ]; then
+    	error_msg "Failed to install exFAT driver." "See $LOG_FILE for details."
+    else
+        echo "✅ exFAT driver installed." | tee -a "${LOG_FILE}"
+    fi
 fi
 
-echo
-
-# Setup Python virtual environment and install dependencies
-echo -n "Setting up Python virtual environment and installing dependencies..."
-if ! python3 -m venv scripts/venv >> "${LOG_FILE}" 2>&1; then
-    error_msg "Failed to create Python virtual environment."
-fi
-echo
-
-# shellcheck disable=SC1091
-source scripts/venv/bin/activate || error_msg "Failed to activate the Python virtual environment."
-
-if ! pip install lz4 natsort mutagen tqdm >> "${LOG_FILE}" 2>&1; then
-    error_msg "Failed to install Python dependencies."
-fi
-deactivate
-
-echo "Python virtual environment and dependencies installed successfully." | tee -a "${LOG_FILE}"
-echo
+# Python virtual environment setup
+(
+    python3 -m venv scripts/venv >> "${LOG_FILE}" 2>&1 || error_msg "Failed to create Python virtual environment."
+    source scripts/venv/bin/activate || error_msg "Failed to activate the Python virtual environment."
+    pip install lz4 natsort mutagen tqdm >> "${LOG_FILE}" || error_msg "Failed to install Python dependencies."
+    deactivate
+) &
+PID=$!
+spinner $PID "Setting up Python virtual environment and installing dependencies..."
 
 cd scripts || error_msg "Failed to enter scripts directory."
 
-echo -n "Installing Puppeteer via npm..."
-if ! npm install puppeteer >> "${LOG_FILE}" 2>&1; then
-    error_msg "Failed to install puppeteer."
-fi
+# Puppeteer install
+(
+    npm_config_progress=false npm install puppeteer --silent >> "${LOG_FILE}" 2>&1 || error_msg "Failed to install puppeteer."
+) &
+PID=$!
+spinner $PID "Installing Puppeteer via npm..."
+
+echo "✅ Puppeteer installed successfully." | tee -a "${LOG_FILE}"
+
 echo
-echo "Puppeteer installed successfully." | tee -a "${LOG_FILE}"
-echo
-echo "Setup completed successfully!" | tee -a "${LOG_FILE}"
+echo -n "✅ Setup completed successfully!" | tee -a "${LOG_FILE}"
+sleep 3
+echo| tee -a "${LOG_FILE}"
 
