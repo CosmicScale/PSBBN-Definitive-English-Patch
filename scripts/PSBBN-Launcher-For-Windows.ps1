@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.0.2"
+$version = "1.0.3"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -25,6 +25,15 @@ $defaultFolders = @('DVD', 'CD', 'POPS', 'APPS', 'music', 'movie', 'photo')
 
 # the specific git branch to be checked out
 $gitBranch = "main"
+
+# the console size that is set at the start of the script
+$consoleWidth = 100
+$consoleHeight = 45
+
+# the filename of the file holding the last path used
+$pathFilename = "path.cfg"
+
+# --- DO NOT MODIFY THE VARIABLES BELOW ---
 
 # in case $gitBranch no longer exists on the remote, use this as fallback
 # DO NOT change this unless the repo has deleted the main branch or is using another branch as release
@@ -43,6 +52,11 @@ $global:diskList = $null
 $global:selectedDisk = -1
 
 function main {
+  # set the console size so it matches the other scripts
+  $host.UI.RawUI.WindowSize = New-Object `
+    -TypeName System.Management.Automation.Host.Size `
+    -ArgumentList ($consoleWidth, $consoleHeight)
+
   clear
   printTitle
   Write-Host "Prepare Windows to run the PSBBN scripts.`n"
@@ -334,9 +348,16 @@ function getTargetFolder {
 
   pause
 
+  # if a previously used path exists, use that in the folder picker, otherwise use "Desktop"
+  $initialDirectory = [Environment]::GetFolderPath('Desktop')
+  if (Test-Path ".\$pathFilename" -PathType Leaf) {
+    $initialDirectory = Get-Content -Path ".\$pathFilename"
+  }
+
+  # prepare and then open the folder picker
   Add-Type -AssemblyName System.Windows.Forms
   $folderselection = New-Object System.Windows.Forms.OpenFileDialog -Property @{
-    InitialDirectory = [Environment]::GetFolderPath('Desktop')
+    InitialDirectory = $initialDirectory
     CheckFileExists = 0
     ValidateNames = 0
     FileName = "Choose Folder"
@@ -370,6 +391,11 @@ Before you continue, you can fill this folder with your games and other media:
 You can refer to the PSBBN Readme to know more.
 https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
 " -ForegroundColor Yellow
+
+  # store the selected path to re-use next time the script is ran
+  New-Item -Path "." -Name $pathFilename -ItemType "file" -Value $pickedPath -Force | Out-Null
+
+  explorer $pickedPath
 
   pause
 
