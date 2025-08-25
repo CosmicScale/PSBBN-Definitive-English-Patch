@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.0.3"
+$version = "1.0.4"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -142,8 +142,10 @@ function main {
   diskPicker
   
   # mount the disk
-  Write-Host "`nMounting \\.\PHYSICALDRIVE$selectedDisk on wsl...`t`t" -NoNewline
-  $mountOut = wsl -d $wslLabel --mount "\\.\PHYSICALDRIVE$selectedDisk" --bare
+  $deviceName = "\\.\PHYSICALDRIVE$global:selectedDisk"
+  Write-Host "`nMounting $deviceName on wsl...`t`t" -NoNewline
+  Set-Disk $global:selectedDisk -isOffline $true
+  $mountOut = wsl -d $wslLabel --mount $deviceName --bare
   handleMountOutput($mountOut)
   
   # give the user the opportunity to put games/homebrew in the PSBBN folder
@@ -159,9 +161,10 @@ function main {
   printTitle
 
   # unmount the disk before exiting
-  Write-Host "Unmounting \\.\PHYSICALDRIVE$selectedDisk...`t`t" -NoNewline
-  $mountOut = wsl -d $wslLabel --unmount $selectedDisk
-  handleMountOutput($mountOut)
+  Write-Host "Unmounting $deviceName...`t`t" -NoNewline
+  $unmountOut = wsl -d $wslLabel --unmount $deviceName
+  Set-Disk $global:selectedDisk -isOffline $false
+  handleMountOutput($unmountOut)
   
   # ensures wsl doesnt run out of resources if this script is ran repeatedly
   wsl --shutdown
