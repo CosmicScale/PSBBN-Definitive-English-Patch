@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.0.4"
+$version = "1.0.5"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -424,7 +424,7 @@ function detectOplVolume ($diskList) {
   $disksWithOplVolume = @()
   $diskList | ForEach-Object {
     $diskNumber = $_.Number
-    Get-Partition -disknumber $diskNumber | ForEach-Object {
+    Get-Partition -disknumber $diskNumber -errorAction SilentlyContinue | ForEach-Object {
       Get-Volume -partition $_ | ForEach-Object {
         $_.FileSystemLabel.GetType()
         if ($_.FileSystemLabel -eq $oplVolumeName) {
