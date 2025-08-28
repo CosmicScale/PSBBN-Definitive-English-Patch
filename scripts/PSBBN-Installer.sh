@@ -237,7 +237,7 @@ BOOTSTRAP() {
 	    BOOTSTRAP_SIZE=$(wc -c "${STORAGE_DIR}/bootstrap.xin" | cut -d' ' -f 1)
 	    BOOTSTRAP_SIZE_LBA=$(echo "$((${BOOTSTRAP_SIZE}/512))")
 	    BOOTSTRAP_SIZE_LBA_HEX_BE=$(printf "%04X" ${BOOTSTRAP_SIZE_LBA} | tac -rs .. | echo "$(tr -d '\n')")
-	    echo "${BOOTSTRAP_ADDRESS_HEX_BE}0000${BOOTSTRAP_SIZE_LBA_HEX_BE}0000" | xxd -r -p > /tmp/apa_header_boot.bin
+	    echo "${BOOTSTRAP_ADDRESS_HEX_BE}0000${BOOTSTRAP_SIZE_LBA_HEX_BE}0000" | xxd -r -p > /tmp/apa_header_boot.bin 2>> "${LOG_FILE}"
 
 	    # METADATA & BOOTSTRAP WRITING:
 	    # 130h = 304d
