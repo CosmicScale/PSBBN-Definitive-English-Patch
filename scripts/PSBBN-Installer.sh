@@ -180,7 +180,7 @@ mount_cfs() {
         MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
         if [ -e "${MAPPER}${PARTITION_NAME}" ]; then
             if [[ "$PARTITION_NAME" = "__linux.8" || "$PARTITION_NAME" = "__linux.9" ]]; then
-                if ! sudo "${HELPER_DIR}/mkfs.vfat" -F 32 "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
+                if ! sudo mkfs.vfat -F 32 "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
                     error_msg "Failed to create filesystem ${PARTITION_NAME}."
                 fi
             else
@@ -199,7 +199,7 @@ mount_cfs() {
     done
     
     if [ "$MODE" = "install" ]; then
-        if ! sudo "${HELPER_DIR}/mkswap" "${MAPPER}__linux.2" >>"${LOG_FILE}" 2>&1; then
+        if ! sudo mkswap "${MAPPER}__linux.2" >>"${LOG_FILE}" 2>&1; then
             error_msg "Failed to create swap filesystem."
         fi
     fi

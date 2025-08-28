@@ -474,7 +474,7 @@ option_five() {
     return 1
   }
 
-  sudo "${HELPER_DIR}/mkfs.vfat" -F 32 $linux8 &>> "${LOG_FILE}" || {
+  sudo mkfs.vfat -F 32 $linux8 &>> "${LOG_FILE}" || {
 
     error_msg "Failed to create the music filesystem."
     return 1

@@ -559,7 +559,7 @@ option_one() {
     clean_up   && \
     mapper_probe || return 1
 
-    if ! sudo "${HELPER_DIR}/mkfs.ext2" -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}__linux.3" >>"${LOG_FILE}" 2>&1; then
+    if ! sudo mkfs.ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}__linux.3" >>"${LOG_FILE}" 2>&1; then
         error_msg "[X] Error: Failed to create filesystem __linux.3."
         return 1
     fi

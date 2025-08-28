@@ -65,13 +65,13 @@ EOF
 
 # Detect package manager and install packages
 if [ -x "$(command -v apt-get)" ]; then
-    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip nodejs npm bc rsync curl unzip wget chromium ffmpeg lvm2 libfuse2 | tee -a "${LOG_FILE}"
+    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip nodejs npm bc rsync curl unzip wget chromium ffmpeg lvm2 libfuse2 dosfstools e2fsprogs | tee -a "${LOG_FILE}"
 # Or if user is on Fedora-based system, do this instead
 elif [ -x "$(command -v dnf)" ]; then
-    sudo dnf check-update -q && sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip nodejs npm bc rsync curl unzip unzip wget chromium ffmpeg lvm2 fuse | tee -a "${LOG_FILE}"
+    sudo dnf check-update -q && sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip nodejs npm bc rsync curl unzip unzip wget chromium ffmpeg lvm2 fuse dosfstools e2fsprogs | tee -a "${LOG_FILE}"
 # Or if user is on Arch-based system, do this instead
 elif [ -x "$(command -v pacman)" ]; then
-    sudo pacman -Sy --needed --noconfirm --quiet archlinux-keyring && sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync curl unzip unzip wget chromium ffmpeg lvm2 fuse2 | tee -a "${LOG_FILE}"
+    sudo pacman -Sy --needed --noconfirm --quiet archlinux-keyring && sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync curl unzip unzip wget chromium ffmpeg lvm2 fuse2 dosfstools e2fsprogs | tee -a "${LOG_FILE}"
 else
     error_msg "No supported package manager found (apt-get, dnf, pacman)."
 fi

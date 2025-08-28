@@ -103,9 +103,6 @@ check_required_files() {
         "./scripts/helper/list-builder.py"
         "./scripts/helper/list-sorter.py"
         "./scripts/helper/mkfs.exfat"
-        "./scripts/helper/mkfs.ext2"
-        "./scripts/helper/mkfs.vfat"
-        "./scripts/helper/mkswap"
         "./scripts/helper/PFS Fuse.elf"
         "./scripts/helper/PFS Shell.elf"
         "./scripts/helper/PS2 APA Header Checksum Fixer.elf"
@@ -194,6 +191,8 @@ check_dep(){
     check_cmd ffmpeg
     check_cmd lvm
     check_cmd timeout
+    check_cmd mkfs.vfat
+    check_cmd mkfs.ext2
 
     echo >> "$LOG_FILE"
     echo "--- Python virtual environment ---" >> "$LOG_FILE"
