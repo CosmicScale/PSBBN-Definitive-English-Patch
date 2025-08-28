@@ -187,7 +187,6 @@ check_dep(){
     check_cmd curl
     check_cmd unzip
     check_cmd wget
-    check_cmd chromium
     check_cmd ffmpeg
     check_cmd lvm
     check_cmd timeout
