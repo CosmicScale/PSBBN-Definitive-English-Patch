@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+
+trap 'echo; exit 130' INT
+
+TOOLKIT_PATH="$(pwd)"
+SOURCES_LIST="/etc/apt/sources.list"
+LOG_FILE="${TOOLKIT_PATH}/logs/setup.log"
+
+error_msg() {
+    echo
+    echo
+    echo "[X] Error: $1" | tee -a "${LOG_FILE}"
+    echo
+    read -n 1 -s -r -p "Press any key to exit..."
+    echo
+    exit 1
+}
+
+spinner() {
+    local pid=$1
+    local message=$2
+    local delay=0.1
+    local spinstr='|/-\'
+
+    # Print initial spinner + message
+    printf "\r[%c] %s" "${spinstr:0:1}" "$message"
+
+    while kill -0 "$pid" 2>/dev/null; do
+        for i in $(seq 0 3); do
+            printf "\r[%c] %s" "${spinstr:i:1}" "$message"
+            sleep $delay
+        done
+    done
+
+    # Replace spinner with check mark when done
+    printf "\r[✓] %s\n" "$message"
+}
+
+clear
+
+mkdir -p "${TOOLKIT_PATH}/logs" >/dev/null 2>&1
+
+# Clean sources.list if needed
+if [[ -f "$SOURCES_LIST" ]]; then
+    if grep -q 'deb cdrom' "$SOURCES_LIST"; then
+        echo "Removing 'deb cdrom' line from $SOURCES_LIST..." >>"${LOG_FILE}"
+        sudo sed -i '/deb cdrom/d' "$SOURCES_LIST" >> "${LOG_FILE}" 2>&1 || error_msg "Failed to clean $SOURCES_LIST"
+        echo "'deb cdrom' line removed." >> "${LOG_FILE}"
+    fi
+fi
+
+cat << "EOF"
+                                    _____      _               
+                                   /  ___|    | |              
+                                   \ `--.  ___| |_ _   _ _ __  
+                                    `--. \/ _ \ __| | | | '_ \ 
+                                   /\__/ /  __/ |_| |_| | |_) |
+                                   \____/ \___|\__|\__,_| .__/ 
+                                                        | |    
+                                                        |_|    
+
+
+Installing Dependences:
+EOF
+
+# Detect package manager and install packages
+if [ -x "$(command -v apt-get)" ]; then
+    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip nodejs npm bc rsync curl unzip wget chromium ffmpeg lvm2 libfuse2 | tee -a "${LOG_FILE}"
+# Or if user is on Fedora-based system, do this instead
+elif [ -x "$(command -v dnf)" ]; then
+    sudo dnf check-update -q && sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip nodejs npm bc rsync curl unzip unzip wget chromium ffmpeg lvm2 fuse | tee -a "${LOG_FILE}"
+# Or if user is on Arch-based system, do this instead
+elif [ -x "$(command -v pacman)" ]; then
+    sudo pacman -Sy --needed --noconfirm --quiet archlinux-keyring && sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync curl unzip unzip wget chromium ffmpeg lvm2 fuse2 | tee -a "${LOG_FILE}"
+else
+    error_msg "No supported package manager found (apt-get, dnf, pacman)."
+fi
+
+if [ $? -ne 0 ]; then
+    error_msg "Package installation failed." "See $LOG_FILE for details."
+else
+    echo "[✓] Packages checked/installed." | tee -a "${LOG_FILE}"
+fi
+
+# Check and install exFAT support if needed
+if ! command -v mkfs.exfat &> /dev/null; then
+    echo "mkfs.exfat not found. Installing exFAT driver..."
+    if [ -x "$(command -v apt-get)" ]; then
+        sudo apt-get install -y exfat-fuse | tee -a "${LOG_FILE}"
+    elif [ -x "$(command -v dnf)" ]; then
+        sudo dnf install -y exfatprogs | tee -a "${LOG_FILE}"
+    elif [ -x "$(command -v pacman)" ]; then
+	    sudo pacman -S --needed --noconfirm exfatprogs | tee -a "${LOG_FILE}"
+    else
+        error_msg "No supported package manager found (apt-get, dnf, pacman)."
+    fi
+
+    if [ $? -ne 0 ]; then
+    	error_msg "Failed to install exFAT driver." "See $LOG_FILE for details."
+    else
+        echo "[✓] exFAT driver installed." | tee -a "${LOG_FILE}"
+    fi
+fi
+
+# Python virtual environment setup
+(
+    python3 -m venv scripts/venv >> "${LOG_FILE}" 2>&1 || error_msg "Failed to create Python virtual environment."
+    source scripts/venv/bin/activate || error_msg "Failed to activate the Python virtual environment."
+    pip install lz4 natsort mutagen tqdm >> "${LOG_FILE}" || error_msg "Failed to install Python dependencies."
+    deactivate
+) &
+PID=$!
+spinner $PID "Setting up Python virtual environment and installing dependencies..."
+
+cd scripts || error_msg "Failed to enter scripts directory."
+
+# Puppeteer install
+(
+    npm_config_progress=false npm install puppeteer --silent >> "${LOG_FILE}" 2>&1 || error_msg "Failed to install puppeteer."
+) &
+PID=$!
+spinner $PID "Installing Puppeteer via npm..."
+
+echo "[✓] Puppeteer installed successfully." | tee -a "${LOG_FILE}"
+
+echo
+echo -n "[✓] Setup completed successfully!" | tee -a "${LOG_FILE}"
+sleep 3
+echo| tee -a "${LOG_FILE}"
+

@@ -1,14 +1,5 @@
 #!/usr/bin/env bash
 
-# Check if the shell is bash
-if [ -z "$BASH_VERSION" ]; then
-    echo "Error: This script must be run using Bash. Try running it with: bash $0" >&2
-    exit 1
-fi
-
-# Set terminal size: 100 columns and 45 rows
-echo -e "\e[8;33;100t"
-
 version_check="2.10"
 
 # Set paths
@@ -16,23 +7,27 @@ TOOLKIT_PATH="$(pwd)"
 ICONS_DIR="${TOOLKIT_PATH}/icons"
 ARTWORK_DIR="${ICONS_DIR}/art"
 VMC_ICON_DIR="${ICONS_DIR}/ico/vmc"
-HELPER_DIR="${TOOLKIT_PATH}/helper"
-ASSETS_DIR="${TOOLKIT_PATH}/assets"
+SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
+HELPER_DIR="${SCRIPTS_DIR}/helper"
+ASSETS_DIR="${SCRIPTS_DIR}/assets"
 POPSTARTER="${ASSETS_DIR}/POPStarter/POPSTARTER.ELF"
 POPS_DIR="${ICONS_DIR}/POPS"
 NEUTRINO_DIR="${ASSETS_DIR}/neutrino"
-LOG_FILE="${TOOLKIT_PATH}/game-installer.log"
-MISSING_ART=${TOOLKIT_PATH}/missing-art.log
-MISSING_APP_ART=${TOOLKIT_PATH}/missing-app-art.log
-MISSING_ICON=${TOOLKIT_PATH}/missing-icon.log
-MISSING_VMC=${TOOLKIT_PATH}/missing-vmc.log
+LOGS_DIR="${TOOLKIT_PATH}/logs"
+LOG_FILE="${LOGS_DIR}/game-installer.log"
+MISSING_ART="${LOGS_DIR}/missing-art.log"
+MISSING_APP_ART="${LOGS_DIR}/missing-app-art.log"
+MISSING_ICON="${LOGS_DIR}/missing-icon.log"
+MISSING_VMC="${LOGS_DIR}/missing-vmc.log"
 GAMES_PATH="${TOOLKIT_PATH}/games"
-CONFIG_FILE="${TOOLKIT_PATH}/gamepath.cfg"
+CONFIG_FILE="${SCRIPTS_DIR}/gamepath.cfg"
 
-OPL="${TOOLKIT_PATH}/OPL"
-PS1_LIST="${TOOLKIT_PATH}/ps1.list"
-PS2_LIST="${TOOLKIT_PATH}/ps2.list"
-ALL_GAMES="${TOOLKIT_PATH}/master.list"
+OPL="${SCRIPTS_DIR}/storage/OPL"
+PS1_LIST="${SCRIPTS_DIR}/tmp/ps1.list"
+PS2_LIST="${SCRIPTS_DIR}/tmp/ps2.list"
+ALL_GAMES="${SCRIPTS_DIR}/tmp/master.list"
+
+path_arg="$1"
 
 prevent_sleep_start() {
     if command -v xdotool >/dev/null; then
@@ -90,20 +85,6 @@ prevent_sleep_stop() {
     fi
 }
 
-# Clean up on exit (even if interrupted)
-trap prevent_sleep_stop EXIT
-
-UNMOUNT_OPL() {
-    sync
-    if ! sudo umount -l "${TOOLKIT_PATH}/OPL" >> "${LOG_FILE}" 2>&1; then
-        echo "Error: Failed to unmount $DEVICE."
-        echo
-        read -n 1 -s -r -p "Press any key to exit..."
-        echo
-        exit 1;
-    fi
-}
-
 clean_up() {
     # Remove unwanted directories inside $ICONS_DIR except 'art' and 'ico'
     for item in "$ICONS_DIR"/*; do
@@ -112,15 +93,28 @@ clean_up() {
         fi
     done
 
-    # Remove all directories inside ${GAMES_PATH}/APPS in reverse sorted order
-    find "${GAMES_PATH}/APPS" -mindepth 1 -maxdepth 1 -type d | sort -r | while IFS= read -r dir; do
+    # Remove all directories inside ${GAMES_PATH}/APPS
+    find "${GAMES_PATH}/APPS" -mindepth 1 -maxdepth 1 -type d | while IFS= read -r dir; do
         sudo rm -rf -- "$dir"
     done
 
+    sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1
+
     # Remove listed files
-    sudo rm -rf "${PS1_LIST}" "${PS2_LIST}" "${ALL_GAMES}" "${ARTWORK_DIR}/tmp"/* "${ICONS_DIR}/ico/tmp/"* "$POPS_DIR/"* "${TOOLKIT_PATH}/ps1.list.tmp" 2>>"$LOG_FILE" \
+    sudo rm -rf "${ARTWORK_DIR}/tmp" "${ICONS_DIR}/ico/tmp" "${SCRIPTS_DIR}/tmp" 2>>"$LOG_FILE" \
         || { echo "Error: Cleanup failed. See ${LOG_FILE} for details."; exit 1; }
 }
+
+exit_script() {
+    prevent_sleep_stop
+    clean_up
+    if [[ -n "$path_arg" ]]; then
+        cp "${LOG_FILE}" "${path_arg}"
+    fi
+}
+
+trap 'echo; exit 130' INT
+trap exit_script EXIT
 
 error_msg() {
     type=$1
@@ -130,26 +124,37 @@ error_msg() {
     error_4="$5"
 
     echo
-    echo "$type: $error_1" | tee -a "${LOG_FILE}"
+    if [ "$type" = "Error" ]; then
+        echo "[X] $type: $error_1" | tee -a "${LOG_FILE}"
+    else
+        echo "[!] $type: $error_1" | tee -a "${LOG_FILE}"
+    fi
+    echo
     [ -n "$error_2" ] && echo "$error_2" | tee -a "${LOG_FILE}"
     [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
     [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
     echo
     if [ "$type" = "Error" ]; then
-        UNMOUNT_OPL
-        clean_up
-        read -n 1 -s -r -p "Press any key to exit..."
+        sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1
+        read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
         echo
         exit 1;
     else
-        read -n 1 -s -r -p "Press any key to continue..."
+        read -n 1 -s -r -p "Press any key to continue..." </dev/tty
         echo
+    fi
+}
+
+UNMOUNT_OPL() {
+    sync
+    if ! sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1; then
+        error_msg "Error" "Failed to unmount $DEVICE."
     fi
 }
 
 MOUNT_OPL() {
     echo | tee -a "${LOG_FILE}"
-    echo "Mounting OPL partition..." | tee -a "${LOG_FILE}"
+    echo "Mounting OPL partition..." >> "${LOG_FILE}" 2>&1
     mkdir -p "${OPL}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${OPL}."
 
     sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
@@ -161,7 +166,7 @@ MOUNT_OPL() {
     fi
 
     if [ $? -ne 0 ]; then
-        error_msg "Error" "Failed to mount ${DEVICE}3"
+        error_msg "Error" "Failed to mount OPL partition."
     fi
 
     # Create necessary folders if they don't exist
@@ -293,7 +298,7 @@ POPS_SYNC() {
         mapfile -t pops_array < <(echo "$ps1_files")
 
         # Initialize a temporary file
-        temp_list="${TOOLKIT_PATH}/ps1.list.tmp"
+        temp_list="${SCRIPTS_DIR}/tmp/ps1.list.tmp"
 
         # Track whether any POPS file is missing from ps1.list
         missing_from_list=false
@@ -387,7 +392,7 @@ POPS_SYNC() {
         echo -n "Copying..."
         PFS_COMMANDS
         echo | tee -a "${LOG_FILE}"
-        echo "PS1 games copied successfully." | tee -a "${LOG_FILE}"
+        echo "[✓] PS1 games copied successfully." | tee -a "${LOG_FILE}"
     fi
     cd ${TOOLKIT_PATH} 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to $TOOLKIT_PATH."
 }
@@ -504,8 +509,10 @@ CREATE_VMC() {
     current_group=""
 
     echo | tee -a "${LOG_FILE}"
-    echo -n "Creating VMCs for PS1 games..."
-    mkdir -p "${POPS_DIR}"
+    echo -n "Creating VMCs for PS1 games..." | tee -a "${LOG_FILE}"
+    if ! mkdir -p "${POPS_DIR}"; then
+        error_msg "Error" "Failed to create VMC folder."
+    fi
 
     # First pass: Group file names by base title
     exec 3< "$PS1_LIST"
@@ -624,8 +631,6 @@ CREATE_VMC() {
         COMMANDS+="put DISCS.TXT\n"
         COMMANDS+="rm VMCDIR.TXT\n"
         COMMANDS+="put VMCDIR.TXT\n"
-        COMMANDS+="rm BIOS.BIN\n"
-        COMMANDS+="put BIOS.BIN\n"
         COMMANDS+="cd ..\n"
     done
     COMMANDS+="cd ..\n"
@@ -675,7 +680,7 @@ app_success_check() {
         error_msg "Error" "Failed to update $name. See "${LOG_FILE}" for details."
     else
         echo | tee -a "${LOG_FILE}"
-        echo "Successfully updated $name." | tee -a "${LOG_FILE}"
+        echo "[✓] Successfully updated $name." | tee -a "${LOG_FILE}"
     fi
 }
 
@@ -687,7 +692,7 @@ ps2_rsync_check() {
         error_msg "Error" "Failed to $INSTALL_TYPE PS2 games. See ${LOG_FILE} for details."
     else
         echo | tee -a "${LOG_FILE}"
-        echo "PS2 games successfully $type." | tee -a "${LOG_FILE}"
+        echo "[✓] PS2 games successfully $type." | tee -a "${LOG_FILE}"
     fi
 }
 
@@ -800,7 +805,7 @@ install_pops() {
             fi
             # Check if both POPS.ELF and IOPRP252.IMG exist after extraction
             if [[ -f "${ASSETS_DIR}/POPS-binaries-main/POPS.ELF" && -f "${ASSETS_DIR}/POPS-binaries-main/IOPRP252.IMG" ]]; then
-                echo "POPS binaries successfully extracted." | tee -a "${LOG_FILE}"
+                echo "[✓] POPS binaries successfully extracted." | tee -a "${LOG_FILE}"
             else
                 error_msg "Warning" "One or both files (POPS.ELF, IOPRP252.IMG) are missing after extraction." "Without these files PS1 games will not be playable."
             fi
@@ -815,7 +820,7 @@ install_pops() {
             COMMANDS+="mkdir POPS\n"
         fi
         COMMANDS+="cd POPS\n"
-        COMMANDS+="lcd '${TOOLKIT_PATH}/assets/POPS-binaries-main'\n"
+        COMMANDS+="lcd '${ASSETS_DIR}/POPS-binaries-main'\n"
         COMMANDS+="put POPS.ELF\n"
         COMMANDS+="put IOPRP252.IMG\n"
         COMMANDS+="cd /\n"
@@ -824,7 +829,7 @@ install_pops() {
 
         PFS_COMMANDS
 
-        echo "POPS-binaries successfully installed." | tee -a "${LOG_FILE}"
+        echo "[✓] POPS-binaries successfully installed." | tee -a "${LOG_FILE}"
 
     fi
 }
@@ -960,20 +965,28 @@ EOL
 }
 
 activate_python() {
-    echo >> "${LOG_FILE}"
-    echo "Activating Python virtual environment..." >> "${LOG_FILE}"
     echo
-    echo -n "Preparing to $INSTALL_TYPE PS2 games..."
-    sleep 5
-    echo | tee -a "${LOG_FILE}"
+    msg="Preparing to $INSTALL_TYPE PS2 games"
+    spin='|/-\'
+    printf "\r[%c] %s" "${spin:0:1}" "$msg"
+    SECONDS=0
+    while [ $SECONDS -lt 5 ]; do
+        for i in {0..3}; do
+            printf "\r[%c] %s" "${spin:i:1}" "$msg"
+            sleep 0.1
+        done
+    done
+    printf "\r[✓] %s\n" "$msg"
 
+    echo | tee -a "${LOG_FILE}"
+    echo "Activating Python virtual environment..." >> "${LOG_FILE}"
     # Try activating the virtual environment twice before failing
-    if ! source "${TOOLKIT_PATH}/venv/bin/activate" 2>>"${LOG_FILE}"; then
+    if ! source "${SCRIPTS_DIR}/venv/bin/activate" 2>>"${LOG_FILE}"; then
         echo -n "Failed to activate the Python virtual environment. Retrying..." | tee -a "${LOG_FILE}"
         sleep 2
         echo | tee -a "${LOG_FILE}"
     
-        if ! source "${TOOLKIT_PATH}/venv/bin/activate" 2>>"${LOG_FILE}"; then
+        if ! source "${SCRIPTS_DIR}/venv/bin/activate" 2>>"${LOG_FILE}"; then
             error_msg "Error" "Failed to activate the Python virtual environment."
         fi
     fi
@@ -1066,11 +1079,11 @@ create_icon_sys() {
 PS2X
 title0=$title
 title1=$publisher
-bgcola=0
-bgcol0=0,0,0
-bgcol1=0,0,0
-bgcol2=0,0,0
-bgcol3=0,0,0
+bgcola=58
+bgcol0=0,3,43
+bgcol1=0,0,10
+bgcol2=1,0,9
+bgcol3=0,1,19
 lightdir0=1.0,-1.0,1.0
 lightdir1=-1.0,1.0,-1.0
 lightdir2=0.0,0.0,0.0
@@ -1124,7 +1137,7 @@ APP_ART() {
         "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/apps/${title_id}.png"
         
         if [[ -s "$png_file" ]]; then
-            echo "Successfully downloaded artwork for $title_id" | tee -a "${LOG_FILE}"
+            echo "[✓] Successfully downloaded artwork for $title_id" | tee -a "${LOG_FILE}"
             cp "$png_file" "$dir/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/jkt_001.png. See ${LOG_FILE} for details."
             echo "Created: $dir/jkt_001.png"  | tee -a "${LOG_FILE}"
             cp "$png_file" "${GAMES_PATH}/ART/${elf}_COV.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create ${GAMES_PATH}/ART/${elf}_COV.png. See ${LOG_FILE} for details."
@@ -1139,101 +1152,54 @@ APP_ART() {
 }
 
 SPLASH() {
-clear
+    clear
+    cat << "EOF"
+                  _____                        _____          _        _ _ 
+                 |  __ \                      |_   _|        | |      | | |          
+                 | |  \/ __ _ _ __ ___   ___    | | _ __  ___| |_ __ _| | | ___ _ __ 
+                 | | __ / _` | '_ ` _ \ / _ \   | || '_ \/ __| __/ _` | | |/ _ \ '__|
+                 | |_\ \ (_| | | | | | |  __/  _| || | | \__ \ || (_| | | |  __/ |   
+                  \____/\__,_|_| |_| |_|\___|  \___/_| |_|___/\__\__,_|_|_|\___|_|   
 
-echo "                  _____                        _____          _        _ _           ";
-echo "                 |  __ \                      |_   _|        | |      | | |          ";
-echo "                 | |  \/ __ _ _ __ ___   ___    | | _ __  ___| |_ __ _| | | ___ ___ ";
-echo "                 | | __ / _\` | '_ \` _ \ / _ \   | || '_ \/ __| __/ _\` | | |/ _ \ __|";
-echo "                 | |_\ \ (_| | | | | | |  __/  _| || | | \__ \ || (_| | | |  __/ |    ";
-echo "                  \____/\__,_|_| |_| |_|\___|  \___/_| |_|___/\__\__,_|_|_|\___|_|    ";
-echo "                                                                      ";
-echo "                                         Written by CosmicScale"
-echo
-echo
-echo
+
+EOF
 }
 
-SPLASH
-
-if [[ "$(uname -m)" != "x86_64" ]]; then
-    error_msg "Error" "Unsupported CPU architecture: $(uname -m). This script requires x86-64."
-fi
-
-# Check if the helper files exists
-if [[ ! -f "${HELPER_DIR}/PFS Shell.elf" || ! -f "${HELPER_DIR}/HDL Dump.elf" ]]; then
-    error_msg "Error" "Helper files not found. Scripts must be from the 'PSBBN-Definitive-English-Patch' directory."
-fi
+mkdir -p "${LOGS_DIR}" >/dev/null 2>&1
 
 if ! echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1; then
     sudo rm -f "${LOG_FILE}"
     if ! echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1; then
-        echo
-        echo "Error: Cannot create log file."
-        echo
-        read -n 1 -s -r -p "Press any key to exit..."
-        echo
-        exit 1
+        error_msg "Error" "Cannot create log file."
     fi
 fi
 
 date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
-
-clean_up
-sudo rm -f "${MISSING_ART}" "${MISSING_APP_ART}" "${MISSING_ICON}" "${MISSING_VMC}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to remove missing artwork files. See ${LOG_FILE} for details."
-
-# Check if the current directory is a Git repository
-if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-  echo "This is not a Git repository. Skipping update check." | tee -a "${LOG_FILE}"
-else
-  # Fetch updates from the remote
-  git fetch >> "${LOG_FILE}" 2>&1
-
-  # Check the current status of the repository
-  LOCAL=$(git rev-parse @)
-  REMOTE=$(git rev-parse @{u})
-  BASE=$(git merge-base @ @{u})
-
-  if [ "$LOCAL" = "$REMOTE" ]; then
-    echo "The repository is up to date." | tee -a "${LOG_FILE}"
-  else
-    echo "Downloading updates..."
-    # Get a list of files that have changed remotely
-    UPDATED_FILES=$(git diff --name-only "$LOCAL" "$REMOTE")
-
-    if [ -n "$UPDATED_FILES" ]; then
-      echo "Files updated in the remote repository:" | tee -a "${LOG_FILE}"
-      echo "$UPDATED_FILES" | tee -a "${LOG_FILE}"
-
-      # Reset only the files that were updated remotely (discard local changes to them)
-      echo "$UPDATED_FILES" | xargs git checkout -- >> "${LOG_FILE}" 2>&1
-
-      # Pull the latest changes
-      if ! git pull --ff-only >> "${LOG_FILE}" 2>&1; then
-        error_msg "Error" "Update failed. Delete the PSBBN-Definitive-English-Patch directory and run the command:" " " "git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git" " " "Then try running the script again."
-      fi
-      echo
-      echo "The repository has been successfully updated." | tee -a "${LOG_FILE}"
-      read -n 1 -s -r -p "Press any key to exit, then run the script again."
-      echo
-      exit 0
-    fi
-  fi
-fi
-
 echo "Tootkit path: $TOOLKIT_PATH" >> "${LOG_FILE}"
 echo  >> "${LOG_FILE}"
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
 echo >> "${LOG_FILE}"
+echo "Path: $path_arg" >> "${LOG_FILE}"
+echo >> "${LOG_FILE}"
+
+clear
+clean_up
+
+sudo rm -f "${MISSING_ART}" "${MISSING_APP_ART}" "${MISSING_ICON}" "${MISSING_VMC}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to remove missing artwork files. See ${LOG_FILE} for details."
+
+mkdir -p "${SCRIPTS_DIR}/tmp" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create tmp folder. See ${LOG_FILE} for details."
 
 DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
 
 if [[ -z "$DEVICE" ]]; then
-    error_msg "Error" "Unable to detect PS2 drive."
+    clear
+    error_msg "Error" "Unable to detect the PS2 drive. Please ensure the drive is properly connected." "If this is your first time using the installer, select 'Install PSBBN' from the main menu."
 fi
 
 echo "OPL partition found on $DEVICE" >> "${LOG_FILE}"
+
+SPLASH
 
 # Find all mounted volumes associated with the device
 mounted_volumes=$(lsblk -ln -o MOUNTPOINT "$DEVICE" | grep -v "^$")
@@ -1243,7 +1209,7 @@ echo "Unmounting volumes associated with $DEVICE..." >> "${LOG_FILE}"
 for mount_point in $mounted_volumes; do
     echo "Unmounting $mount_point..." >> "${LOG_FILE}"
     if sudo umount "$mount_point"; then
-        echo "Successfully unmounted $mount_point." >> "${LOG_FILE}"
+        echo "[✓] Successfully unmounted $mount_point." >> "${LOG_FILE}"
     else
         error_msg "Error" "Failed to unmount $mount_point. Please unmount manually."
 
@@ -1254,60 +1220,83 @@ HDL_TOC
 
 MOUNT_OPL
 
-psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
+psbbn_version=$(head -n 1 "${OPL}/version.txt" 2>/dev/null)
 
 # Compare using sort -V
 if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
-    error_msg "Warning" "PSBBN Definitive Patch version is lower than the recommended version ($version_check)." " " "Update to the latest version by running the 02-PSBBN-Installer.sh script, or press any key to" "proceed with caution."
-    rm -f "${OPL}/conf_apps.cfg" || error_msg "Error" "Failed to delete ${OPL}/conf_apps.cfg."
+    echo "Warning: Your PSBBN Definitive Patch version ($psbbn_version) is older than the recommended version ($version_check)."
+    echo "It is strongly recommended to update by selecting 'Install PSBBN' from the main menu."
+    echo "Proceed with caution."
+    echo
+    while true; do
+        read -rp "Do you want to continue anyway? [Y]es / [N]o: " response
+        case "$response" in
+            [Yy]* )
+                rm -f "${OPL}/conf_apps.cfg" || error_msg "Error" "Failed to delete ${OPL}/conf_apps.cfg."
+                break
+                ;;
+            [Nn]* )
+                exit 0
+                ;;
+            * )
+                echo "Please answer Y (yes) or N (no)."
+                ;;
+        esac
+    done
 fi
 
 # Check if the Python virtual environment exists
-if [ -f "./venv/bin/activate" ]; then
+if [ -f "./scripts/venv/bin/activate" ]; then
     echo "The Python virtual environment exists." >> "${LOG_FILE}"
 else
     error_msg "Error" "The Python virtual environment does not exist. Run 01-Setup.sh and try again."
 fi
 
-if [[ -f "$CONFIG_FILE" && -s "$CONFIG_FILE" ]]; then
+if [[ -n "$path_arg" ]]; then
+    if [[ -d "$path_arg" ]]; then
+        GAMES_PATH="$path_arg"
+    fi
+elif [[ -f "$CONFIG_FILE" && -s "$CONFIG_FILE" ]]; then
     cfg_path="$(<"$CONFIG_FILE")"
     if [[ -d "$cfg_path" ]]; then
         GAMES_PATH="$cfg_path"
     fi
 fi
 
-echo
-echo "Games folder: $GAMES_PATH" | tee -a "${LOG_FILE}"
-echo
+if [[ -z "$path_arg" ]]; then
+    echo
+    echo "Games folder: $GAMES_PATH" | tee -a "${LOG_FILE}"
+    echo
 
-while true; do
-    read -p "Would you like to change the location of the local games folder? (y/n): " answer
-    case "$answer" in
-        [Yy])
-            echo
-            read -p "Enter new path for games folder: " new_path
-            if [[ -d "$new_path" ]]; then
-                # Remove trailing slash unless it's the root directory
-                new_path="${new_path%/}"
-                [[ "$new_path" == "" ]] && new_path="/"
-
-                GAMES_PATH="$new_path"
-                echo "$GAMES_PATH" > "$CONFIG_FILE"
-                break
-            else
-                echo "Invalid path. Please try again." | tee -a "${LOG_FILE}"
+    while true; do
+        read -p "Would you like to change the location of the local games folder? (y/n): " answer
+        case "$answer" in
+            [Yy])
                 echo
-            fi
-            ;;
-        [Nn])
-            break
-            ;;
-        *)
-            echo
-            echo "Please enter y or n."
-            ;;
-    esac
-done
+                read -p "Enter new path for games folder: " new_path
+                if [[ -d "$new_path" ]]; then
+                    # Remove trailing slash unless it's the root directory
+                    new_path="${new_path%/}"
+                    [[ "$new_path" == "" ]] && new_path="/"
+
+                    GAMES_PATH="$new_path"
+                    echo "$GAMES_PATH" > "$CONFIG_FILE"
+                    break
+                else
+                    echo "Invalid path. Please try again." | tee -a "${LOG_FILE}"
+                    echo
+                fi
+                ;;
+            [Nn])
+                break
+                ;;
+            *)
+                echo
+                echo "Please enter y or n."
+                ;;
+        esac
+    done
+fi
 
 # Create necessary folders if they don't exist
 for folder in APPS ART CFG CHT LNG THM VMC POPS CD DVD; do
@@ -1357,9 +1346,9 @@ while true; do
 done
 
 if [ "$INSTALL_TYPE" = "sync" ] && \
-   ! find "${GAMES_PATH}/POPS" -maxdepth 1 -type f -iname "*.vcd" | grep -q . && \
-   ! find "${GAMES_PATH}/CD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) | grep -q . && \
-   ! find "${GAMES_PATH}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) | grep -q .; then
+   ! find "${GAMES_PATH}/POPS" -maxdepth 1 -type f -iname "*.vcd" -print -quit | grep -q . && \
+   ! find "${GAMES_PATH}/CD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) -print -quit | grep -q . && \
+   ! find "${GAMES_PATH}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) -print -quit | grep -q .; then
     echo
     echo "Warning: No games found in the games folder: ${GAMES_PATH}"
     echo "All games on the PS2 drive will be deleted."
@@ -1398,12 +1387,72 @@ while true; do
     esac
 done
 
+ps1_games_found=false
+
+# Only populate ps1_games if INSTALL_TYPE=copy
+if [ "$INSTALL_TYPE" = "copy" ]; then
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="mount __.POPS\n"
+    COMMANDS+="ls -l\n"
+    COMMANDS+="umount\n"
+    COMMANDS+="exit"
+    ps1_games=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" 2>/dev/null)
+    if echo "$ps1_games" | grep -qi '\.vcd$'; then
+        ps1_games_found=true
+    fi
+fi
+
+# Check conditions for sync or copy
+if { [ "$INSTALL_TYPE" = "sync" ] && find "${GAMES_PATH}/POPS" -maxdepth 1 -type f -iname "*.vcd" -print -quit 2>/dev/null | grep -q .; } \
+   || { [ "$INSTALL_TYPE" = "copy" ] && { find "${GAMES_PATH}/POPS" -maxdepth 1 -type f -iname "*.vcd" -print -quit 2>/dev/null | grep -q . || [ "$ps1_games_found" = true ]; }; }; then
+    
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="mount __common\n"
+    COMMANDS+="cd POPS\n"
+    COMMANDS+="lcd '${ASSETS_DIR}/POPStarter'\n"
+
+    SPLASH
+    echo "Would you like to enable 'HDTVFIX' for PS1 games?"
+    echo
+    echo "Enable this if your TV cannot display 240p and PS1 games show a blank screen."
+    echo
+    while true; do
+        read -p "Yes or No (y/n): " HDTVFIX
+        case "$HDTVFIX" in
+            [Yy])
+                COMMANDS+="rm CHEATS.TXT\n"
+                COMMANDS+="put CHEATS.TXT\n"
+                break
+                ;;
+            [Nn])
+                COMMANDS+="rm CHEATS.TXT\n"
+                break
+                ;;
+            *)
+                echo
+                echo "Please enter y or n."
+                ;;
+        esac
+    done
+
+    COMMANDS+="umount\n"
+    COMMANDS+="exit"
+    PFS_COMMANDS
+fi
+
 SPLASH
 
-echo "PS2 drive detected: $DEVICE" | tee -a "${LOG_FILE}"
-echo "Games folder: $GAMES_PATH" | tee -a "${LOG_FILE}"
-echo "Install type: $DESC1" | tee -a "${LOG_FILE}"
-echo "Game launcher: $DESC2" | tee -a "${LOG_FILE}"
+echo "PS2 Drive Detected: $DEVICE" | tee -a "${LOG_FILE}"
+echo "Games Folder: $GAMES_PATH" | tee -a "${LOG_FILE}"
+echo "Install Type: $DESC1" | tee -a "${LOG_FILE}"
+echo "Game Launcher: $DESC2" | tee -a "${LOG_FILE}"
+if [ -n "$HDTVFIX" ]; then
+    case "$HDTVFIX" in
+        [Yy]) HDTVFIX="Yes" ;;
+        [Nn]) HDTVFIX="No" ;;
+    esac
+    echo "HDTV fix for PS1 Games: $HDTVFIX"
+fi
 echo
 read -n 1 -s -r -p "Press any key to continue..."
 echo
@@ -1438,6 +1487,7 @@ if [ -n "$delete_partition" ]; then
     delete_partition=$(grep -o 'PP\.[^ ]\+' "$hdl_output")
     
     if [ -n "$delete_partition" ]; then
+        echo | tee -a "${LOG_FILE}"
         echo "Unable to delete the following partitions:"
         echo $delete_partition 
         error_msg "Error" "Failed to delete existing PP partitions."
@@ -1445,6 +1495,7 @@ if [ -n "$delete_partition" ]; then
         echo "Existing PP partitions sucessfully deleted." | tee -a "${LOG_FILE}"
     fi
 else
+    echo | tee -a "${LOG_FILE}"
     echo "No PP partitions to delete." | tee -a "${LOG_FILE}"
 fi
 
@@ -1467,7 +1518,7 @@ if [ "$INSTALL_TYPE" = "sync" ]; then
 
     rsync -rut --progress --delete --exclude='.*' "${GAMES_PATH}/APPS/" "${OPL}/APPS/" >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed sync apps. See $LOG_FILE for details."
 
-    find "${OPL}/APPS/" -maxdepth 1 -type f -exec rm -f {} + 2>>"${LOG_FILE}" || error_msg "Error" "Failed to tidy up OPL/APPS/"
+    find "${OPL}/APPS/" -maxdepth 1 -type f -exec rm -f {} + 2>>"${LOG_FILE}" || error_msg "Error" "Failed to tidy up ${OPL}/APPS/"
 
     POPS_SYNC
     activate_python
@@ -1611,7 +1662,7 @@ if [[ -s "${ALL_GAMES}" ]]; then
     echo | tee -a "${LOG_FILE}"
     echo "Number of games to install: $count" | tee -a "${LOG_FILE}"
     echo
-    echo "Games list successfully created."| tee -a "${LOG_FILE}"
+    echo "[✓] Games list successfully created."| tee -a "${LOG_FILE}"
     echo >> "${LOG_FILE}"
     echo "master.list:" >> "${LOG_FILE}"
     cat "${ALL_GAMES}" >> "${LOG_FILE}"
@@ -1796,6 +1847,8 @@ else
         elif [[ "$title_id" == "BBNAVIGATOR" ]]; then
             cp "${ICONS_DIR}/ico/psbbn.ico" "$dir/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
             echo "Created: $dir/list.ico" | tee -a "${LOG_FILE}"
+            cp "${ICONS_DIR}/ico/psbbn-del.ico" "$dir/del.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
+            echo "Created: $dir/del.ico" | tee -a "${LOG_FILE}"
         elif [[ "$title_id" == "HDDOSD" ]]; then
             cp "${ICONS_DIR}/ico/hdd-osd.ico" "$dir/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
             echo "Created: $dir/list.ico" | tee -a "${LOG_FILE}"
@@ -1863,9 +1916,9 @@ if [ -f "$ALL_GAMES" ]; then
 
             if [[ -f "$png_file_cover" || -f "$png_file_disc" ]]; then
                 if [[ ${#missing_files[@]} -eq 0 ]]; then
-                    echo "Successfully downloaded OPL artwork for $game_id" | tee -a "${LOG_FILE}"
+                    echo "[✓] Successfully downloaded OPL artwork for $game_id" | tee -a "${LOG_FILE}"
                 else
-                    echo "Successfully downloaded some OPL artwork for $game_id, but missing: ${missing_files[*]}" | tee -a "${LOG_FILE}"
+                    echo "[✓] Successfully downloaded some OPL artwork for $game_id, but missing: ${missing_files[*]}" | tee -a "${LOG_FILE}"
                 fi
             else
                 echo "Failed to download OPL artwork for $game_id" | tee -a "${LOG_FILE}"
@@ -1912,7 +1965,7 @@ if [ -f "$ALL_GAMES" ]; then
             wget --quiet --timeout=10 --tries=3 --output-document="$png_file" \
             "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/art/${game_id}.png"
             if [[ -s "$png_file" ]]; then
-                echo "Successfully downloaded artwork for $game_id" | tee -a "${LOG_FILE}"
+                echo "[✓] Successfully downloaded artwork for $game_id" | tee -a "${LOG_FILE}"
             else
                 # If wget fails, run the art downloader
                 [[ -f "$png_file" ]] && rm -f "$png_file"
@@ -1982,7 +2035,7 @@ if [ -f "$ALL_GAMES" ]; then
             wget --quiet --timeout=10 --tries=3 --output-document="$ico_file" \
             "https://raw.githubusercontent.com/CosmicScale/HDD-OSD-Icon-Database/main/ico/${game_id}.ico"
             if [[ -s "$ico_file" ]]; then
-                echo "Successfully downloaded icon for ${game_id}." | tee -a "${LOG_FILE}"
+                echo "[✓] Successfully downloaded icon for ${game_id}." | tee -a "${LOG_FILE}"
                 echo | tee -a "${LOG_FILE}"
             else
                 # If wget fails, run the art downloader
@@ -2082,7 +2135,7 @@ if [ -f "$ALL_GAMES" ]; then
                     wget --quiet --timeout=10 --tries=3 --output-document="$ico_file" \
                     "https://raw.githubusercontent.com/CosmicScale/HDD-OSD-Icon-Database/main/vmc/${game_id}.ico"
                     if [[ -s "$ico_file" ]]; then
-                        echo "Successfully downloaded VMC icon for ${game_id}." | tee -a "${LOG_FILE}"
+                        echo "[✓] Successfully downloaded VMC icon for ${game_id}." | tee -a "${LOG_FILE}"
                         echo | tee -a "${LOG_FILE}"
                     else
                         # If wget fails, run the art downloader
@@ -2265,7 +2318,7 @@ fi
 
 echo | tee -a "${LOG_FILE}"
 echo "Copying BBNL configs..." | tee -a "${LOG_FILE}"
-rm -f "${TOOLKIT_PATH}"/OPL/bbnl/*.cfg >> "${LOG_FILE}" 2>&1
+rm -f "${OPL}"/bbnl/*.cfg >> "${LOG_FILE}" 2>&1
 cp "${ICONS_DIR}"/bbnl/*.cfg "${OPL}/bbnl" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to copy BBNL config files. See ${LOG_FILE} for details."
 
 echo | tee -a "${LOG_FILE}"
@@ -2446,9 +2499,10 @@ if [ -f "$ALL_GAMES" ]; then
 
         if [[ "$disc_type" == "POPS" ]]; then
             COMMANDS+="lcd '${ASSETS_DIR}/POPStarter'\n"
+            COMMANDS+="put bg.png\n"
+            COMMANDS+="lcd '${ASSETS_DIR}/POPStarter/eng'\n"
             COMMANDS+="put 1.png\n"
             COMMANDS+="put 2.png\n"
-            COMMANDS+="put bg.png\n"
             COMMANDS+="put man.xml\n"
         fi
 
@@ -2488,7 +2542,7 @@ if [ "$(ls -A "${ARTWORK_DIR}/tmp")" ]; then
     upload_url=$(curl -F "reqtype=fileupload" -F "time=72h" -F "fileToUpload=@art.zip" https://litterbox.catbox.moe/resources/internals/api.php)
 
     if [[ "$upload_url" == https://* ]]; then
-        echo "File uploaded successfully: $upload_url" | tee -a "${LOG_FILE}"
+        echo "[✓] File uploaded successfully: $upload_url" | tee -a "${LOG_FILE}"
 
     # Send a POST request to Webhook.site with the uploaded file URL
     webhook_url="https://webhook.site/PSBBN"
@@ -2503,16 +2557,13 @@ else
     echo "No art work or icons to contribute." | tee -a "${LOG_FILE}"
 fi
 
-echo | tee -a "${LOG_FILE}"
-echo "Cleaning up..." | tee -a "${LOG_FILE}"
-clean_up
-
 HDL_TOC
 cat "$hdl_output" >> "${LOG_FILE}"
 rm -f "$hdl_output"
 
+
 echo | tee -a "${LOG_FILE}"
 echo "Game installer script complete." | tee -a "${LOG_FILE}"
 echo
-read -n 1 -s -r -p "Press any key to exit..."
+read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
 echo
