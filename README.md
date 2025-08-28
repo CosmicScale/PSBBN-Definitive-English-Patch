@@ -53,7 +53,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 # Changelog
 
 ## August 28th, 2025 - PSBBN Definitive Patch v3.00 - Music, Faster Installs, Menu System & More!
-[![PSBBN Definitive English Patch 3.0](https://github.com/user-attachments/assets/d60dc4ff-85f8-4fb4-8acb-201b063545b0)](https://www.youtube.com/watch?v=lUMKZck6G08)  
+[![PSBBN Definitive English Patch 3.0](https://github.com/user-attachments/assets/3b82d809-28d5-4675-87c2-c7f1abf96ae6)](https://www.youtube.com/watch?v=lUMKZck6G08)  
 
 **[NEW! Menu System:](#main-menu)**
 - New central menu system instead of separate scripts, making it easier to navigate the various features of the PSBBN Definitive Patch
