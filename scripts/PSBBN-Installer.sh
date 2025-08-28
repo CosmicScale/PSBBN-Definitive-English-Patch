@@ -184,7 +184,7 @@ mount_cfs() {
                     error_msg "Failed to create filesystem ${PARTITION_NAME}."
                 fi
             else
-                if ! sudo "${HELPER_DIR}/mkfs.ext2" -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
+                if ! sudo mkfs.ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
                     error_msg "Failed to create filesystem ${PARTITION_NAME}."
                 fi
             fi
@@ -547,35 +547,25 @@ PSBBN_PATCH="${ASSETS_DIR}/${LATEST_FILE}"
 clean_up
 
 if [ "$MODE" = "install" ]; then
-    echo >> "${LOG_FILE}"
-    echo "Initialising drive:" >> "${LOG_FILE}"
-    (
-        set -e # exit immediately if any command fails
+    echo | tee -a "${LOG_FILE}"
+    echo -n "Initialising drive..." | tee -a "${LOG_FILE}"
+    {
+        sudo dd if=/dev/zero of="${DEVICE}" bs=1M count=100 status=progress >> "${LOG_FILE}" 2>&1
+        sudo dd if=/dev/zero of="${DEVICE}" bs=1M seek=$(( $(sudo blockdev --getsz "${DEVICE}") / 2048 - 100 )) count=100 status=progress >> "${LOG_FILE}" 2>&1
+    }
 
-        {
-            sudo dd if=/dev/zero of="${DEVICE}" bs=1M count=100 status=progress
-            sudo dd if=/dev/zero of="${DEVICE}" bs=1M seek=$(( $(sudo blockdev --getsz "${DEVICE}") / 2048 - 100 )) count=100 status=progress
-        }
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="initialize yes\n"
+    COMMANDS+="mkpart __linux.1 512M EXT2\n"
+    COMMANDS+="mkpart __linux.2 128M EXT2SWAP\n"
+    COMMANDS+="mkpart __linux.4 512M EXT2\n"
+    COMMANDS+="mkpart __linux.5 512M EXT2\n"
+    COMMANDS+="mkpart __linux.6 128M EXT2\n"
+    COMMANDS+="mkpart __linux.7 256M EXT2\n"
+    COMMANDS+="mkpart __linux.9 3072M EXT2\n"
+    COMMANDS+="exit"
 
-        COMMANDS="device ${DEVICE}\n"
-        COMMANDS+="initialize yes\n"
-        COMMANDS+="mkpart __linux.1 512M EXT2\n"
-        COMMANDS+="mkpart __linux.2 128M EXT2SWAP\n"
-        COMMANDS+="mkpart __linux.4 512M EXT2\n"
-        COMMANDS+="mkpart __linux.5 512M EXT2\n"
-        COMMANDS+="mkpart __linux.6 128M EXT2\n"
-        COMMANDS+="mkpart __linux.7 256M EXT2\n"
-        COMMANDS+="mkpart __linux.9 3072M EXT2\n"
-        COMMANDS+="exit"
-
-        PFS_COMMANDS
-
-    ) >> "${LOG_FILE}" 2>&1 || error_msg "Failed to erase drive ${DEVICE}"
-
-    INIT_PID=$!
-
-    # Spinner
-    spinner $INIT_PID "Initialising drive"
+    PFS_COMMANDS
 
     # Retreive avaliable space
 
@@ -590,7 +580,7 @@ if [ "$MODE" = "install" ]; then
     free_space=$((available / 1024))
     max_music=$(((available - 2048) / 1024))
 
-
+    echo | tee -a "${LOG_FILE}"
     # Prompt user for partition size for music and POPS, validate input, and keep asking until valid input is provided
     while true; do
         echo | tee -a "${LOG_FILE}"
@@ -695,91 +685,83 @@ if [ "$MODE" = "install" ]; then
     PFS_COMMANDS
 fi
 
-echo >> "${LOG_FILE}"
-echo "Installing PSBBN:" >> "${LOG_FILE}"
-(
-    mapper_probe
-    mount_cfs
-    mount_pfs
+echo | tee -a "${LOG_FILE}"
+echo -n "Installing PSBBN..." | tee -a "${LOG_FILE}"
+mapper_probe
+mount_cfs
+mount_pfs
 
-    if [ "$MODE" = "install" ]; then
-        sudo mkdir -p "${STORAGE_DIR}/__linux.8/MusicCh/contents"
-        sudo mkdir -p "${STORAGE_DIR}/__common"/{POPS,"Your Saves"}
-        sudo cp "${ASSETS_DIR}/POPStarter/eng"/{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} "${STORAGE_DIR}/__common/POPS/"
-    fi
+if [ "$MODE" = "install" ]; then
+    sudo mkdir -p "${STORAGE_DIR}/__linux.8/MusicCh/contents"
+    sudo mkdir -p "${STORAGE_DIR}/__common"/{POPS,"Your Saves"}
+    sudo cp "${ASSETS_DIR}/POPStarter/eng"/{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} "${STORAGE_DIR}/__common/POPS/"
+fi
 
-    sudo tar zxpf "${PSBBN_PATCH}" -C "${STORAGE_DIR}/" > /dev/null 2>&1
+sudo tar zxpf "${PSBBN_PATCH}" -C "${STORAGE_DIR}/" > /dev/null 2>&1
 
-    if [ "$MODE" = "update" ]; then
-        sudo tee -a "${STORAGE_DIR}/__linux.1/etc/rc.d/rc.sysinit" >/dev/null <<'EOF'
+if [ "$MODE" = "update" ]; then
+    sudo tee -a "${STORAGE_DIR}/__linux.1/etc/rc.d/rc.sysinit" >/dev/null <<'EOF'
 BUTTON=`cat /proc/ps2pad | awk '$1==0 { print $5; }'`
 [ "$BUTTON" != "" -a "$BUTTON" != "FFFF" ] && /sbin/akload -r /boot/linux
 EOF
-    fi
+fi
 
-    BOOTSTRAP
-    clean_up
-    
-) >>"$LOG_FILE" 2>&1 &
-
-INSTALL_PID=$!
-spinner $INSTALL_PID "Installing PSBBN"
+BOOTSTRAP
+clean_up
+echo | tee -a "${LOG_FILE}"
 
 if [ "$MODE" = "install" ]; then
-    echo >> "${LOG_FILE}"
-    echo "Running APA-Jail:" >> "${LOG_FILE}"
+    echo | tee -a "${LOG_FILE}"
+    echo -n "Running APA-Jail..." | tee -a "${LOG_FILE}"
     ################################### APA-Jail code by Berion ###################################
-    (
-        # Signature injection (type A2):
-        MAGIC_NUMBER="4150414A2D413200"
-        apajail_magic_number
 
-        # Setting up MBR:
-        {
-        echo -e ",128GiB,17\n,32MiB,17\n,,07" | sudo sfdisk ${DEVICE}
-        sudo partprobe ${DEVICE}
-        if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
-	        sudo mkfs.ext2 -L "RECOVERY" ${DEVICE}p2
-	        sudo "${HELPER_DIR}/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}p3
-	    else
-		    sleep 4
-		    sudo mkfs.ext2 -L "RECOVERY" ${DEVICE}2
-		    sudo "${HELPER_DIR}/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}3
+    # Signature injection (type A2):
+    MAGIC_NUMBER="4150414A2D413200"
+    apajail_magic_number
+
+    # Setting up MBR:
+    {
+    echo -e ",128GiB,17\n,32MiB,17\n,,07" | sudo sfdisk ${DEVICE}
+    sudo partprobe ${DEVICE}
+    if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
+	    sudo mkfs.ext2 -L "RECOVERY" ${DEVICE}p2
+	    sudo "${HELPER_DIR}/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}p3
+	else
+		sleep 4
+		sudo mkfs.ext2 -L "RECOVERY" ${DEVICE}2
+		sudo "${HELPER_DIR}/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}3
         fi
-        }
+    } >> "${LOG_FILE}" 2>&1
 
-        PARTITION_NUMBER=3
+    PARTITION_NUMBER=3
 
-        # Finalising recovery:
-        if [ ! -d "${STORAGE_DIR}/recovery" ]; then
-	        mkdir -p "${STORAGE_DIR}/recovery"
-        fi
+    # Finalising recovery:
+    if [ ! -d "${STORAGE_DIR}/recovery" ]; then
+	    mkdir -p "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
+    fi
 
-        if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
-	        sudo mount ${DEVICE}p2 "${STORAGE_DIR}/recovery"
-	    else
-            sudo mount ${DEVICE}2 "${STORAGE_DIR}/recovery"
-        fi
+    if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
+	    sudo mount ${DEVICE}p2 "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
+	else
+        sudo mount ${DEVICE}2 "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
+    fi
 
-        sudo dd if=${DEVICE} bs=128M count=1 status=noxfer | xz -z > /tmp/apa_index.xz
-        sudo cp /tmp/apa_index.xz "${STORAGE_DIR}/recovery"
-        LBA_MAX=$(sudo blockdev --getsize ${DEVICE})
-        LBA_GPT_BUP=$(echo $(($LBA_MAX-33)))
-        sudo dd if=${DEVICE} skip=${LBA_GPT_BUP} bs=512 count=33 status=noxfer | xz -z > /tmp/gpt_2nd.xz
-        sudo cp /tmp/gpt_2nd.xz "${STORAGE_DIR}/recovery"
-        sync
-        sudo umount -l "${STORAGE_DIR}/recovery"
-        CHECK_PARTITIONS
-        MOUNT_OPL
+    sudo dd if=${DEVICE} bs=128M count=1 status=noxfer 2>> "${LOG_FILE}" | xz -z > /tmp/apa_index.xz 2>> "${LOG_FILE}" 
+    sudo cp /tmp/apa_index.xz "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
+    LBA_MAX=$(sudo blockdev --getsize ${DEVICE})
+    LBA_GPT_BUP=$(echo $(($LBA_MAX-33)))
+    sudo dd if=${DEVICE} skip=${LBA_GPT_BUP} bs=512 count=33 status=noxfer 2>> "${LOG_FILE}" | xz -z > /tmp/gpt_2nd.xz 2>> "${LOG_FILE}"
+    sudo cp /tmp/gpt_2nd.xz "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
+    sync 2>> "${LOG_FILE}"
+    sudo umount -l "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
+    CHECK_PARTITIONS
+    MOUNT_OPL
 
-        if ! mkdir -p "${OPL}"/{APPS,ART,CFG,CHT,LNG,THM,VMC,CD,DVD,bbnl}; then
-            error_msg "Failed to create OPL folders."
-        fi
-        ) >>"$LOG_FILE" 2>&1 &
+    if ! mkdir -p "${OPL}"/{APPS,ART,CFG,CHT,LNG,THM,VMC,CD,DVD,bbnl}; then
+        error_msg "Failed to create OPL folders."
+    fi
 
-        APAJAIL_PID=$!
-        spinner $APAJAIL_PID "Running APA-Jail"
-
+    echo | tee -a "${LOG_FILE}"
     ###############################################################################################
 else
     MOUNT_OPL
