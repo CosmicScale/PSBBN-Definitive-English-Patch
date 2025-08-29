@@ -52,7 +52,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 # Changelog
 
-## August 28th, 2025 - PSBBN Definitive Patch v3.00 - Music, Faster Installs, Menu System & More!
+## August 28th, 2025 - PSBBN Definitive Patch v3.00 - Music Installer, Menu System, Faster Installs & More!
 [![PSBBN Definitive English Patch 3.0](https://github.com/user-attachments/assets/3b82d809-28d5-4675-87c2-c7f1abf96ae6)](https://www.youtube.com/watch?v=lUMKZck6G08)  
 
 **[NEW! Menu System:](#main-menu)**
@@ -84,10 +84,12 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 - New PSBBN icon designed by Yornn
 - New improved background colour when viewing game icons
 
-## July 17, 2025 - Definitive Patch v2.11 - Boot Security Patched! Button Swap, VMC Groups & More! - [Click to Watch](https://www.youtube.com/watch?v=kgXe8rlqsr0)
+## July 17, 2025 - Definitive Patch v2.11 - Boot Security Patched! Button Swap, VMC Groups & More!
 
 <details>
 <summary><b>Release Notes:</b></summary>
+  
+[![PSBBN Definitive Patch v2.11](https://github.com/user-attachments/assets/49511803-429b-4cd8-8546-40334be3f244)](https://www.youtube.com/watch?v=kgXe8rlqsr0)
 
 **PSBBN Updated to Definitive Patch v2.11**
 
@@ -127,10 +129,12 @@ New in Definitive Patch v2.11:
 
 </details>
 
-## June 05, 2025 - PSBBN Definitive Patch v2.10 – Big Game Installer Changes & More! - [Click to Watch](https://www.youtube.com/watch?v=XTacIPOGAwE)
+## June 05, 2025 - PSBBN Definitive Patch v2.10 – Big Game Installer Changes & More!
 
 <details>
 <summary><b>Release Notes:</b></summary>
+
+[![PSBBN Definitive Patch v2.10](https://github.com/user-attachments/assets/ff4e6e5b-8556-4fe2-88b2-99e7eb09121c)](https://www.youtube.com/watch?v=XTacIPOGAwE)
 
 **PFS Shell.elf & HDL Dump.elf:**
 
@@ -197,10 +201,12 @@ New in Definitive Patch v2.11:
 
 </details>
 
-## May 01, 2025 - SAS, HDD-OSD, PS2BBL & More! - [Click to Watch](https://www.youtube.com/watch?v=vpbHlS8nY58)
+## May 01, 2025 - SAS, HDD-OSD, PS2BBL & More!
 
 <details>
 <summary><b>Release Notes:</b></summary>
+
+[![SAS, HDD-OSD, PS2BBL & More!](https://github.com/user-attachments/assets/be5b32d2-665c-4505-aefe-3c9ab864f72a)](https://www.youtube.com/watch?v=vpbHlS8nY58)
 
 - Added support for the [Save Application System (SAS)](#save-application-system-sas). `PSU` files can now also be placed in the local `games/APPS` folder on your PC and will be installed by the `03-Game-Installer.sh` script
 - Added support for HDD-OSD to the `03-Game-Installer.sh` script. 3D icons are now downloaded from the [HDD-OSD Icon Database](https://github.com/cosmicscale/hdd-osd-icon-database)
@@ -210,10 +216,12 @@ New in Definitive Patch v2.11:
 
 </details>
 
-## Mar 28, 2025 - Homebrew Launcher & More! - [Click to Watch](https://www.youtube.com/watch?v=q9LvE_OPIPo)
+## Mar 28, 2025 - Homebrew Launcher & More!
 
 <details>
 <summary><b>Release Notes:</b></summary>
+
+[![Homebrew Launcher & More!](https://github.com/user-attachments/assets/57e7842c-f5b5-46b0-950e-246eebfb0e4a)](https://www.youtube.com/watch?v=q9LvE_OPIPo)
 
 - [Open PS2 Loader](#open-ps2-loader-opl) updated to version 1.2.0-Beta-2201-4b6cc21:
   - Limited max BDM UDMA mode to UDMA4 to avoid compatibility issues with various SATA/IDE2SD adapters
@@ -231,10 +239,12 @@ New in Definitive Patch v2.11:
 
 </details>
 
-## Feb 19, 2025 - BBN Launcher, Neutrino & NHDDL - [Click to Watch](https://www.youtube.com/watch?v=0vpSiAa6ITc)
+## Feb 19, 2025 - BBN Launcher, Neutrino & NHDDL
 
 <details>
 <summary><b>Release Notes:</b></summary>
+
+[![BBN Launcher, Neutrino & NHDDL](https://github.com/user-attachments/assets/8007d102-3019-4037-8c52-24d1454777da)](https://www.youtube.com/watch?v=0vpSiAa6ITc)
 
 - [OPL-Launcher-BDM](https://github.com/CosmicScale/OPL-Launcher-BDM) has been replaced by [BBN Launcher (BBNL)](#bbn-launcher-bbnl)
 - Added [Neutrino](#neutrino-and-nhddl) support. You can now choose between [Open PS2 Loader](#open-ps2-loader-opl) and [Neutrino](#neutrino-and-nhddl) as your game launcher
@@ -242,10 +252,12 @@ New in Definitive Patch v2.11:
 
 </details>
 
-## Jan 22, 2025 - Game ID, PSBBN Art Database, Updated Tutorial & More! – [Click to Watch](https://www.youtube.com/watch?v=sHz0yKYybhk)
+## Jan 22, 2025 - Game ID, PSBBN Art Database, Updated Tutorial & More!
 
 <details>
 <summary><b>Release Notes:</b></summary>
+
+[![Game ID, PSBBN Art Database, Updated Tutorial & More!](https://github.com/user-attachments/assets/1bae03fe-b3eb-447e-99da-8f184279a848)](https://www.youtube.com/watch?v=sHz0yKYybhk)
 
 - Added [Game ID](#game-id) support for the Pixel FX Retro GEM, as well as MemCard Pro 2 and SD2PSX. Works for both PS1 and PS2 games
 - PS2 games now launch up to 5 seconds faster
@@ -269,10 +281,12 @@ New in Definitive Patch v2.11:
 
 </details>
 
-## Dec 11, 2024 - PSBBN Definitive English Patch 2.0 – [Click to Watch](https://www.youtube.com/watch?v=ooH0FjltsyE)
+## Dec 11, 2024 - PSBBN Definitive English Patch 2.0
 
 <details>
 <summary><b>Release Notes:</b></summary>
+
+[![PSBBN Definitive English Patch 2.0](https://github.com/user-attachments/assets/608c9430-25d8-4918-8111-023eac16ab62)](https://www.youtube.com/watch?v=ooH0FjltsyE)
 
 - Initial release of patch version 2.0
 - Bandai and SCEI online channels have been added to the Game Channel
@@ -796,10 +810,7 @@ PS2 Homebrew Community:
 
 Third-Party Libraries & Binaries:  
 - `vmlinux` **BB Navigator kernel (Linux 2.4.17)** – Source code available [here](https://github.com/rickgaiser/linux-2.4.17-ps2)
-- **SQLite v2.8.17** from [sqlite.org](https://www.sqlite.org)
-- **mkswap (util-linux 2.39.3)** from [util-linux](https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/)
-- **mkfs.vfat (4.2, 2021-01-31)** from [dosfstools](https://www.linuxfromscratch.org/blfs/view/svn/postlfs/dosfstools.html)
-- **mkfs.ext2 (1.47.0, 5-Feb-2023)** from [e2fsprogs](https://e2fsprogs.sourceforge.io/)  
+- **SQLite v2.8.17** from [sqlite.org](https://www.sqlite.org) 
 - **mkfs.exfat (exfatprogs 1.2.2)** from [exfatprogs](https://github.com/exfatprogs/exfatprogs)
 
 All libraries and utilities are open-source and used in accordance with their respective licenses.
