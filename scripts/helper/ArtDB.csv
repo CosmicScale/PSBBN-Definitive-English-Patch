@@ -2575,12 +2575,12 @@ SLUS_004.38|dynasty-warriors
 SLES_038.05|et-interplanetary-mission
 SLUS_013.85|et-interplanetary-mission
 SCED_039.14|e3-demo-2002
-SLES_025.38|ea-sports-superbike-2000
-SLUS_010.52|ea-sports-superbike-2000
-SLES_033.99|ea-sports-supercross
-SLUS_013.19|ea-sports-supercross
-SLES_023.73|ea-sports-supercross-2000
-SLUS_010.05|ea-sports-supercross-2000
+SLES_025.38|superbike-2000
+SLUS_010.52|superbike-2000
+SLES_033.99|supercross
+SLUS_013.19|supercross
+SLES_023.73|supercross-2000
+SLUS_010.05|supercross-2000
 SLES_028.23|ecw-anarchy-rulz
 SLES_030.69|ecw-anarchy-rulz
 SLUS_011.69|ecw-anarchy-rulz
@@ -6083,7 +6083,7 @@ SLPM_863.97|nba-power-dunkers-5
 SLES_008.82|nba-pro-98
 SLES_019.70|nba-pro-99
 SCUS_945.00|nba-shoot-out
-SCUS_945.52|nba-shoot-out-97
+SCUS_945.52|nba-shootout-97
 SCUS_945.61|nba-shootout-2000
 SCUS_945.81|nba-shootout-2001
 SCUS_945.82|nba-shootout-2001
@@ -6175,10 +6175,10 @@ SLES_006.24|nhl-breakaway-98
 SLUS_003.91|nhl-breakaway-98
 SLES_022.98|nhl-championship-2000
 SLUS_009.25|nhl-championship-2000
-SCES_002.20|nhl-face-off
-SCUS_945.04|nhl-face-off
-SCES_003.92|nhl-face-off-97
-SCUS_945.50|nhl-face-off-97
+SCES_002.20|nhl-faceoff
+SCUS_945.04|nhl-faceoff
+SCES_003.92|nhl-faceoff-97
+SCUS_945.50|nhl-faceoff-97
 SCES_024.51|nhl-faceoff-2000
 SCUS_945.58|nhl-faceoff-2000
 SCUS_943.87|nhl-faceoff-2000
@@ -8455,8 +8455,8 @@ SLUS_006.01|skullmonkeys
 SLES_037.76|sky-sports-football-quiz
 SLES_038.56|sky-sports-football-quiz-season-02
 SLUS_013.92|skydiving-extreme
-SLES_000.76|slam-n-jam-96-featuring-magic-kareem
-SLUS_000.22|slam-n-jam-96-featuring-magic-kareem
+SLES_000.76|slam-n-jam-96-featuring-magic-and-kareem
+SLUS_000.22|slam-n-jam-96-featuring-magic-and-kareem
 SLPS_002.46|slam-dragon
 SLES_004.27|slamscape
 SLUS_000.80|slamscape
@@ -15318,6 +15318,7 @@ SCUS_971.59|ico
 PCPX_963.22|ico
 SLPS_200.39|ide-yousuke-no-mahjong-kazoku-2
 SLPS_251.82|idol-janshi-r-janguru-project
+SLPS_251.83|idol-janshi-r-janguru-project
 SLPM_667.84|idol-janshi-suchie-pai-iii-remix
 SLPM_667.85|idol-janshi-suchie-pai-iv
 SLPM_667.83|idol-janshi-suchie-pai-iv
@@ -22593,3 +22594,4 @@ SLUS_211.15|okami
 SCUS_000.00|friday-night-funkin
 SLES_020.87|plane-crazy
 LSP90902.200|unknown-variable2-ravens-ridge
+SCUS_974.52|official-us-playstation-magazine-demo-disc-100
