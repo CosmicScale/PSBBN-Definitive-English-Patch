@@ -8,7 +8,7 @@ ASSETS_DIR="${SCRIPTS_DIR}/assets"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
 MEDIA_DIR="${TOOLKIT_PATH}/media"
 TMP_DIR="${SCRIPTS_DIR}/tmp"
-OPL="${STORAGE_DIR}/OPL"
+OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/media.log"
 CONFIG_FILE="${TOOLKIT_PATH}/scripts/media.cfg"
 
@@ -533,6 +533,10 @@ cat /etc/*-release >> "${LOG_FILE}" 2>&1
 echo >> "${LOG_FILE}"
 echo "Path: $path_arg" >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
+
+if ! sudo rm -rf "${STORAGE_DIR}"; then
+    error_msg "Failed to remove $STORAGE_DIR folder."
+fi
 
 detect_drive
 MOUNT_OPL

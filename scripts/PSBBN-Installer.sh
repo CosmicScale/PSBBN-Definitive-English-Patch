@@ -7,7 +7,7 @@ SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
 ASSETS_DIR="${SCRIPTS_DIR}/assets"
 HELPER_DIR="${SCRIPTS_DIR}/helper"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
-OPL="${STORAGE_DIR}/OPL"
+OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/PSBBN-installer.log"
 
 serialnumber="$2"
@@ -189,7 +189,7 @@ mount_cfs() {
                 fi
             fi
 
-            [ -d "${MOUNT_PATH}" ] || mkdir -p "${MOUNT_PATH}"
+            [ -d "${MOUNT_PATH}" ] || sudo mkdir -p "${MOUNT_PATH}"
                 if ! sudo mount "${MAPPER}${PARTITION_NAME}" "${MOUNT_PATH}" >>"${LOG_FILE}" 2>&1; then
                     error_msg "Failed to mount ${PARTITION_NAME} partition."
                 fi
@@ -208,7 +208,7 @@ mount_cfs() {
 mount_pfs() {
     for PARTITION_NAME in "${APA_PARTITIONS[@]}"; do
         MOUNT_POINT="${STORAGE_DIR}/$PARTITION_NAME/"
-        mkdir -p "$MOUNT_POINT"
+        sudo mkdir -p "$MOUNT_POINT"
         if ! sudo "${HELPER_DIR}/PFS Fuse.elf" \
             -o allow_other \
             --partition="$PARTITION_NAME" \
@@ -343,6 +343,10 @@ echo >> "${LOG_FILE}"
 
 trap 'echo; exit 130' INT
 trap exit_script EXIT
+
+if ! sudo rm -rf "${STORAGE_DIR}"; then
+    error_msg "Failed to remove $STORAGE_DIR folder."
+fi
 
 if [ "$MODE" = "install" ]; then
     # Choose the PS2 storage device
@@ -737,7 +741,7 @@ if [ "$MODE" = "install" ]; then
 
     # Finalising recovery:
     if [ ! -d "${STORAGE_DIR}/recovery" ]; then
-	    mkdir -p "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
+	    sudo mkdir -p "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
     fi
 
     if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then

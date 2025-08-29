@@ -6,7 +6,7 @@ SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
 HELPER_DIR="${SCRIPTS_DIR}/helper"
 ASSETS_DIR="${SCRIPTS_DIR}/assets"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
-OPL="${STORAGE_DIR}/OPL"
+OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/extras.log"
 
 path_arg="$1"
@@ -103,7 +103,7 @@ mount_cfs() {
   for PARTITION_NAME in "${LINUX_PARTITIONS[@]}"; do
     MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
     if [ -e "${MAPPER}${PARTITION_NAME}" ]; then
-        [ -d "${MOUNT_PATH}" ] || mkdir -p "${MOUNT_PATH}"
+        [ -d "${MOUNT_PATH}" ] || sudo mkdir -p "${MOUNT_PATH}"
         if ! sudo mount "${MAPPER}${PARTITION_NAME}" "${MOUNT_PATH}" >>"${LOG_FILE}" 2>&1; then
             error_msg "[X] Error: Failed to mount ${PARTITION_NAME} partition."
             clean_up
@@ -120,7 +120,7 @@ mount_cfs() {
 mount_pfs() {
     for PARTITION_NAME in "${APA_PARTITIONS[@]}"; do
         MOUNT_POINT="${STORAGE_DIR}/$PARTITION_NAME/"
-        mkdir -p "$MOUNT_POINT"
+        sudo mkdir -p "$MOUNT_POINT"
         if ! sudo "${HELPER_DIR}/PFS Fuse.elf" \
             -o allow_other \
             --partition="$PARTITION_NAME" \
@@ -414,6 +414,10 @@ fi
 date >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 cat /etc/*-release >> "${LOG_FILE}" 2>&1
+
+if ! sudo rm -rf "${STORAGE_DIR}"; then
+    error_msg "Failed to remove $STORAGE_DIR folder."
+fi
 
 # Function for Option 1 - Install PS2 Linux
 option_one() {

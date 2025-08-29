@@ -22,7 +22,7 @@ MISSING_VMC="${LOGS_DIR}/missing-vmc.log"
 GAMES_PATH="${TOOLKIT_PATH}/games"
 CONFIG_FILE="${SCRIPTS_DIR}/gamepath.cfg"
 
-OPL="${SCRIPTS_DIR}/storage/OPL"
+OPL="${SCRIPTS_DIR}/OPL"
 PS1_LIST="${SCRIPTS_DIR}/tmp/ps1.list"
 PS2_LIST="${SCRIPTS_DIR}/tmp/ps2.list"
 ALL_GAMES="${SCRIPTS_DIR}/tmp/master.list"
