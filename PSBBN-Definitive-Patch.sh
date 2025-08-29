@@ -163,11 +163,14 @@ check_python_pkg() {
 }
 
 check_node_pkg() {
-    if [ ! -d "scripts/node_modules/$1" ]; then
-        echo "[X] Missing Node.js package: $1" >> "$LOG_FILE"
-        MISSING=1
+    PACKAGE="$1"
+    NODE_MODULES_PATH="./scripts/node_modules"
+
+    if NODE_PATH="$NODE_MODULES_PATH" node -e "require('$PACKAGE');" >/dev/null 2>&1; then
+        echo "[✓] Node.js package '$PACKAGE' found" >> "$LOG_FILE"
     else
-        echo "[✓] Node.js package '$1' found" >> "$LOG_FILE"
+        echo "[X] Missing Node.js package: '$PACKAGE'" >> "$LOG_FILE"
+        MISSING=1
     fi
 }
 
