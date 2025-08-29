@@ -162,7 +162,7 @@ def process_files(folder, extensions):
             with open(file_path, "rb") as fin:
                 def iso_reader(sector, num_sectors=1):
                     return read_iso_sector(fin, sector, num_sectors)
-                string = extract_game_id_from_disc(fin, iso_reader)
+                string = extract_game_id_from_disc(fin, iso_reader) or ""
 
         # ZSO
         if image.lower().endswith('.zso') and not string:
@@ -177,7 +177,7 @@ def process_files(folder, extensions):
                     def zso_reader(sector, num_sectors=1):
                         return decompress_zso_sector(fin, index_buf, block_size, align, sector, num_sectors)
 
-                    string = extract_game_id_from_disc(fin, zso_reader)
+                    string = extract_game_id_from_disc(fin, zso_reader) or ""
 
         # VCD
         if image.lower().endswith('.vcd') and not string:
