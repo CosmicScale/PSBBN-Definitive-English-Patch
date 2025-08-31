@@ -122,7 +122,7 @@ def process_files(folder, extensions):
 
                 patterns = [
                     b"BOOT=cdrom:\\",
-                    b"BOOT2=cdrom0:\\"
+                    b"BOOT2=cdrom0:\\",
                     b"BOOT = cdrom:\\",
                     b"BOOT2 = cdrom0:\\",
                 ]
