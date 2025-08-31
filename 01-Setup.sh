@@ -28,55 +28,6 @@ if [[ ! -f "${TOOLKIT_PATH}/helper/PFS Shell.elf" || ! -f "${TOOLKIT_PATH}/helpe
     exit 1
 fi
 
-# Check if the current directory is a Git repository
-if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-  echo "This is not a Git repository. Skipping update check."
-else
-  # Fetch updates from the remote
-  git fetch > /dev/null 2>&1
-
-  # Check the current status of the repository
-  LOCAL=$(git rev-parse @)
-  REMOTE=$(git rev-parse @{u})
-  BASE=$(git merge-base @ @{u})
-
-  if [ "$LOCAL" = "$REMOTE" ]; then
-    echo "The repository is up to date."
-  else
-    echo "Downloading updates..."
-    # Get a list of files that have changed remotely
-    UPDATED_FILES=$(git diff --name-only "$LOCAL" "$REMOTE")
-
-    if [ -n "$UPDATED_FILES" ]; then
-      echo "Files updated in the remote repository:"
-      echo "$UPDATED_FILES"
-
-      # Reset only the files that were updated remotely (discard local changes to them)
-      echo "$UPDATED_FILES" | xargs git checkout --
-
-      # Pull the latest changes
-      git pull --ff-only
-      if [[ $? -ne 0 ]]; then
-        echo
-        echo "Error: Update failed. Delete the PSBBN-Definitive-English-Patch directory and run the command:"
-        echo
-        echo "git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git"
-        echo
-        read -n 1 -s -r -p "Then try running the script again. Press any key to exit"
-        echo
-        exit 1
-      fi
-      echo
-      echo "The repository has been successfully updated."
-      read -n 1 -s -r -p "Press any key to exit, then run the script again."
-      echo
-      exit 0
-    else
-      echo "The repository is up to date."
-    fi
-  fi
-fi
-
 echo "                                      _____      _               ";
 echo "                                     /  ___|    | |              ";
 echo "                                     \ \`--.  ___| |_ _   _ _ __  ";
