@@ -40,7 +40,7 @@ error_msg() {
     error_3="$3"
     error_4="$4"
 
-    echo
+    echo | tee -a "${LOG_FILE}"
     echo "$error_1" | tee -a "${LOG_FILE}"
     [ -n "$error_2" ] && echo "$error_2" | tee -a "${LOG_FILE}"
     [ -n "$error_3" ] && echo "$error_3" | tee -a "${LOG_FILE}"
@@ -165,7 +165,7 @@ mapper_probe() {
     while IFS= read -r line; do
         for part in "${keep_partitions[@]}"; do
             if [[ "$line" == "${DEVICE_CUT}-${part},"* ]]; then
-                echo "$line" | sudo dmsetup create --concise
+                echo "$line" | sudo dmsetup create --concise | tee -a "${LOG_FILE}"
                 break
             fi
         done
@@ -309,6 +309,7 @@ SPLASH(){
               | |    /\__/ / |_/ / |_/ / |\  |  _| || | | \__ \ || (_| | | |  __/ |   
               \_|    \____/\____/\____/\_| \_/  \___/_| |_|___/\__\__,_|_|_|\___|_|   
 
+
 EOF
 }
 
@@ -351,11 +352,11 @@ fi
 if [ "$MODE" = "install" ]; then
     # Choose the PS2 storage device
     if [[ -n "$serialnumber" ]]; then
+            SPLASH
             DEVICE=$(lsblk -p -o NAME,SERIAL | awk -v sn="$serialnumber" '$2 == sn {print $1; exit}')
     else
         while true; do
         SPLASH
-            echo | tee -a "${LOG_FILE}"
             lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT | tee -a "${LOG_FILE}"
             echo | tee -a "${LOG_FILE}"
         
@@ -553,10 +554,12 @@ clean_up
 if [ "$MODE" = "install" ]; then
     echo | tee -a "${LOG_FILE}"
     echo -n "Initialising drive..." | tee -a "${LOG_FILE}"
+
     {
-        sudo dd if=/dev/zero of="${DEVICE}" bs=1M count=100 status=progress >> "${LOG_FILE}" 2>&1
-        sudo dd if=/dev/zero of="${DEVICE}" bs=1M seek=$(( $(sudo blockdev --getsz "${DEVICE}") / 2048 - 100 )) count=100 status=progress >> "${LOG_FILE}" 2>&1
-    }
+        sudo wipefs -a ${DEVICE} &&
+        sudo dd if=/dev/zero of="${DEVICE}" bs=1M count=100 status=progress &&
+        sudo dd if=/dev/zero of="${DEVICE}" bs=1M seek=$(( $(sudo blockdev --getsz "${DEVICE}") / 2048 - 100 )) count=100 status=progress
+    } >> "${LOG_FILE}" 2>&1 || error_msg "Failed to Initialising drive"
 
     COMMANDS="device ${DEVICE}\n"
     COMMANDS+="initialize yes\n"
