@@ -65,13 +65,14 @@ EOF
 
 # Detect package manager and install packages
 if [ -x "$(command -v apt-get)" ]; then
-    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip nodejs npm bc rsync curl unzip wget ffmpeg lvm2 libfuse2 dosfstools e2fsprogs libc-bin | tee -a "${LOG_FILE}"
+    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip nodejs npm bc rsync curl unzip wget ffmpeg lvm2 libfuse2 dosfstools e2fsprogs libc-bin exfatprogs exfat-fuse 2>&1 | tee -a "${LOG_FILE}"
 # Or if user is on Fedora-based system, do this instead
 elif [ -x "$(command -v dnf)" ]; then
-    sudo dnf check-update -q && sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip nodejs npm bc rsync curl unzip unzip wget ffmpeg lvm2 fuse dosfstools e2fsprogs glibc-common | tee -a "${LOG_FILE}"
+    sudo dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm 2>&1 | tee -a "${LOG_FILE}"
+    sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip nodejs npm bc rsync curl unzip wget ffmpeg lvm2 fuse-libs dosfstools e2fsprogs glibc-common exfatprogs fuse-exfat 2>&1 | tee -a "${LOG_FILE}"
 # Or if user is on Arch-based system, do this instead
 elif [ -x "$(command -v pacman)" ]; then
-    sudo pacman -Sy --needed --noconfirm --quiet archlinux-keyring && sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync curl unzip unzip wget ffmpeg lvm2 fuse2 dosfstools e2fsprogs glibc | tee -a "${LOG_FILE}"
+    sudo pacman -Sy --needed --noconfirm --quiet archlinux-keyring && sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync curl unzip wget ffmpeg lvm2 fuse2 dosfstools e2fsprogs glibc exfatprogs exfat-utils 2>&1 | tee -a "${LOG_FILE}"
 else
     error_msg "No supported package manager found (apt-get, dnf, pacman)."
 fi
@@ -80,26 +81,6 @@ if [ $? -ne 0 ]; then
     error_msg "Package installation failed." "See $LOG_FILE for details."
 else
     echo "[✓] Packages checked/installed." | tee -a "${LOG_FILE}"
-fi
-
-# Check and install exFAT support if needed
-if ! command -v mkfs.exfat &> /dev/null; then
-    echo "mkfs.exfat not found. Installing exFAT driver..."
-    if [ -x "$(command -v apt-get)" ]; then
-        sudo apt-get install -y exfat-fuse | tee -a "${LOG_FILE}"
-    elif [ -x "$(command -v dnf)" ]; then
-        sudo dnf install -y exfatprogs | tee -a "${LOG_FILE}"
-    elif [ -x "$(command -v pacman)" ]; then
-	    sudo pacman -S --needed --noconfirm exfatprogs | tee -a "${LOG_FILE}"
-    else
-        error_msg "No supported package manager found (apt-get, dnf, pacman)."
-    fi
-
-    if [ $? -ne 0 ]; then
-    	error_msg "Failed to install exFAT driver." "See $LOG_FILE for details."
-    else
-        echo "[✓] exFAT driver installed." | tee -a "${LOG_FILE}"
-    fi
 fi
 
 # Python virtual environment setup

@@ -197,6 +197,18 @@ check_dep(){
     check_cmd mkfs.ext2
 
     echo >> "$LOG_FILE"
+    echo "--- exFAT support ---" >> "$LOG_FILE"
+
+    if grep -qw exfat /proc/filesystems; then
+        echo "[✓] Native kernel exFAT support detected." >> "$LOG_FILE"
+    elif command -v mount.exfat-fuse &>/dev/null; then
+        echo "[✓] FUSE-based exFAT support detected (mount.exfat-fuse)." >> "$LOG_FILE"
+    else
+        echo "[X] No exFAT support found. Running setup..." >> "$LOG_FILE"
+        MISSING=1
+    fi
+
+    echo >> "$LOG_FILE"
     echo "--- Python virtual environment ---" >> "$LOG_FILE"
     if [ ! -d "scripts/venv" ]; then
         echo "[X] Python venv not found in scripts/venv" >> "$LOG_FILE"
@@ -325,6 +337,20 @@ echo >> "${LOG_FILE}"
 if [[ "$(uname -m)" != "x86_64" ]]; then
     error_msg "Unsupported CPU architecture: $(uname -m). This script requires x86-64."
     exit 1
+fi
+
+# Detect WSL
+if grep -qi microsoft /proc/version; then
+    # Detect distro
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        case "$ID" in
+            fedora|arch)
+                echo "Unsupported distro under WSL: $NAME. Please use Debian instead."
+                exit 1
+                ;;
+        esac
+    fi
 fi
 
 rm "${TOOLKIT_PATH}/"*.log >/dev/null 2>&1
