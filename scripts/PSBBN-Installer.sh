@@ -352,7 +352,6 @@ fi
 if [ "$MODE" = "install" ]; then
     # Choose the PS2 storage device
     if [[ -n "$serialnumber" ]]; then
-            SPLASH
             DEVICE=$(lsblk -p -o NAME,SERIAL | awk -v sn="$serialnumber" '$2 == sn {print $1; exit}')
     else
         while true; do
@@ -704,7 +703,14 @@ if [ "$MODE" = "install" ]; then
     sudo cp "${ASSETS_DIR}/POPStarter/eng"/{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} "${STORAGE_DIR}/__common/POPS/"
 fi
 
-sudo tar zxpf "${PSBBN_PATCH}" -C "${STORAGE_DIR}/" > /dev/null 2>&1
+ALL_ERRORS=$(sudo tar zxpf "${PSBBN_PATCH}" -C "${STORAGE_DIR}/" 2>&1 >/dev/null)
+
+FILTERED_ERRORS=$(echo "$ALL_ERRORS" | grep -v -e "Cannot change ownership" -e "tar: Exiting with failure status")
+
+if [ -n "$FILTERED_ERRORS" ]; then
+    echo "$FILTERED_ERRORS" >> "${LOG_FILE}"
+    error_msg "Failed to install PSBBN." "See ${LOG_FILE} for details."
+fi
 
 if [ "$MODE" = "update" ]; then
     sudo tee -a "${STORAGE_DIR}/__linux.1/etc/rc.d/rc.sysinit" >/dev/null <<'EOF'
