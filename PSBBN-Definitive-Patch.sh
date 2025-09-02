@@ -195,6 +195,9 @@ check_dep(){
     check_cmd timeout
     check_cmd mkfs.vfat
     check_cmd mkfs.ext2
+    check_cmd ldconfig
+    check_cmd sfdisk
+    check_cmd partprobe
 
     echo >> "$LOG_FILE"
     echo "--- exFAT support ---" >> "$LOG_FILE"
