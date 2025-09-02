@@ -175,12 +175,18 @@ def convert_to_pcm(input_path, OUTPUT_PATH):
         return  # Skip if already converted
 
     os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
-    subprocess.run([
-        'ffmpeg', '-y', '-i', input_path,
-        '-af', 'dynaudnorm',
-        '-f', 's16le', '-acodec', 'pcm_s16le',
-        '-ar', '44100', '-ac', '2', OUTPUT_PATH
-    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    try:
+        subprocess.run([
+            'ffmpeg', '-y', '-i', input_path,
+            '-af', 'dynaudnorm',
+            '-f', 's16le', '-acodec', 'pcm_s16le',
+            '-ar', '44100', '-ac', '2', OUTPUT_PATH
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+    except subprocess.CalledProcessError as e:
+        err_output = e.stderr.decode(errors='ignore') if e.stderr else "No stderr captured"
+        logging.error(f"ffmpeg failed on {input_path}: {err_output}")
+        return False
+    return True
 
 def load_music_data_txt():
     entries = []
@@ -222,16 +228,22 @@ def music_installer():
         if file.lower().endswith(SUPPORTED_EXTENSIONS) and not file.startswith('.')
     ]
 
+    skipped_files = []  # <--- keep track of skipped files
+
     for filepath in tqdm(all_files, desc="Converting files", unit="file"):
         meta = extract_metadata(filepath)
         if not meta or not meta['album']:
-            logging.info(f"Skipped: {filepath} (failed to extract metadata or album missing)")
+            reason = "failed to extract metadata or album missing"
+            logging.info(f"Skipped: {filepath} ({reason})")
+            skipped_files.append((filepath, reason))
             continue
 
         album_folder = sanitize_folder_name(meta['album'])
         track_num = clean_track_number(meta['tracknumber'])
         if not track_num.isdigit():
-            logging.info(f"Skipped: {filepath} (missing or invalid track number: '{meta['tracknumber']}')")
+            reason = f"missing or invalid track number: '{meta['tracknumber']}'"
+            logging.info(f"Skipped: {filepath} ({reason})")
+            skipped_files.append((filepath, reason))
             continue
 
         # Fallbacks
@@ -245,7 +257,12 @@ def music_installer():
         out_folder = os.path.join(CONVERTED_DIR, album_folder)
         out_file = f"track{padded}.pcm"
         out_path = os.path.join(out_folder, out_file)
-        convert_to_pcm(filepath, out_path)
+        success = convert_to_pcm(filepath, out_path)
+        if not success:
+            reason = "ffmpeg conversion failed"
+            logging.info(f"Skipped: {filepath} ({reason})")
+            skipped_files.append((filepath, reason))   # <--- just this new line
+            continue
 
         bitrate_dest = os.path.join(out_folder, 'bitrate')
         if os.path.isfile(BITRATE_FILE) and not os.path.isfile(bitrate_dest):
@@ -336,6 +353,13 @@ def music_installer():
             f.write(footer + '\n')
             album_index += 1
 
+    # After processing all files, print summary to terminal
+    if skipped_files:
+        print("\nSkipped files:")
+        for f, reason in skipped_files:
+            print(f"  - {f} ({reason})")
+    else:
+        print("\nNo files were skipped.")
 
 # Create new database file:
 def format_values(line):
