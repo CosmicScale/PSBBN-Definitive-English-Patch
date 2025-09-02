@@ -456,9 +456,9 @@ Select `Install Media` from the main menu and you will be presented with the fol
 5. [Initialise Music Partition](#initialise-music-partition)
 
 ### Music Installer
-Install music for playback on the PSBBN Music Channel. Supported formats are `.mp3`, `.m4a`, `.flac` and `.ogg`. Place your music files in the default `music` folder, or in the `music` subfolder of a custom location set with [Set Media Location](#set-media-location).
+Install music for playback on the PSBBN Music Channel. To use the Music Installer, you must be running PSBBN Definitive Patch version 3.00 or later. If you have previously upgraded from a lower version, you must [Initialise the Music Partition](#initialise-music-partition) first.
 
-To use the Music Installer, you must be running PSBBN Definitive Patch version 3.00 or later. If you have previously upgraded from a lower version, you must [initialise the Music Partition](initialise-music-partition) first.
+Supported formats are `.mp3`, `.m4a`, `.flac` and `.ogg`. Each file’s metadata must include the album title and track number. Place your music files in the default `music` folder, or choose a custom location using [Set Media Location](#set-media-location) and place the files its `music` subfolder.
 
 ### Set Media Location
 Set a custom location for your media folder. Music should be placed in a `music` subfolder.
