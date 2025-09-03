@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 
 # User must open its execution policy by running
 # `Set-ExecutionPolicy -ExecutionPolicy Unrestricted`
@@ -56,6 +56,8 @@ function main {
   $host.UI.RawUI.WindowSize = New-Object `
     -TypeName System.Management.Automation.Host.Size `
     -ArgumentList ($consoleWidth, $consoleHeight)
+
+  $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
   clear
   printTitle
