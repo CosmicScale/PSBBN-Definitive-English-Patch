@@ -267,6 +267,23 @@ CHECK_PARTITIONS() {
     fi
 }
 
+UNMOUNT_ALL() {
+    # Find all mounted volumes associated with the device
+    mounted_volumes=$(lsblk -ln -o MOUNTPOINT "$DEVICE" | grep -v "^$")
+
+    # Iterate through each mounted volume and unmount it
+    echo "Unmounting volumes associated with $DEVICE..." >> "${LOG_FILE}"
+    for mount_point in $mounted_volumes; do
+        echo "Unmounting $mount_point..." >> "${LOG_FILE}"
+        if sudo umount "$mount_point"; then
+            echo "[✓] Successfully unmounted $mount_point." >> "${LOG_FILE}"
+        else
+            error_msg "Failed to unmount $mount_point. Please unmount manually."
+
+        fi
+    done
+}
+
 UNMOUNT_OPL() {
     sync
     if ! sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1; then
@@ -417,21 +434,7 @@ else
 
 EOF
 
-    # Find all mounted volumes associated with the device
-    mounted_volumes=$(lsblk -ln -o MOUNTPOINT "$DEVICE" | grep -v "^$")
-
-    # Iterate through each mounted volume and unmount it
-    echo "Unmounting volumes associated with $DEVICE..." >> "${LOG_FILE}"
-    for mount_point in $mounted_volumes; do
-        echo "Unmounting $mount_point..." >> "${LOG_FILE}"
-        if sudo umount "$mount_point"; then
-            echo "[✓] Successfully unmounted $mount_point." >> "${LOG_FILE}"
-        else
-            error_msg "Failed to unmount $mount_point. Please unmount manually."
-
-        fi
-    done
-
+    UNMOUNT_ALL
     HDL_TOC
     MOUNT_OPL
 
@@ -447,6 +450,7 @@ fi
 
 if [ "$MODE" = "install" ]; then
     SPLASH
+    UNMOUNT_ALL
 fi
 
 # URL of the webpage
