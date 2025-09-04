@@ -73,13 +73,13 @@ elif [ -x "$(command -v dnf)" ]; then
     sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip nodejs npm bc rsync curl unzip wget ffmpeg lvm2 fuse-libs dosfstools e2fsprogs glibc-common exfatprogs fuse-exfat util-linux parted 2>&1 | tee -a "${LOG_FILE}"
 # Or if user is on Arch-based system, do this instead
 elif [ -x "$(command -v pacman)" ]; then
-    sudo pacman -Sy --needed --noconfirm --quiet archlinux-keyring && sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync curl unzip wget ffmpeg lvm2 fuse2 dosfstools e2fsprogs glibc exfatprogs util-linux parted 2>&1 | tee -a "${LOG_FILE}"
+    sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync curl unzip wget ffmpeg lvm2 fuse2 dosfstools e2fsprogs glibc exfatprogs util-linux parted 2>&1 | tee -a "${LOG_FILE}"
 else
     error_msg "No supported package manager found (apt-get, dnf, pacman)."
 fi
 
 if [ $? -ne 0 ]; then
-    error_msg "Package installation failed." "See $LOG_FILE for details."
+    error_msg "Package installation failed. Please update your OS and try again." "See $LOG_FILE for details."
 else
     echo "[✓] Packages checked/installed." | tee -a "${LOG_FILE}"
 fi
