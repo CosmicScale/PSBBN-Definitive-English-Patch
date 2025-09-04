@@ -341,7 +341,7 @@ cd PSBBN-Definitive-English-Patch
 ./PSBBN-Definitive-Patch.sh
 ```
 ### Installing on Windows
-If you are running Microsoft Windows 10 or 11, it is recommended to install the PSBBN Definitive Patch using WSL. WSL is a feature of Windows that allows you to run a Linux environment directly within Windows.
+If you are running Microsoft Windows 10 or 11, it is recommended to install the PSBBN Definitive Patch using the Windows Subsystem for Linux (WSL). WSL is a feature of Windows that allows you to run a Linux environment directly within Windows.
 
 To install WSL and Debian, launch PowerShell as administrator and run:
 ```
@@ -356,7 +356,7 @@ It may also be necessary to enable `SVM Mode` (for AMD CPUs) or `VT-x` (for Inte
 
 To mount your PS2 Drive, from PowerShell as administrator, run:
 ```
-wmic diskdrive list brief
+Get-CimInstance Win32_DiskDrive
 ```
 This will display a list of drives connected to your PC. Identify the appropriate drive and note the physical drive number (e.g., PHYSICALDRIVE3).
 
@@ -366,6 +366,7 @@ wsl --mount \\.\PHYSICALDRIVEx --bare
 ```
 From the Linux command line, run the following commands:
 ```
+cd ~
 sudo apt update
 sudo apt install git
 git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
