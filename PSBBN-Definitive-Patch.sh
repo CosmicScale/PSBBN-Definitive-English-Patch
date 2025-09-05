@@ -205,11 +205,16 @@ check_dep(){
 
     if grep -qw exfat /proc/filesystems; then
         echo "[✓] Native kernel exFAT support detected." >> "$LOG_FILE"
-    elif command -v mount.exfat-fuse &>/dev/null; then
-        echo "[✓] FUSE-based exFAT support detected (mount.exfat-fuse)." >> "$LOG_FILE"
     else
-        echo "[X] No exFAT support found. Running setup..." >> "$LOG_FILE"
-        MISSING=1
+        sudo modprobe exfat 2>/dev/null
+        if grep -qw exfat /proc/filesystems; then
+            echo "[✓] Native kernel exFAT support detected (after modprobe)." >> "$LOG_FILE"
+        elif command -v mount.exfat-fuse &>/dev/null; then
+            echo "[✓] FUSE-based exFAT support detected (mount.exfat-fuse)." >> "$LOG_FILE"
+        else
+            echo "[X] No exFAT support found. Running setup..." >> "$LOG_FILE"
+            MISSING=1
+        fi
     fi
 
     echo >> "$LOG_FILE"
