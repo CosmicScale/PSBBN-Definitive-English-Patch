@@ -128,6 +128,9 @@ def sort_games_list(games_list_path):
             "super robot taisen og gaiden": "super robot taisen 8",
             "super robot taisen z": "super robot taisen 9",
             "super robot taisen z: special disc": "super robot taisen 10",
+            "air combat": "ace combat 1",
+            "wipeout xl": "wipeout 2",
+            "wipeout 2097": "wipeout 2",
 
         }
 
