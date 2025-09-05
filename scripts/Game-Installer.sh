@@ -616,11 +616,12 @@ CREATE_VMC() {
 
     COMMANDS="device ${DEVICE}\n"
     COMMANDS+="mount __common\n"
-    COMMANDS+="cd POPS\n"
 
     for dir in "$POPS_DIR"/*/; do
         [ -d "$dir" ] || continue
         VMC_FOLDER="$(basename "$dir")"
+        COMMANDS+="cd /\n"
+        COMMANDS+="cd POPS\n"
         COMMANDS+="mkdir '${VMC_FOLDER}'\n"
         COMMANDS+="cd '${VMC_FOLDER}'\n"
         COMMANDS+="lcd '${POPS_DIR}/${VMC_FOLDER}'\n"
@@ -632,9 +633,9 @@ CREATE_VMC() {
         COMMANDS+="put DISCS.TXT\n"
         COMMANDS+="rm VMCDIR.TXT\n"
         COMMANDS+="put VMCDIR.TXT\n"
-        COMMANDS+="cd ..\n"
+        COMMANDS+="cd /\n"
     done
-    COMMANDS+="cd ..\n"
+    COMMANDS+="cd /\n"
     COMMANDS+="umount\n"
     COMMANDS+="exit"
 
