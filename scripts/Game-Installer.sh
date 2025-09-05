@@ -633,12 +633,16 @@ CREATE_VMC() {
         COMMANDS+="put DISCS.TXT\n"
         COMMANDS+="rm VMCDIR.TXT\n"
         COMMANDS+="put VMCDIR.TXT\n"
-        COMMANDS+="cd /\n"
     done
+    COMMANDS+="cd /\n"
+    COMMANDS+="cd POPS\n"
+    COMMANDS+="rm icon.sys\n"
+    COMMANDS+="rm list.ico\n"
+    COMMANDS+="rm DISCS.TXT\n"
+    COMMANDS+="rm VMCDIR.TXT\n"
     COMMANDS+="cd /\n"
     COMMANDS+="umount\n"
     COMMANDS+="exit"
-
     echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
     echo | tee -a "${LOG_FILE}"
 }
