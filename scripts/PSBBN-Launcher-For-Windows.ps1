@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.0.5"
+$version = "1.0.6"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -348,15 +348,39 @@ function restartAsAdminIfNeeded {
 
 # handles the folder picker and return a wsl compatible path as a string
 function getTargetFolder {
+  # if a previously used path exists, use that in the folder picker, otherwise use "Desktop"
+  $desktopDirectory = [Environment]::GetFolderPath('Desktop')
+  $initialDirectory = $desktopDirectory
+  $isPresetPath = $false
+  if (Test-Path ".\$pathFilename" -PathType Leaf) {
+    $initialDirectory = Get-Content -Path ".\$pathFilename"
+    $isPresetPath = $true
+
+    # check that the path in path.cfg still exists, if not default to "Desktop"
+    if (-Not (Test-Path $initialDirectory -PathType Container)) {
+      $initialDirectory = $desktopDirectory
+      $isPresetPath = $false
+    }
+  }
+
+  # if the path is already set, ask if the user wants to re-use it
+  if ($isPresetPath) {
+    Write-Host "`nThe following path was previously used: " -NoNewLine
+    Write-Host "$initialDirectory`n" -ForegroundColor Green
+    do {
+      clearLines(1)
+      $keyPressed = Read-Host "Would you like to keep using this path? (y/n)"
+      $keyPressed = $keyPressed.ToLower()
+    } while ($keyPressed -ne 'y' -and $keyPressed -ne 'n')
+
+    if ($keyPressed -eq 'y') {
+      return convertPathToWsl($initialDirectory)
+    }
+  }
+  
   Write-Host "`nNext you will be asked to pick a folder where to put all your games, movies, photos, and music." -ForegroundColor Yellow
 
   pause
-
-  # if a previously used path exists, use that in the folder picker, otherwise use "Desktop"
-  $initialDirectory = [Environment]::GetFolderPath('Desktop')
-  if (Test-Path ".\$pathFilename" -PathType Leaf) {
-    $initialDirectory = Get-Content -Path ".\$pathFilename"
-  }
 
   # prepare and then open the folder picker
   Add-Type -AssemblyName System.Windows.Forms
@@ -374,8 +398,6 @@ function getTargetFolder {
   }
 
   $pickedPath = Split-Path -Parent $folderselection.FileName
-  $driveLetter = $pickedPath.Split(":\")[0].ToLower()
-  $path = $pickedPath.Split(":")[1].Replace("\", "/")
 
   # create default folders if missing
   $defaultFolders.ForEach({
@@ -403,7 +425,7 @@ https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
 
   pause
 
-  return "/mnt/$driveLetter$path"
+  return convertPathToWsl($pickedPath)
 }
 
 # clears $count lines with spaces and move the cursor back
@@ -435,6 +457,12 @@ function detectOplVolume ($diskList) {
     } | Out-Null
   }
   return $disksWithOplVolume
+}
+
+function convertPathToWsl ($windowsPath) {
+  $driveLetter = $windowsPath.Split(":")[0].ToLower()
+  $path = $windowsPath.Split(":")[1].Replace("\", "/")
+  return "/mnt/$driveLetter$path"
 }
 
 restartAsAdminIfNeeded
