@@ -228,7 +228,7 @@ check_dep(){
     if ldconfig -p | grep -q "libfuse.so.2"; then
         echo "[✓] FUSE2 (libfuse.so.2) is installed." >> "$LOG_FILE"
     else
-        echo "[X] FUSE2 (libfuse.so.2) is missing."
+        echo "[X] FUSE2 (libfuse.so.2) is missing." >> "$LOG_FILE"
         MISSING=1
     fi
 
