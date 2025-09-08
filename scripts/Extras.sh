@@ -189,7 +189,7 @@ check_device_size() {
 
     if (( size_gb > 960 )); then
         echo
-        echo "⚠️ Warning: Device is $size_gb GB. HDD-OSD may experience issues with drives larger than 960 GB." | tee -a "${LOG_FILE}"
+        echo "[!] Warning: Device is $size_gb GB. HDD-OSD may experience issues with drives larger than 960 GB." | tee -a "${LOG_FILE}"
         echo
         read -rp "Continue anyway? (y/n): " answer
         case "$answer" in
@@ -564,7 +564,7 @@ option_one() {
     clean_up   && \
     mapper_probe || return 1
 
-    if ! sudo mkfs.ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}__linux.3" >>"${LOG_FILE}" 2>&1; then
+    if ! sudo mke2fs -t ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}__linux.3" >>"${LOG_FILE}" 2>&1; then
         error_msg "[X] Error: Failed to create filesystem __linux.3."
         return 1
     fi

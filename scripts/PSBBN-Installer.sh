@@ -185,7 +185,7 @@ mount_cfs() {
                     error_msg "Failed to create filesystem ${PARTITION_NAME}."
                 fi
             else
-                if ! sudo mkfs.ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
+                if ! sudo mke2fs -t ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
                     error_msg "Failed to create filesystem ${PARTITION_NAME}."
                 fi
             fi
@@ -742,11 +742,11 @@ if [ "$MODE" = "install" ]; then
     echo -e ",128GiB,17\n,32MiB,17\n,,07" | sudo sfdisk ${DEVICE}
     sudo partprobe ${DEVICE}
     if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
-	    sudo mkfs.ext2 -L "RECOVERY" ${DEVICE}p2
+	    sudo mke2fs -t ext2 -L "RECOVERY" ${DEVICE}p2
 	    sudo "${HELPER_DIR}/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}p3
 	else
 		sleep 4
-		sudo mkfs.ext2 -L "RECOVERY" ${DEVICE}2
+		sudo mke2fs -t ext2 -L "RECOVERY" ${DEVICE}2
 		sudo "${HELPER_DIR}/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}3
         fi
     } >> "${LOG_FILE}" 2>&1

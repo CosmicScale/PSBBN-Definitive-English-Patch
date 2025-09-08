@@ -8,6 +8,7 @@ if [ -z "$BASH_VERSION" ]; then
 fi
 
 # Set paths
+export PATH="$PATH:/sbin:/usr/sbin"
 TOOLKIT_PATH="$(pwd)"
 HELPER_DIR="${TOOLKIT_PATH}/scripts/helper"
 LOG_FILE="${TOOLKIT_PATH}/logs/setup.log"
@@ -195,7 +196,7 @@ check_dep(){
     check_cmd lvm
     check_cmd timeout
     check_cmd mkfs.vfat
-    check_cmd mkfs.ext2
+    check_cmd mke2fs
     check_cmd ldconfig
     check_cmd sfdisk
     check_cmd partprobe
