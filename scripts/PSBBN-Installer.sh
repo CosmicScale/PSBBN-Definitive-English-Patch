@@ -399,10 +399,14 @@ if [ "$MODE" = "install" ]; then
     if (( size_gb < 200 )); then
         error_msg "Device is $size_gb GB. Required minimum is 200 GB."
     else
+        echo "Device Name: $DEVICE" >> "${LOG_FILE}"
+        drive_model=$(lsblk -no MODEL "$DEVICE" | xargs)
+        [[ -z "$drive_model" ]] && drive_model="$DEVICE"
+
         echo
-        echo "Selected drive: ${DEVICE}" | tee -a "${LOG_FILE}"
+        echo "Selected drive: $drive_model" | tee -a "${LOG_FILE}"
         echo
-        echo "Are you sure you want to install to ${DEVICE}?" | tee -a "${LOG_FILE}"
+        echo "Are you sure you want to install to $drive_model?" | tee -a "${LOG_FILE}"
         read -p "This will erase all data on the drive. (yes/no): " CONFIRM
             if [[ $CONFIRM != "yes" ]]; then
                 echo "Aborted." | tee -a "${LOG_FILE}"

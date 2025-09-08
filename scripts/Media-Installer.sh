@@ -294,6 +294,22 @@ mount_cfs() {
   done
 }
 
+get_display_path() {
+if [[ "$MEDIA_DIR" =~ ^/mnt/([a-zA-Z])(/.*)?$ ]]; then
+    drive="${BASH_REMATCH[1]}"
+    rest="${BASH_REMATCH[2]}"
+
+    # If the rest is empty, default to empty string
+    [[ -z "$rest" ]] && rest=""
+
+    # Convert to Windows format
+    display_path="${drive^^}:$(echo "$rest" | sed 's#/#\\#g')\\"
+else
+    # For Linux paths, display_path is the same as MEDIA_DIR
+    display_path="$MEDIA_DIR/"
+fi
+}
+
 option_one() {
   clear
 
@@ -322,13 +338,15 @@ EOF
     return 1
   }
 
+  get_display_path
+
   cat << EOF
 Supported formats:
 The music installer supports mp3, m4a, flac, and ogg files.
 
 Music location:
 Place your music files in:
-${MEDIA_DIR}/music
+${display_path}music
 
 Note:
 If you encounter any problems, please initialise the music partition from the Media Installer menu.
@@ -400,11 +418,35 @@ exit
 option_four() {
   while true; do
     LOCATION_SPLASH
+    get_display_path
     echo
     echo
-    echo "Current Media Folder: $MEDIA_DIR" | tee -a "${LOG_FILE}"
+    echo "Current Linux Media Folder: $MEDIA_DIR" >> "${LOG_FILE}"
+    echo "Current Media Folder: $display_path" | tee -a "${LOG_FILE}"
     echo
     read -p "Enter new path for media folder: " new_path
+
+    # --- Detect & convert Windows path ---
+    if [[ "$new_path" =~ ^[A-Za-z]: ]]; then
+      # Convert backslashes to forward slashes
+      win_path=$(echo "$new_path" | sed 's#\\#/#g')
+
+      # If there's no slash after the colon (C:Games), insert it
+      if [[ "$win_path" =~ ^[A-Za-z]:[^/] ]]; then
+          win_path="${win_path:0:2}/${win_path:2}"
+      fi
+
+      # Extract drive letter and lowercase it
+      drive=$(echo "$win_path" | cut -d':' -f1 | tr '[:upper:]' '[:lower:]')
+
+      # Remove the drive and colon safely
+      path_without_drive=$(echo "$win_path" | sed 's#^[A-Za-z]:##')
+
+      # Build Linux path
+      new_path="/mnt/$drive$path_without_drive"
+    fi
+    # -----------------------------------
+
     if [[ -d "$new_path" ]]; then
         # Remove trailing slash unless it's the root directory
         new_path="${new_path%/}"
@@ -423,9 +465,12 @@ option_four() {
     error_msg "Failed to create music directory."
     return 1
   }
+    get_display_path
     echo
-    echo -n "Media set to ${MEDIA_DIR}" | tee -a "${LOG_FILE}"
-    sleep 3
+    echo "Linux Media Folder set to: $MEDIA_DIR" >> "${LOG_FILE}"
+    echo "Media path set to $display_path" | tee -a "${LOG_FILE}"
+    echo
+    read -p "Press any key to return to the menu..."
 }
 
 option_five() {

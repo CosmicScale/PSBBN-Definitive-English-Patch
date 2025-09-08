@@ -1157,6 +1157,22 @@ APP_ART() {
     fi
 }
 
+get_display_path() {
+if [[ "$GAMES_PATH" =~ ^/mnt/([a-zA-Z])(/.*)?$ ]]; then
+    drive="${BASH_REMATCH[1]}"
+    rest="${BASH_REMATCH[2]}"
+
+    # If the rest is empty, default to empty string
+    [[ -z "$rest" ]] && rest=""
+
+    # Convert to Windows format
+    display_path="${drive^^}:$(echo "$rest" | sed 's#/#\\#g')"
+else
+    # For Linux paths, display_path is the same as GAMES_PATH
+    display_path="$GAMES_PATH"
+fi
+}
+
 SPLASH() {
     clear
     cat << "EOF"
@@ -1270,8 +1286,9 @@ elif [[ -f "$CONFIG_FILE" && -s "$CONFIG_FILE" ]]; then
 fi
 
 if [[ -z "$path_arg" ]]; then
+    get_display_path
     echo
-    echo "Games folder: $GAMES_PATH" | tee -a "${LOG_FILE}"
+    echo "Games folder: $display_path" | tee -a "${LOG_FILE}"
     echo
 
     while true; do
@@ -1280,6 +1297,28 @@ if [[ -z "$path_arg" ]]; then
             [Yy])
                 echo
                 read -p "Enter new path for games folder: " new_path
+
+                # --- Detect & convert Windows path ---
+                if [[ "$new_path" =~ ^[A-Za-z]: ]]; then
+                    # Convert backslashes to forward slashes
+                    win_path=$(echo "$new_path" | sed 's#\\#/#g')
+
+                    # If there's no slash after the colon (C:Games), insert it
+                    if [[ "$win_path" =~ ^[A-Za-z]:[^/] ]]; then
+                        win_path="${win_path:0:2}/${win_path:2}"
+                    fi
+
+                    # Extract drive letter and lowercase it
+                    drive=$(echo "$win_path" | cut -d':' -f1 | tr '[:upper:]' '[:lower:]')
+
+                    # Remove the drive and colon safely
+                    path_without_drive=$(echo "$win_path" | sed 's#^[A-Za-z]:##')
+
+                    # Build Linux path
+                    new_path="/mnt/$drive$path_without_drive"
+                fi
+                # -----------------------------------
+
                 if [[ -d "$new_path" ]]; then
                     # Remove trailing slash unless it's the root directory
                     new_path="${new_path%/}"
@@ -1448,8 +1487,11 @@ fi
 
 SPLASH
 
-echo "PS2 Drive Detected: $DEVICE" | tee -a "${LOG_FILE}"
-echo "Games Folder: $GAMES_PATH" | tee -a "${LOG_FILE}"
+get_display_path
+
+echo "PS2 Drive Detected: $DEVICE" >> "${LOG_FILE}"
+echo "Linux Games Folder: $GAMES_PATH" >> "${LOG_FILE}"
+echo "Games Folder: $display_path" | tee -a "${LOG_FILE}"
 echo "Install Type: $DESC1" | tee -a "${LOG_FILE}"
 echo "Game Launcher: $DESC2" | tee -a "${LOG_FILE}"
 if [ -n "$HDTVFIX" ]; then

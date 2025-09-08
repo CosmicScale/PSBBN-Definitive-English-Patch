@@ -249,7 +249,7 @@ check_dep(){
 
 option_one() {
     if [ "$wsl" = "true" ]; then
-        "${TOOLKIT_PATH}/scripts/PSBBN-Installer.sh" -install $serialnumber $path_arg
+        "${TOOLKIT_PATH}/scripts/PSBBN-Installer.sh" -install $serialnumber "$path_arg"
     else
         "${TOOLKIT_PATH}/scripts/PSBBN-Installer.sh" -install
     fi
@@ -261,7 +261,7 @@ option_two() {
 
 option_three() {
     if [ "$wsl" = "true" ]; then
-        "${TOOLKIT_PATH}/scripts/Game-Installer.sh" $path_arg
+        "${TOOLKIT_PATH}/scripts/Game-Installer.sh" "$path_arg"
     else
         "${TOOLKIT_PATH}/scripts/Game-Installer.sh"
     fi
@@ -269,7 +269,7 @@ option_three() {
 
 option_four() {
     if [ "$wsl" = "true" ]; then
-        "${TOOLKIT_PATH}/scripts/Media-Installer.sh" $path_arg
+        "${TOOLKIT_PATH}/scripts/Media-Installer.sh" "$path_arg"
     else
         "${TOOLKIT_PATH}/scripts/Media-Installer.sh"
     fi
@@ -277,7 +277,7 @@ option_four() {
 
 option_five() {
     if [ "$wsl" = "true" ]; then
-        "${TOOLKIT_PATH}/scripts/Extras.sh" $path_arg
+        "${TOOLKIT_PATH}/scripts/Extras.sh" "$path_arg"
     else
         "${TOOLKIT_PATH}/scripts/Extras.sh"
     fi
