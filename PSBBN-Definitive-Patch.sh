@@ -164,17 +164,17 @@ check_python_pkg() {
     fi
 }
 
-check_node_pkg() {
-    PACKAGE="$1"
-    NODE_MODULES_PATH="./scripts/node_modules"
+# check_node_pkg() {
+#     PACKAGE="$1"
+#     NODE_MODULES_PATH="./scripts/node_modules"
 
-    if NODE_PATH="$NODE_MODULES_PATH" node -e "require('$PACKAGE');" >/dev/null 2>&1; then
-        echo "[✓] Node.js package '$PACKAGE' found" >> "$LOG_FILE"
-    else
-        echo "[X] Missing Node.js package: '$PACKAGE'" >> "$LOG_FILE"
-        MISSING=1
-    fi
-}
+#     if NODE_PATH="$NODE_MODULES_PATH" node -e "require('$PACKAGE');" >/dev/null 2>&1; then
+#         echo "[✓] Node.js package '$PACKAGE' found" >> "$LOG_FILE"
+#     else
+#         echo "[X] Missing Node.js package: '$PACKAGE'" >> "$LOG_FILE"
+#         MISSING=1
+#     fi
+# }
 
 check_dep(){
     MISSING=0
@@ -185,7 +185,7 @@ check_dep(){
     check_cmd convert       # from ImageMagick
     check_cmd xxd
     check_cmd python3
-    check_cmd node
+    # check_cmd node
     check_cmd npm
     check_cmd bc
     check_cmd rsync
@@ -238,9 +238,9 @@ check_dep(){
         MISSING=1
     fi
 
-    echo >> "$LOG_FILE"
-    echo "--- Node.js packages ---" >> "$LOG_FILE"
-    check_node_pkg puppeteer
+    # echo >> "$LOG_FILE"
+    # echo "--- Node.js packages ---" >> "$LOG_FILE"
+    # check_node_pkg puppeteer
 
     if [ "$MISSING" -ne 0 ]; then
         return 1
