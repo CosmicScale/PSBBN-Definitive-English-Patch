@@ -96,14 +96,14 @@ spinner $PID "Setting up Python virtual environment and installing dependencies.
 
 cd scripts || error_msg "Failed to enter scripts directory."
 
-# Puppeteer install
-(
-    npm_config_progress=false npm install puppeteer --silent >> "${LOG_FILE}" 2>&1 || error_msg "Failed to install puppeteer."
-) &
-PID=$!
-spinner $PID "Installing Puppeteer via npm..."
+# # Puppeteer install
+# (
+#     npm_config_progress=false npm install puppeteer --silent >> "${LOG_FILE}" 2>&1 || error_msg "Failed to install puppeteer."
+# ) &
+# PID=$!
+# spinner $PID "Installing Puppeteer via npm..."
 
-echo "[✓] Puppeteer installed successfully." | tee -a "${LOG_FILE}"
+# echo "[✓] Puppeteer installed successfully." | tee -a "${LOG_FILE}"
 
 echo
 echo -n "[✓] Setup completed successfully!" | tee -a "${LOG_FILE}"
