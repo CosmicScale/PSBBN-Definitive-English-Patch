@@ -2018,7 +2018,7 @@ if [ -f "$ALL_GAMES" ]; then
                 # If wget fails, run the art downloader
                 [[ -f "$png_file" ]] && rm -f "$png_file"
                 echo "Trying IGN for $game_id" | tee -a "${LOG_FILE}"
-                node "${HELPER_DIR}/art_downloader.js" "$game_id" 2>&1 | tee -a "${LOG_FILE}"
+                "${HELPER_DIR}/art_downloader.js" "$game_id" 2>&1 | tee -a "${LOG_FILE}"
             fi
         fi
     done
