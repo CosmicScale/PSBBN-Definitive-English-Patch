@@ -374,7 +374,7 @@ if [ "$MODE" = "install" ]; then
     else
         while true; do
         SPLASH
-            lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT | tee -a "${LOG_FILE}"
+            lsblk -dp -o NAME,MODEL,SIZE,SERIAL | tee -a "${LOG_FILE}"
             echo | tee -a "${LOG_FILE}"
         
             read -p "Choose your PS2 HDD from the list above (e.g., /dev/sdx): " DEVICE
@@ -400,13 +400,14 @@ if [ "$MODE" = "install" ]; then
         error_msg "Device is $size_gb GB. Required minimum is 200 GB."
     else
         echo "Device Name: $DEVICE" >> "${LOG_FILE}"
-        drive_model=$(lsblk -no MODEL "$DEVICE" | xargs)
+        drive_model=$(lsblk -ndo MODEL,SIZE,SERIAL "$DEVICE" | xargs)
         [[ -z "$drive_model" ]] && drive_model="$DEVICE"
 
         echo
         echo "Selected drive: $drive_model" | tee -a "${LOG_FILE}"
         echo
-        echo "Are you sure you want to install to $drive_model?" | tee -a "${LOG_FILE}"
+        echo "Are you sure you want to install to the selected dive?" | tee -a "${LOG_FILE}"
+        echo
         read -p "This will erase all data on the drive. (yes/no): " CONFIRM
             if [[ $CONFIRM != "yes" ]]; then
                 echo "Aborted." | tee -a "${LOG_FILE}"
