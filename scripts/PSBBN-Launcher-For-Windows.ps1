@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.0.6"
+$version = "1.0.7"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -237,13 +237,14 @@ function diskPicker {
 
   # list available disks and pick the one to be mounted
   Write-Host "`nList of available disks:"
-  $global:diskList = Get-Disk
+  $global:diskList = Get-Disk | Sort -Property Number
   $disksWithOplVolume = detectOplVolume($global:diskList)
-  $global:diskList | Sort -Property Number | Format-Table -Property `
+  $global:diskList | Format-Table -Property `
     Number, `
     @{Label="Name";Expression={$_.FriendlyName}}, `
     @{Label="Size";Expression={("{0:N2}" -f ($_.Size / 1GB)).ToString() + " GB"}}, `
-    @{Label="";Expression={if ($disksWithOplVolume -contains $_.Number) { "<- PSBBN install detected on this disk" } else { "   " }}}
+    SerialNumber, `
+    @{Label="";Expression={if ($disksWithOplVolume -contains $_.Number) { "<- PSBBN detected" } else { "   " }}}
 
   # generate a list of disk number to validate user input
   $availableNumbers = $global:diskList | Foreach-Object {$_.Number}
