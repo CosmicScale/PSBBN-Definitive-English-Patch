@@ -375,6 +375,7 @@ function getTargetFolder {
     } while ($keyPressed -ne 'y' -and $keyPressed -ne 'n')
 
     if ($keyPressed -eq 'y') {
+      explorer $initialDirectory
       return convertPathToWsl($initialDirectory)
     }
   }
