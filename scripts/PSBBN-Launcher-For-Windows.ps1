@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.0.7"
+$version = "1.0.8"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -87,7 +87,15 @@ function main {
     You need to restart your computer in order for some newly installed features to work properly.
     Once you have restarted, just run this script again.
 " -ForegroundColor Yellow
-    Restart-Computer -Confirm
+    do {
+      clearLines(1)
+      $keyPressed = Read-Host "⚠️ You are about to restart your PC. Save your work, type `"restart`" and press ENTER"
+      $keyPressed = $keyPressed.ToLower()
+    } while ($keyPressed -ne 'restart')
+
+    if ($keyPressed -eq 'restart') {
+      Restart-Computer
+    }
     Exit
   }
 
@@ -106,8 +114,8 @@ function main {
   $isWslInstalled = wsl --list | Select-String -SimpleMatch -Quiet $wslLabel
   if (-Not ($isWslInstalled)) {
     Write-Host "`nThe WSL distro will prompt you to set a username and a password." -ForegroundColor Yellow
-    Write-Host "/!\ The username must start with a lowercase letter, and only contain letters and numbers." -ForegroundColor Red
-    Write-Host "/!\ A password must be set." -ForegroundColor Red
+    Write-Host "⚠️ The username must start with a lowercase letter, and only contain letters and numbers." -ForegroundColor Red
+    Write-Host "⚠️ A password must be set." -ForegroundColor Red
     Write-Host "After this is done, you can type 'exit' and press enter to return to this script.`n" -ForegroundColor Yellow
     Write-Host "------- Linux magic starts ---------"
 
