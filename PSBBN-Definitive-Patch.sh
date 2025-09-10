@@ -166,7 +166,7 @@ check_python_pkg() {
 
 check_node_pkg() {
     PACKAGE="$1"
-    NODE_MODULES_PATH="./scripts/node_modules"
+    NODE_MODULES_PATH="./node_modules"
 
     if NODE_PATH="$NODE_MODULES_PATH" node -e "require('$PACKAGE');" >/dev/null 2>&1; then
         echo "[✓] Node.js package '$PACKAGE' found" >> "$LOG_FILE"
