@@ -371,6 +371,7 @@ if [ "$MODE" = "install" ]; then
     # Choose the PS2 storage device
     if [[ -n "$serialnumber" ]]; then
             DEVICE=$(lsblk -p -o NAME,SERIAL | awk -v sn="$serialnumber" '$2 == sn {print $1; exit}')
+            drive_model=$(lsblk -ndo VENDOR,MODEL,SIZE,SERIAL "$DEVICE" | xargs)
     else
         while true; do
         SPLASH
@@ -388,6 +389,7 @@ if [ "$MODE" = "install" ]; then
             sleep 3
         fi
         done
+        drive_model=$(lsblk -ndo MODEL,SIZE,SERIAL "$DEVICE" | xargs)
     fi
     
     # Check the size of the chosen device
@@ -400,7 +402,6 @@ if [ "$MODE" = "install" ]; then
         error_msg "Device is $size_gb GB. Required minimum is 200 GB."
     else
         echo "Device Name: $DEVICE" >> "${LOG_FILE}"
-        drive_model=$(lsblk -ndo MODEL,SIZE,SERIAL "$DEVICE" | xargs)
         [[ -z "$drive_model" ]] && drive_model="$DEVICE"
 
         echo
