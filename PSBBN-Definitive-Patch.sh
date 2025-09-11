@@ -200,6 +200,7 @@ check_dep(){
     check_cmd ldconfig
     check_cmd sfdisk
     check_cmd partprobe
+    check_cmd chromium
 
     echo >> "$LOG_FILE"
     echo "--- exFAT support ---" >> "$LOG_FILE"
