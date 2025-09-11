@@ -52,9 +52,20 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 # Changelog
 
-## August 28th, 2025 - PSBBN Definitive Patch v3.00 - Music Installer, Menu System, Faster Installs & More!
-[![PSBBN Definitive English Patch 3.0](https://github.com/user-attachments/assets/3b82d809-28d5-4675-87c2-c7f1abf96ae6)](https://www.youtube.com/watch?v=lUMKZck6G08)  
+## September 09, 2025 - PSBBN Launcher for Windows: Easy Install & Setup
 
+[![PSBBN Launcher for Windows: Easy Install & Setup](https://github.com/user-attachments/assets/981e4abc-10b0-49d2-8d52-3e19ea80650b)](https://www.youtube.com/watch?v=O5ZvJoW4oNw)
+
+**[NEW! PSBBN Launcher For Windows](#installing-on-windows)** - The New way to install the **PSBBN Definitive Patch** on Windows 10 and 11.  
+Special thanks to Yornn for all his work on this feature.
+
+## August 28, 2025 - PSBBN Definitive Patch v3.00 - Music Installer, Menu System, Faster Installs & More!
+
+<details>
+<summary><b>Release Notes:</b></summary>
+  
+[![PSBBN Definitive English Patch 3.0](https://github.com/user-attachments/assets/3b82d809-28d5-4675-87c2-c7f1abf96ae6)](https://www.youtube.com/watch?v=lUMKZck6G08) 
+  
 **[NEW! Menu System:](#main-menu)**
 - New central menu system instead of separate scripts, making it easier to navigate the various features of the PSBBN Definitive Patch
 - Setup now runs automatically if missing dependencies are detected
@@ -83,6 +94,8 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 **[HDD-OSD (Browser 2.0):](#hdd-osd-browser-20)**
 - New PSBBN icon designed by Yornn
 - New improved background colour when viewing game icons
+
+</details>
 
 ## July 17, 2025 - Definitive Patch v2.11 - Boot Security Patched! Button Swap, VMC Groups & More!
 
@@ -341,42 +354,39 @@ cd PSBBN-Definitive-English-Patch
 ./PSBBN-Definitive-Patch.sh
 ```
 ### Installing on Windows
-If you are running Microsoft Windows 10 or 11, it is recommended to install the PSBBN Definitive Patch using the Windows Subsystem for Linux (WSL). WSL is a feature of Windows that allows you to run a Linux environment directly within Windows.
+The recommended way to install the PSBBN Definitive Patch on Windows 10 and 11 is to use the **PSBBN Launcher For Windows**.
 
-To install WSL and Debian, launch PowerShell as administrator and run:
-```
-wsl --install --distribution Debian
-```
-If you receive an error, it most likely means your hypervisor is disabled. Open “Turn Windows features on or off” and enable the following:
-- Hyper-V
-- Virtual Machine Platform
-- Windows Subsystem for Linux
+**Video Tutorial:**
 
-It may also be necessary to enable `SVM Mode` (for AMD CPUs) or `VT-x` (for Intel CPUs) in your BIOS settings. After making these changes, re-run the command above.
+[![PSBBN Launcher for Windows: Easy Install & Setup](https://github.com/user-attachments/assets/981e4abc-10b0-49d2-8d52-3e19ea80650b)](https://www.youtube.com/watch?v=O5ZvJoW4oNw)
 
-To mount your PS2 Drive, from PowerShell as administrator, run:
-```
-Get-CimInstance Win32_DiskDrive
-```
-This will display a list of drives connected to your PC. Identify the appropriate drive and note the physical drive number (e.g., PHYSICALDRIVE3).
+**Enabling Virtualization:**  
+It may be necessary to enable SVM Mode (for AMD CPUs) or VT-x (for Intel CPUs) in your BIOS settings if they are not already enabled. Instructions on how to do this can be found [here](https://www.elevenforum.com/t/enable-or-disable-cpu-virtualization-in-uefi-bios-firmware-settings-on-windows-pc.4928/).
 
-Then run the following command, substituting `x` with the correct drive number:
+Download the **PSBBN Launcher for Windows** [here](https://raw.githubusercontent.com/CosmicScale/PSBBN-Definitive-English-Patch/refs/heads/main/scripts/PSBBN-Launcher-For-Windows.ps1) (Right-click and select **Save link as**).
+
+**Set the PowerShell Execution Policy:**  
+Before running the script for the first time, you must change the execution policy in PowerShell:
+1. Open a new PowerShell window from the **Start menu** by searching for **PowerShell** and select **Run as Administrator**.
+2. Type the following command and press Enter:
+
 ```
-wsl --mount \\.\PHYSICALDRIVEx --bare
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
-From the Linux command line, run the following commands:
-```
-cd ~
-sudo apt update
-sudo apt install git
-git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
-cd PSBBN-Definitive-English-Patch
-./PSBBN-Definitive-Patch.sh
-```
-When complete, don’t forget to unmount the drive in PowerShell, replacing `x` with the drive number:
-```
-wsl --unmount \\.\PHYSICALDRIVEx
-```
+
+**You are now ready to run the script:**  
+Right-click on `PSBBN-Launcher-For-Windows.ps1` and select **Run with PowerShell**.
+
+The script will:
+- Automatically set up the [Windows Subsystem for Linux (WSL)](https://learn.microsoft.com/en-us/windows/wsl/about)
+- Prompt you to select a **drive** and `games` folder
+- Launch the **PSBBN Definitive Patch** [Main Menu](#main-menu)
+
+**Accessing the PSBBN Definitive Patch Main Menu in the Future:**  
+Simply right-click on `PSBBN-Launcher-For-Windows.ps1` and select **Run with PowerShell**
+
+**NOTE:**  
+Always exit the PSBBN Definitive Patch Main Menu by pressing `q` to quit. This ensures the drive is unmounted from WSL. If you are using a drive connected via USB, remember to also eject it from the Windows system tray.
 
 ## Main Menu
 `PSBBN-Definitive-Patch.sh` is your gateway to the PSBBN Definitive Patch. Running this script launches the main menu.  
@@ -781,6 +791,7 @@ PS2 Homebrew Community:
 - PSBBN English translation by [CosmicScale](https://github.com/CosmicScale)
 - `Setup.sh`, `PSBBN-Installer.sh`, `Game-Installer.sh`, `Media-Installer.sh`, `music-installer.py`, `Extras.sh`, `art_downloader.js`, `list-sorter.py` `txt_to_icon_sys.py`, `vmc_groups.list` written by [CosmicScale](https://github.com/CosmicScale)
 - `ps2iconmaker.sh` written by [Sakitoshi](https://github.com/Sakitoshi) and [CosmicScale](https://github.com/CosmicScale)
+- `PSBBN-Launcher-For-Windows.ps1` written by Yornn
 - Contains code from `list_builder.py` from [XEB+ neutrino Launcher Plugin](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin) by [sync-on-luma](https://github.com/sync-on-luma), modified by [CosmicScale](https://github.com/CosmicScale)
 - Contains data from `TitlesDB_PS1_English.txt` and `TitlesDB_PS2_English.txt` from the [PFS-BatchKit-Manager](https://github.com/GDX-X/PFS-BatchKit-Manager) by [GDX-X](https://github.com/GDX-X), modified by [CosmicScale](https://github.com/CosmicScale)
 - [PFS Shell](https://github.com/AKuHAK/pfsshell/tree/8Mb) and [HDL Dump](https://github.com/AKuHAK/hdl-dump/tree/8M) with 8MB PFS partition modifications by [AKuHAK](https://github.com/AKuHAK)
