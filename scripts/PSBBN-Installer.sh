@@ -372,7 +372,8 @@ if [ "$MODE" = "install" ]; then
     if [[ -n "$serialnumber" ]]; then
             DEVICE=$(lsblk -p -o NAME,SERIAL | awk -v sn="$serialnumber" '$2 == sn {print $1; exit}')
             drive_model=$(lsblk -ndo VENDOR,MODEL,SIZE,SERIAL "$DEVICE" | xargs)
-    else
+    fi
+    if [ -z "$DEVICE" ]; then
         while true; do
         SPLASH
             lsblk -dp -o NAME,MODEL,SIZE,SERIAL | tee -a "${LOG_FILE}"
