@@ -173,7 +173,6 @@ check_dep(){
     check_cmd convert       # from ImageMagick
     check_cmd xxd
     check_cmd python3
-    check_cmd npm
     check_cmd bc
     check_cmd rsync
     check_cmd curl
