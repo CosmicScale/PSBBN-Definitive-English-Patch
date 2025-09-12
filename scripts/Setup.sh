@@ -74,6 +74,8 @@ elif [ -x "$(command -v dnf)" ]; then
 # Or if user is on Arch-based system, do this instead
 elif [ -x "$(command -v pacman)" ]; then
     sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip nodejs npm bc rsync curl zip unzip wget ffmpeg lvm2 fuse2 dosfstools e2fsprogs glibc exfatprogs util-linux parted chromium 2>&1 | tee -a "${LOG_FILE}"
+elif [ -n "$IN_NIX_SHELL" ]; then
+    error_msg "Running in Nix environment - packages should be provided by flake and setup should not be run."
 else
     error_msg "No supported package manager found (apt-get, dnf, pacman)."
 fi

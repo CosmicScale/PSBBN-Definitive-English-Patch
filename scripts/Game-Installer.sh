@@ -984,6 +984,11 @@ activate_python() {
     done
     printf "\r[✓] %s\n" "$msg"
 
+    if [ -n "$IN_NIX_SHELL" ]; then
+        echo "Running in Nix environment - packages should be provided by flake." | tee -a "${LOG_FILE}"
+        return
+    fi
+
     echo | tee -a "${LOG_FILE}"
     echo "Activating Python virtual environment..." >> "${LOG_FILE}"
     # Try activating the virtual environment twice before failing
@@ -1270,6 +1275,8 @@ fi
 # Check if the Python virtual environment exists
 if [ -f "./scripts/venv/bin/activate" ]; then
     echo "The Python virtual environment exists." >> "${LOG_FILE}"
+elif [ -n "$IN_NIX_SHELL" ]; then
+    echo "Running in Nix environment - The Python dependencies are managed by the flake." >> "${LOG_FILE}"
 else
     error_msg "Error" "The Python virtual environment does not exist. Run 01-Setup.sh and try again."
 fi
@@ -1684,7 +1691,9 @@ if [ -f "${PS2_LIST}" ]; then
 fi
 
 # Deactivate the virtual environment
-deactivate
+if [[ -n "$VIRTUAL_ENV" ]]; then
+    deactivate
+fi
 
 # Create master list combining PS1 and PS2 games to a single list
 if [[ ! -f "${PS1_LIST}" && ! -f "${PS2_LIST}" ]] && find "${GAMES_PATH}/CD" "${GAMES_PATH}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) | grep -q .; then

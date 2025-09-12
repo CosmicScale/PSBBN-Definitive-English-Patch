@@ -1,3 +1,4 @@
+.direnv/
 scripts/venv/
 scripts/node_modules/
 scripts/storage/
