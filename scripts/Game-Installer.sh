@@ -2583,11 +2583,11 @@ zip -r "${ARTWORK_DIR}/tmp/ico.zip" * >/dev/null 2>&1
 cd "${ARTWORK_DIR}/tmp/" 
 zip -r "${ARTWORK_DIR}/tmp/art.zip" * >/dev/null 2>&1
 
-if [ "$(ls -A "${ARTWORK_DIR}/tmp")" ]; then
+if [ -f "${ARTWORK_DIR}/tmp/art.zip" ]; then
     echo | tee -a "${LOG_FILE}"
     echo "Contributing to the PSBBN art & HDD-OSD databases..." | tee -a "${LOG_FILE}"
     # Upload the file using transfer.sh
-    upload_url=$(curl -F "reqtype=fileupload" -F "time=72h" -F "fileToUpload=@art.zip" https://litterbox.catbox.moe/resources/internals/api.php)
+    upload_url=$(curl -F "reqtype=fileupload" -F "time=72h" -F "fileToUpload=@${ARTWORK_DIR}/tmp/art.zip" https://litterbox.catbox.moe/resources/internals/api.php)
 
     if [[ "$upload_url" == https://* ]]; then
         echo "[✓] File uploaded successfully: $upload_url" | tee -a "${LOG_FILE}"

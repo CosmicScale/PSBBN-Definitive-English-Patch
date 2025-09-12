@@ -190,6 +190,7 @@ check_dep(){
     check_cmd bc
     check_cmd rsync
     check_cmd curl
+    check_cmd zip
     check_cmd unzip
     check_cmd wget
     check_cmd ffmpeg
