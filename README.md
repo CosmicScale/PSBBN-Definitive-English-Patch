@@ -623,7 +623,7 @@ If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL
 # Credits
 - PSBBN Definitive English Patch project by [CosmicScale](https://github.com/CosmicScale)
 - PSBBN English translation by [CosmicScale](https://github.com/CosmicScale)
-- `01-Setup.sh`, `02-PSBBN-Installer.sh`, `03-Game-Installer.sh`, `04-Extras.sh`, `art_downloader.js`, `list-sorter.py` `txt_to_icon_sys.py` written by [CosmicScale](https://github.com/CosmicScale)
+- `01-Setup.sh`, `02-PSBBN-Installer.sh`, `03-Game-Installer.sh`, `04-Extras.sh`, `art_downloader.py`, `list-sorter.py` `txt_to_icon_sys.py` written by [CosmicScale](https://github.com/CosmicScale)
 - `ps2iconmaker.sh` written by [Sakitoshi](https://github.com/Sakitoshi) and [CosmicScale](https://github.com/CosmicScale)
 - Contains code from `list_builder.py` from [XEB+ neutrino Launcher Plugin](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin) by [sync-on-luma](https://github.com/sync-on-luma), modified by [CosmicScale](https://github.com/CosmicScale)
 - Contains data from `TitlesDB_PS1_English.txt` and `TitlesDB_PS2_English.txt` from the [PFS-BatchKit-Manager](https://github.com/GDX-X/PFS-BatchKit-Manager) by [GDX-X](https://github.com/GDX-X), modified by [CosmicScale](https://github.com/CosmicScale)
