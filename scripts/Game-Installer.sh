@@ -1943,7 +1943,7 @@ if [ -f "$ALL_GAMES" ]; then
             echo "OPL Artwork for $game_id already exists. Skipping download." | tee -a "${LOG_FILE}"
         else
             # Attempt to download artwork using wget
-            echo -n "OPL Artwork not found locally. Attempting to download from archive.org..." | tee -a "${LOG_FILE}"
+            echo -n "OPL Artwork not found locally for $game_id. Attempting to download from archive.org..." | tee -a "${LOG_FILE}"
             echo | tee -a "${LOG_FILE}"
             wget --quiet --timeout=10 --tries=3 --output-document="$png_file_cover" \
             "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS2/${game_id}/${game_id}_COV.png"
