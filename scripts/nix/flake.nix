@@ -18,35 +18,35 @@
         psbbn = pkgs.writeScriptBin "psbbn" ''
           #!${pkgs.bash}/bin/bash
           ${builtins.concatStringsSep "\n" (
-            builtins.tail (pkgs.lib.splitString "\n" (builtins.readFile ./PSBBN-Definitive-Patch.sh))
+            builtins.tail (pkgs.lib.splitString "\n" (builtins.readFile ../../PSBBN-Definitive-Patch.sh))
           )}
         '';
 
         psbbnInstaller = pkgs.writeScriptBin "psbbn-installer" ''
           #!${pkgs.bash}/bin/bash
           ${builtins.concatStringsSep "\n" (
-            builtins.tail (pkgs.lib.splitString "\n" (builtins.readFile ./scripts/PSBBN-Installer.sh))
+            builtins.tail (pkgs.lib.splitString "\n" (builtins.readFile ../PSBBN-Installer.sh))
           )}
         '';
 
         gameInstaller = pkgs.writeScriptBin "game-installer" ''
           #!${pkgs.bash}/bin/bash
           ${builtins.concatStringsSep "\n" (
-            builtins.tail (pkgs.lib.splitString "\n" (builtins.readFile ./scripts/Game-Installer.sh))
+            builtins.tail (pkgs.lib.splitString "\n" (builtins.readFile ../Game-Installer.sh))
           )}
         '';
 
         mediaInstaller = pkgs.writeScriptBin "media-installer" ''
           #!${pkgs.bash}/bin/bash
           ${builtins.concatStringsSep "\n" (
-            builtins.tail (pkgs.lib.splitString "\n" (builtins.readFile ./scripts/Media-Installer.sh))
+            builtins.tail (pkgs.lib.splitString "\n" (builtins.readFile ../Media-Installer.sh))
           )}
         '';
 
         extras = pkgs.writeScriptBin "extras" ''
           #!${pkgs.bash}/bin/bash
           ${builtins.concatStringsSep "\n" (
-            builtins.tail (pkgs.lib.splitString "\n" (builtins.readFile ./scripts/Extras.sh))
+            builtins.tail (pkgs.lib.splitString "\n" (builtins.readFile ../Extras.sh))
           )}
         '';
 
