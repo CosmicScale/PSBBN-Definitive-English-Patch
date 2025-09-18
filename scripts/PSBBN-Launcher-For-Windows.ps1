@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.0.8"
+$version = "1.0.9"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
@@ -59,25 +59,17 @@ function main {
 
   $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 
-  clear
+  Clear-Host
   printTitle
   Write-Host "Prepare Windows to run the PSBBN scripts.`n"
 
   # check if mandatory windows features are enabled
-  Write-Host "Checking if the mandatory features are enabled..." -NoNewline
-  $wslFeature = Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
-  $hyperVFeature = Get-WindowsOptionalFeature -Online -FeatureName HypervisorPlatform
-  $virtualMachineFeature = Get-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
-  printOK
-
-  # enable WSL as needed
-  enableFeature($wslFeature)
-
-  # enable Hyper V as needed
-  enableFeature($hyperVFeature)
-
-  # enable Virtual Maching Platform as needed
-  enableFeature($virtualMachineFeature)
+  Write-Host "Checking if the mandatory features are enabled..."
+  
+  # The underlying command differs between PowerShell for Windows and PWSH (PowerShell 7)
+  checkAndInstallFeature("Microsoft-Windows-Subsystem-Linux")
+  checkAndInstallFeature("HypervisorPlatform")
+  checkAndInstallFeature("VirtualMachinePlatform")
   
   # detect if virtualization is enabled in BIOS
   detectVirtualization
@@ -90,7 +82,7 @@ function main {
     do {
       clearLines(1)
       $keyPressed = Read-Host "⚠️ You are about to restart your PC. Save your work, type `"restart`" and press ENTER"
-      $keyPressed = $keyPressed.ToLower()
+      $keyPressed = $keyPressed.ToLowerInvariant()
     } while ($keyPressed -ne 'restart')
 
     if ($keyPressed -eq 'restart') {
@@ -107,7 +99,7 @@ function main {
   
   # fetch the latest wsl update
   Write-Host "Check the latest WSL updates...`t`t`t" -NoNewline
-  $wslUpdate = wsl --update --web-download
+  $null = wsl --update --web-download
   printOK
 
   # check if a wsl distro is installed already
@@ -160,14 +152,14 @@ function main {
   
   # give the user the opportunity to put games/homebrew in the PSBBN folder
   $path = getTargetFolder
-  clear
+  Clear-Host
   
   # run PSBBN regular steps
   wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- `
     ./PSBBN-Definitive-Patch.sh -wsl $global:diskList[$selectedDisk].SerialNumber $path
 
   # clear the terminal to get rid of the wsl-run scripts
-  clear
+  Clear-Host
   printTitle
 
   # unmount the disk before exiting
@@ -203,19 +195,95 @@ function printRestartRequired {
   Write-Host " ]"
 }
 
-# takes a feature as parameter and enable it if needed
-function enableFeature ($feature) {
-  if (($null -ne $feature.FeatureName) -and ($feature.State -ne "Enabled")) {
-    Write-Host "  └ Enabling" $feature.DisplayName "..." -NoNewline;
-    $enabled = Enable-WindowsOptionalFeature -Online -FeatureName $feature.FeatureName -All -NoRestart -WarningAction:SilentlyContinue
-    if ($enabled.RestartNeeded) {
-      $global:IsRestartRequired = $true
-      printRestartRequired
-    } else {
-      printOK
+function checkAndInstallFeature ($feature) {
+  $featureStatus = $null
+
+  # get the status of the feature, this varies between PS5 and PS7
+  if ($PSVersionTable.PSVersion.Major -eq 5) {
+    $featureStatus = Get-WindowsOptionalFeature -Online -FeatureName $feature
+  }
+  elseif ($PSVersionTable.PSVersion.Major -ge 7) {
+    try {
+      # try to use windows powershell anyway for this task
+      Import-Module Dism -UseWindowsPowerShell -ErrorAction Stop -WarningAction SilentlyContinue
+      $featureStatus = Get-WindowsOptionalFeature -Online -FeatureName $feature
+    } catch {
+      # fallback to using Get-CimInstance
+      $stateMap = @{ 1='Enabled'; 2='Disabled'; 3='Absent'; 4='Unknown' }
+      $featureInfo = Get-CimInstance Win32_OptionalFeature -Filter "Name='$feature'"
+      $featureStatus = [pscustomobject]@{
+        FeatureName = $featureInfo.Name
+        State = $stateMap[[int]$featureInfo.InstallState]
+        DisplayName = $featureInfo.Caption
+      }
     }
-  } elseif ($feature.State -eq "Enabled"){
-    Write-Host "  └" $feature.DisplayName 'already enabled.' -NoNewline
+  }
+  
+  # enable the feature if possible
+  $enabled = $null
+  if ($null -eq $featureStatus) {
+    Write-Host "  └" $feature 'unable to determine status.' -NoNewline;
+    printNG
+    return
+  } elseif ($featureStatus.State -eq "Enabled") {
+    Write-Host "  └" $featureStatus.DisplayName 'already enabled.' -NoNewline
+    printOK
+    return
+  } else {
+    if ($PSVersionTable.PSVersion.Major -eq 5) {
+      Write-Host "  └ Enabling" $featureStatus.DisplayName "..." -NoNewline;
+      $enabled = Enable-WindowsOptionalFeature -Online -FeatureName $featureStatus.FeatureName -All -NoRestart -WarningAction:SilentlyContinue
+    } elseif ($PSVersionTable.PSVersion.Major -ge 7) {
+      try {
+        # try to use windows powershell anyway for this task
+        Import-Module Dism -UseWindowsPowerShell -ErrorAction Stop -WarningAction SilentlyContinue
+        $enabled = Enable-WindowsOptionalFeature -Online -FeatureName $featureStatus.FeatureName -All -NoRestart -WarningAction:SilentlyContinue
+      } catch {
+        # fallback to using dism.exe
+        $featureName = $featureStatus.FeatureName
+        $dismArgs = @(
+          '/Online'
+          '/NoRestart'
+          '/Enable-Feature'
+          "/FeatureName:$featureName"
+          '/All'
+        )
+
+        # capture dism output and exit code
+        $dismOut = & Dism.exe @dismArgs 2>&1
+        $exit = $LASTEXITCODE
+
+        # check for success exit code
+        if ($exit -eq 0) {
+          # janky string parsing to check if restart required under exit code 0
+          $restartNeeded = [bool](
+            $dismOut | Select-String -Quiet '(?i)\bRestart (Required|Needed)\s*:\s*Yes\b|restart.+required'
+          )
+
+          $enabled = [pscustomobject]@{
+            Path = ''
+            Online = $true
+            RestartRequired = $restartNeeded
+          }
+        # microsoft standard exit codes for "success, restart required"
+        # source: https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--1700-3999-
+        } elseif ($exit -eq 0xbc2 -or $exit -eq 0xbc3) {
+          $enabled = [pscustomobject]@{
+            Path = ''
+            Online = $true
+            RestartRequired = $true
+          }
+        }
+      }
+    }
+  }
+
+  if ($null -eq $enabled) {
+    printNG
+  } elseif ($enabled.RestartNeeded) {
+    $global:IsRestartRequired = $true
+    printRestartRequired
+  } else {
     printOK
   }
 }
@@ -234,6 +302,7 @@ ______  _________________ _   _  ______      __ _       _ _   _            _____
                                                 ---
                                      Launcher for Windows v$version
                                           Written by Yornn
+                                        Updated by johnkiddjr
 
 "
 }
@@ -245,7 +314,7 @@ function diskPicker {
 
   # list available disks and pick the one to be mounted
   Write-Host "`nList of available disks:"
-  $global:diskList = Get-Disk | Sort -Property Number
+  $global:diskList = Get-Disk | Sort-Object -Property Number
   $disksWithOplVolume = detectOplVolume($global:diskList)
   $global:diskList | Format-Table -Property `
     Number, `
@@ -270,27 +339,21 @@ function diskPicker {
 # handles the input logic of the diskpicker
 # this function calls itself recursively as long an invalid input is provided
 function handleDiskSelection ($availableNumbers) {
-  Write-Host "Select a disk to use by typing its number or press `"r`" to refresh the list: " -NoNewline
-  $keyPressed = $Host.UI.RawUI.ReadKey("IncludeKeyDown")
-  try {
-    $selectedDisk = [int][string]$keyPressed.Character
-  } catch {
-    $selectedDisk = -1
-  }
-
-  if ($keyPressed.Character -eq "r") {
-    Write-Host $(" " * 45) -NoNewline
-    return "r"
-  }
-
-  if ((-Not ($availableNumbers -contains $selectedDisk)) -or ($keyPressed.VirtualKeyCode -eq 13)) {
-    Write-Host " - Invalid input, try again.`r" -NoNewline -ForegroundColor Red
-    $selectedDisk = handleDiskSelection($maxDiskNumber)
-  } else {
+  $prompt = 'Enter an available number ({0}) or (r)efresh and press Enter' -f ((
+    $availableNumbers -split '\r?\n' | Where-Object { $_ } ) -join ', ')
+  
+  $diskInput = Read-Host $prompt
+  $selectedDisk = -1
+  $diskInput = $diskInput.ToLowerInvariant().Trim()
+  # parse to int, fail silently since default is already -1
+  if ($diskInput.StartsWith("r") -or ([int]::TryParse($diskInput, [ref]$selectedDisk) -and $availableNumbers -contains $selectedDisk)) {
     # erase the "invalid output" message
     Write-Host $(" " * 45) -NoNewline
+    return $selectedDisk
+  } else {
+    Write-Host " - Invalid input, try again.`r" -NoNewline -ForegroundColor Red
+    return handleDiskSelection($maxDiskNumber)
   }
-  return $selectedDisk
 }
 
 # detects if bios-level virtualization is enabled or not, and display messages
@@ -379,11 +442,23 @@ function getTargetFolder {
     do {
       clearLines(1)
       $keyPressed = Read-Host "Would you like to keep using this path? (y/n)"
-      $keyPressed = $keyPressed.ToLower()
-    } while ($keyPressed -ne 'y' -and $keyPressed -ne 'n')
+      $keyPressed = $keyPressed.ToLowerInvariant()
+    } while (-Not ($keyPressed.StartsWith('y')) -and -Not ($keyPressed.StartsWith('n')))
 
-    if ($keyPressed -eq 'y') {
-      explorer $initialDirectory
+    # if path is already set, and user wants to reuse it, ask if they want to open it
+    if ($keyPressed.StartsWith('y')) {
+      $keyPressed = ''
+      do {
+        clearLines(1)
+        $keyPressed = Read-Host "Would you like to open that directory now? (y/n)"
+        $keyPressed = $keyPressed.ToLowerInvariant()
+      } while (-Not ($keyPressed.StartsWith('y')) -and -Not ($keyPressed.StartsWith('n')))
+
+      # open the explorer window with target directory
+      if ($keyPressed.StartsWith('y')) {
+        explorer $initialDirectory
+      }
+
       return convertPathToWsl($initialDirectory)
     }
   }
@@ -470,7 +545,7 @@ function detectOplVolume ($diskList) {
 }
 
 function convertPathToWsl ($windowsPath) {
-  $driveLetter = $windowsPath.Split(":")[0].ToLower()
+  $driveLetter = $windowsPath.Split(":")[0].ToLowerInvariant()
   $path = $windowsPath.Split(":")[1].Replace("\", "/")
   return "/mnt/$driveLetter$path"
 }
@@ -478,7 +553,7 @@ function convertPathToWsl ($windowsPath) {
 restartAsAdminIfNeeded
 
 # necessary to ensure the CWD is where the script is located, in case the script was restarted as admin
-cd $PSScriptRoot
+Set-Location $PSScriptRoot
 
 if ($LogsEnabled) {
   try { $null = Start-Transcript -Path ".\psbbn-windows-launcher.log" }  catch {}
