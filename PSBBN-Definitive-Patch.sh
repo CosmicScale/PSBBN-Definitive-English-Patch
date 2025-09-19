@@ -233,7 +233,7 @@ check_dep(){
         check_python_pkg tqdm
     fi
 
-    if ldconfig -p | grep -q "libfuse.so.2"; then
+    if { ldconfig -p 2>/dev/null | grep -q "libfuse.so.2"; } || pkg-config --exists fuse 2>/dev/null; then
         echo "[✓] FUSE2 (libfuse.so.2) is installed." >> "$LOG_FILE"
     else
         echo "[X] FUSE2 (libfuse.so.2) is missing." >> "$LOG_FILE"
