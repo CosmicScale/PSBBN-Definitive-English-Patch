@@ -10,9 +10,9 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.0.9"
+$version = "1.0.8"
 
-# the label of the WSL machine. Still based on Debian, but this label makes sure we get the
+# the label of the WSL machine. Still based on Debian, but this label makes sure we get the 
 # machine created by this script and not some pre-existing Debian the user had.
 $wslLabel = "PSBBN"
 
@@ -33,17 +33,11 @@ $consoleHeight = 45
 # the filename of the file holding the last path used
 $pathFilename = "path.cfg"
 
-# the minimum disk size allowed to be picked, in gigabytes
-$minimumDiskSize = 200
-
 # --- DO NOT MODIFY THE VARIABLES BELOW ---
 
 # in case $gitBranch no longer exists on the remote, use this as fallback
 # DO NOT change this unless the repo has deleted the main branch or is using another branch as release
 $fallbackGitBranch = "main"
-
-# the escape character used to color text
-$e = [char] 27
 
 # this make wsl commands output utf8 instead of utf16_LE
 $env:WSL_UTF8 = 1
@@ -84,10 +78,10 @@ function main {
 
   # enable Virtual Maching Platform as needed
   enableFeature($virtualMachineFeature)
-
+  
   # detect if virtualization is enabled in BIOS
   detectVirtualization
-
+  
   if ($isRestartRequired) {
     Write-Host "
     You need to restart your computer in order for some newly installed features to work properly.
@@ -110,7 +104,7 @@ function main {
     Write-Host "WSL is not available on this computer." -ForegroundColor Yellow
     Exit
   }
-
+  
   # fetch the latest wsl update
   Write-Host "Check the latest WSL updates...`t`t`t" -NoNewline
   $wslUpdate = wsl --update --web-download
@@ -130,10 +124,10 @@ function main {
     Write-Host "The WSL distro is already present, skipping.`t" -NoNewline
     printOK
   }
-
+  
   # install git if it is missing
   wsl -d $wslLabel -- type git `&`> /dev/null `|`| `(sudo apt update `&`& sudo apt -y install git`)
-
+  
   # check if the git branch exists on the remote, and if not, use the fallback
   if (-Not (wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- git branch -r --list origin/$gitBranch)) {
     $gitBranch = $fallbackGitBranch
@@ -149,25 +143,25 @@ function main {
       `&`& git pull --ff-only `
     `) `
     `|`| git clone -b $gitBranch https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
-
+  
   if (-Not ($isWslInstalled)) {
     Write-Host "------- Linux magic finishes ---------`n"
   }
 
   # prompt user to choose a disk
   diskPicker
-
+  
   # mount the disk
   $deviceName = "\\.\PHYSICALDRIVE$global:selectedDisk"
   Write-Host "`nMounting $deviceName on wsl...`t`t" -NoNewline
   Set-Disk $global:selectedDisk -isOffline $true
   $mountOut = wsl -d $wslLabel --mount $deviceName --bare
   handleMountOutput($mountOut)
-
+  
   # give the user the opportunity to put games/homebrew in the PSBBN folder
   $path = getTargetFolder
   clear
-
+  
   # run PSBBN regular steps
   wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- `
     ./PSBBN-Definitive-Patch.sh -wsl $global:diskList[$selectedDisk].SerialNumber $path
@@ -181,7 +175,7 @@ function main {
   $unmountOut = wsl -d $wslLabel --unmount $deviceName
   Set-Disk $global:selectedDisk -isOffline $false
   handleMountOutput($unmountOut)
-
+  
   # ensures wsl doesnt run out of resources if this script is ran repeatedly
   wsl --shutdown
 
@@ -190,17 +184,23 @@ function main {
 
 # print colored `[ OK ]`
 function printOK {
-  Write-Host "    `t`t[ $e[92mOK$e[0m ]"
+  Write-Host "    `t`t[ " -NoNewline
+  Write-Host "OK" -NoNewline -ForegroundColor Green
+  Write-Host " ]"
 }
 
 # print colored `[ NG ]`
 function printNG {
-  Write-Host "    `t`t[ $e[91mNG$e[0m ]"
+  Write-Host "`t`t[ " -NoNewline
+  Write-Host "NG" -NoNewline -ForegroundColor Red
+  Write-Host " ]"
 }
 
 # print colored `[ Restart required ]`
 function printRestartRequired {
-  Write-Host "    `t`t[ $e[93mRestart required$e[0m ]"
+  Write-Host "    `t`t[ " -NoNewline
+  Write-Host "Restart required" -NoNewline -ForegroundColor Yellow
+  Write-Host " ]"
 }
 
 # takes a feature as parameter and enable it if needed
@@ -223,10 +223,10 @@ function enableFeature ($feature) {
 # prints the big psbbn logo and the version number
 function printTitle {
   Write-Host "
-______  _________________ _   _  ______      __ _       _ _   _            ______     _       _
-| ___ \/  ___| ___ \ ___ \ \ | | |  _  \    / _(_)     (_) | (_)           | ___ \   | |     | |
-| |_/ /\ ``--.| |_/ / |_/ /  \| | | | | |___| |_ _ _ __  _| |_ ___   _____  | |_/ /_ _| |_ ___| |__
-|  __/  ``--. \ ___ \ ___ \ . `` | | | | / _ \  _| | '_ \| | __| \ \ / / _ \ |  __/ _`` | __/ __| '_ \
+______  _________________ _   _  ______      __ _       _ _   _            ______     _       _     
+| ___ \/  ___| ___ \ ___ \ \ | | |  _  \    / _(_)     (_) | (_)           | ___ \   | |     | |    
+| |_/ /\ ``--.| |_/ / |_/ /  \| | | | | |___| |_ _ _ __  _| |_ ___   _____  | |_/ /_ _| |_ ___| |__  
+|  __/  ``--. \ ___ \ ___ \ . `` | | | | / _ \  _| | '_ \| | __| \ \ / / _ \ |  __/ _`` | __/ __| '_ \ 
 | |    /\__/ / |_/ / |_/ / |\  | | |/ /  __/ | | | | | | | |_| |\ V /  __/ | | | (_| | || (__| | | |
 \_|    \____/\____/\____/\_| \_/ |___/ \___|_| |_|_| |_|_|\__|_| \_/ \___| \_|  \__,_|\__\___|_| |_|
 
@@ -246,24 +246,18 @@ function diskPicker {
   # list available disks and pick the one to be mounted
   Write-Host "`nList of available disks:"
   $global:diskList = Get-Disk | Sort -Property Number
-  $disksExtras = detectDisksExtras
-  $global:diskList | Format-Table -AutoSize -Property `
+  $disksWithOplVolume = detectOplVolume($global:diskList)
+  $global:diskList | Format-Table -Property `
     Number, `
     @{Label="Name";Expression={$_.FriendlyName}}, `
     @{Label="Size";Expression={("{0:N2}" -f ($_.Size / 1GB)).ToString() + " GB"}}, `
     SerialNumber, `
-    @{Label="";Expression={$disksExtras[$_.Number]}}
-  
-  if (($global:diskList | Where-Object -FilterScript {isTooSmall($_)}).Count -gt 0) {
-    Write-Host "ℹ️ PSBBN requires a disk with a minimum capacity of 200GB.`n" -ForegroundColor Yellow
-  }
+    @{Label="";Expression={if ($disksWithOplVolume -contains $_.Number) { "<- PSBBN detected" } else { "   " }}}
 
-  if (($global:diskList | Where-Object -FilterScript {isUsbStorage($_)}).Count -gt 0) {
-    Write-Host "ℹ️ USB thumbdrives and SD card readers are not supported by the PSBBN Launcher for Windows.
-    They are marked as `"$e[91mIncompatible disk$e[93m`".`n" -ForegroundColor Yellow
-  }
+  # generate a list of disk number to validate user input
+  $availableNumbers = $global:diskList | Foreach-Object {$_.Number}
 
-  $selectedDisk = handleDiskSelection
+  $selectedDisk = handleDiskSelection($availableNumbers)
 
   if ($selectedDisk -eq "r") {
     clearLines($Host.UI.RawUI.CursorPosition.Y - $lineStart)
@@ -275,13 +269,8 @@ function diskPicker {
 
 # handles the input logic of the diskpicker
 # this function calls itself recursively as long an invalid input is provided
-function handleDiskSelection {
+function handleDiskSelection ($availableNumbers) {
   Write-Host "Select a disk to use by typing its number or press `"r`" to refresh the list: " -NoNewline
-  # generate a list of disk number to validate user input
-  $availableNumbers = $global:diskList `
-    | Where-Object -FilterScript {-Not (isUsbStorage($_) -or isTooSmall($_))} `
-    | Foreach-Object {$_.Number}
-
   $keyPressed = $Host.UI.RawUI.ReadKey("IncludeKeyDown")
   try {
     $selectedDisk = [int][string]$keyPressed.Character
@@ -290,19 +279,16 @@ function handleDiskSelection {
   }
 
   if ($keyPressed.Character -eq "r") {
-    Write-Host $(" " * $consoleWidth) -NoNewline
+    Write-Host $(" " * 45) -NoNewline
     return "r"
   }
 
-  if (
-    (-Not ($availableNumbers -contains $selectedDisk)) `
-    -or ($keyPressed.VirtualKeyCode -eq 13) `
-  ) {
+  if ((-Not ($availableNumbers -contains $selectedDisk)) -or ($keyPressed.VirtualKeyCode -eq 13)) {
     Write-Host " - Invalid input, try again.`r" -NoNewline -ForegroundColor Red
     $selectedDisk = handleDiskSelection($maxDiskNumber)
   } else {
     # erase the "invalid output" message
-    Write-Host $(" " * $consoleWidth) -NoNewline
+    Write-Host $(" " * 45) -NoNewline
   }
   return $selectedDisk
 }
@@ -310,10 +296,10 @@ function handleDiskSelection {
 # detects if bios-level virtualization is enabled or not, and display messages
 function detectVirtualization {
   Write-Host "Checking if virtualization is enabled in BIOS..." -NoNewline
-
+  
   $propertyName = "HyperVRequirementVirtualizationFirmwareEnabled"
   $property = Get-ComputerInfo -property $propertyName
-
+  
   # the property is null if the feature is enabled, false otherwise
   if ($property.$propertyName -eq $false) {
     printNG
@@ -355,16 +341,16 @@ function restartAsAdminIfNeeded {
     # already running as admin, so we just carry on
     return
   }
-
+  
   # if powershell 7 is installed, launch that one instead of 5.1
   $shell = "powershell"
   if (Get-Command pwsh -errorAction SilentlyContinue) {
     $shell = "pwsh"
   }
-
+  
   # relaunch the script as admin, this should trigger a UAC prompt
   Start-Process $shell -Verb RunAs -ArgumentList "-NoLogo -NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-
+  
   # close the initial non-admin shell to avoid confusion
   exit
 }
@@ -401,7 +387,7 @@ function getTargetFolder {
       return convertPathToWsl($initialDirectory)
     }
   }
-
+  
   Write-Host "`nNext you will be asked to pick a folder where to put all your games, movies, photos, and music." -ForegroundColor Yellow
 
   pause
@@ -465,47 +451,22 @@ function clearLines ($count) {
   [Console]::SetCursorPosition(0,($CurrentLine - $count))
 }
 
-# for each disk, generate a message to be displayed in the diskPicker list's last column
-function detectDisksExtras {
-  # a keyed array of <(int) diskNumber, (string) messages>
-  $messages = @{}
-
-  $global:diskList | ForEach-Object {
-    $message = "   "
+# walks through each disk -> partition -> volume to find which disks have
+# volumes named $oplVolumeName, and return an array of disk numbers
+function detectOplVolume ($diskList) {
+  $disksWithOplVolume = @()
+  $diskList | ForEach-Object {
     $diskNumber = $_.Number
-
-    # walks through each partition -> volume to find which disks have volumes named $oplVolumeName
-    $null = Get-Partition -disknumber $diskNumber -errorAction SilentlyContinue | ForEach-Object {
+    Get-Partition -disknumber $diskNumber -errorAction SilentlyContinue | ForEach-Object {
       Get-Volume -partition $_ | ForEach-Object {
         $_.FileSystemLabel.GetType()
         if ($_.FileSystemLabel -eq $oplVolumeName) {
-          $message = "$e[92mPSBBN detected$e[0m"
+          $disksWithOplVolume += $diskNumber
         }
       }
-    }
-
-    # current implementation does not allow for mounting usb drives and sdcard readers on wsl
-    if (isUsbStorage($_)) {
-      $message = "$e[91mIncompatible disk$e[0m"
-    }
-
-    # PSBBN requires disk with at least 200GB
-    if (isTooSmall($_)) {
-      $message = "$e[91mInsufficient size$e[0m"
-    }
-
-    $messages.Add($diskNumber, $message)
+    } | Out-Null
   }
-
-  return $messages
-}
-
-function isTooSmall ($item) {
-  return ($item.Size / 1GB) -lt $minimumDiskSize
-}
-
-function isUsbStorage ($item) {
-  return $_.UniqueId.Contains('USBSTOR\DISK')
+  return $disksWithOplVolume
 }
 
 function convertPathToWsl ($windowsPath) {
