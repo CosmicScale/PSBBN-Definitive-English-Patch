@@ -272,8 +272,16 @@ def process_files(folder, extensions):
                 game_name = os.path.splitext(image)[0]
                 publisher = ""
         else:
-            game_name = os.path.splitext(image)[0]
+            base_name = os.path.splitext(image)[0]
+            # If filename begins with the Game ID, strip it off
+            if base_name.upper().startswith(string):
+                # also strip optional separators like '_' or '.'
+                stripped = base_name[len(string):].lstrip('_. ')
+                game_name = stripped if stripped else base_name
+            else:
+                game_name = base_name
             publisher = ""
+            
         print(f"Game ID '{string}' -> Game='{game_name}', Publisher='{publisher}'")
 
         # Add to game list entries
