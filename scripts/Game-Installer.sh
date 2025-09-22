@@ -395,7 +395,7 @@ POPS_SYNC() {
         echo | tee -a "${LOG_FILE}"
         echo "[✓] PS1 games copied successfully." | tee -a "${LOG_FILE}"
     fi
-    cd ${TOOLKIT_PATH} 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to $TOOLKIT_PATH."
+    cd "${TOOLKIT_PATH}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to $TOOLKIT_PATH."
 }
 
 VMC_TITLE() {
