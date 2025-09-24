@@ -10,6 +10,8 @@ HELPER_DIR="${SCRIPTS_DIR}/helper"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
 OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/PSBBN-installer.log"
+PARTITION_CHOICE=""
+USE_GPT=false
 
 serialnumber="$2"
 path_arg="$3"
@@ -744,9 +746,47 @@ if [ "$MODE" = "install" ]; then
     MAGIC_NUMBER="4150414A2D413200"
     apajail_magic_number
 
-    # Setting up MBR:
+    # Ask user for partition scheme with retry loop:
+    while true; do
+        echo
+        echo "Select partitioning scheme:"
+        echo "  1) MBR (Limit 2TB)"
+        echo "  2) GPT (No Limit)"
+        echo "  q) Quit"
+        echo
+        read -rp "Enter choice [1-2 or q]: " PARTITION_CHOICE
+
+        if [ "$PARTITION_CHOICE" = "1" ]; then
+            echo "Setting up MBR..." | tee -a "${LOG_FILE}"
+            USE_GPT=false
+            break
+        elif [ "$PARTITION_CHOICE" = "2" ]; then
+            echo "Setting up GPT..." | tee -a "${LOG_FILE}"
+            USE_GPT=true
+            break
+        elif [ "$PARTITION_CHOICE" = "q" ] || [ "$PARTITION_CHOICE" = "Q" ]; then
+            echo "User chose to quit. Exiting." | tee -a "${LOG_FILE}"
+            exit 0
+        else
+            echo "Invalid choice. Please enter 1, 2, or q to quit." | tee -a "${LOG_FILE}"
+        fi
+    done
+
     {
-    echo -e ",128GiB,17\n,32MiB,17\n,,07" | sudo sfdisk ${DEVICE}
+    if [ "$USE_GPT" = true ]; then
+        # Setting up GPT:
+        sudo sgdisk -o ${DEVICE}
+        # 128GiB = 137438953472 / 512 = LBA 268435456
+        # (137438953472 + 33554432) / 512 = LBA 268500992
+        sudo sgdisk -n 1:0:268435456         -t 1:ED00 -c 1:"PS2 Protection Area" ${DEVICE}
+        sudo sgdisk -n 2:268435457:268500993 -t 2:8300 -c 2:"Recovery" ${DEVICE} # 0700 for msdata
+        sudo sgdisk -N 3                     -t 3:0700 -c 3:"PC Area" ${DEVICE}
+        sudo parted ${DEVICE} set 1 hidden on
+        sudo parted ${DEVICE} set 2 hidden on
+    else
+        # Setting up MBR:
+        echo -e ",128GiB,17\n,32MiB,17\n,,07" | sudo sfdisk ${DEVICE}
+    fi
     sudo partprobe ${DEVICE}
     if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
 	    sudo mke2fs -t ext2 -L "RECOVERY" ${DEVICE}p2
