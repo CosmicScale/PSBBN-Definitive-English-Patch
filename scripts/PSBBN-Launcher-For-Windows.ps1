@@ -259,34 +259,33 @@ function diskPicker {
 # handles the input logic of the diskpicker
 # this function calls itself recursively as long an invalid input is provided
 function handleDiskSelection {
-  Write-Host "Select a disk to use by typing its number or press `"r`" to refresh the list: " -NoNewline
+  $selectedDisk = -1
   # generate a list of disk number to validate user input
   $availableNumbers = $global:diskList `
     | Where-Object -FilterScript {-Not (isTooSmall($_))} `
     | Foreach-Object {$_.Number}
 
-  $keyPressed = $Host.UI.RawUI.ReadKey("IncludeKeyDown")
-  try {
-    $selectedDisk = [int][string]$keyPressed.Character
-  } catch {
-    $selectedDisk = -1
-  }
+  Write-Host "Select a disk to use by typing its number or press `"r`" to refresh the list.`n"
+  $promptMessage = " "
+  $validInput = $false
+  do {
+    clearLines(1)
+    $input = Read-Host "$promptMessage"
+    $input = $input.ToLower()
 
-  if ($keyPressed.Character -eq "r") {
-    Write-Host $(" " * $consoleWidth) -NoNewline
-    return "r"
-  }
+    if (-Not $validInput) {
+      $promptMessage = "$e[91mInvalid input, try again$e[0m"
+    }
 
-  if (
-    (-Not ($availableNumbers -contains $selectedDisk)) `
-    -or ($keyPressed.VirtualKeyCode -eq 13) `
-  ) {
-    Write-Host " - Invalid input, try again.`r" -NoNewline -ForegroundColor Red
-    $selectedDisk = handleDiskSelection($maxDiskNumber)
-  } else {
-    # erase the "invalid output" message
-    Write-Host $(" " * $consoleWidth) -NoNewline
-  }
+    # it is necessary to check if $input is empty first, or ($input -in $availableNumbers) will return true for some reason
+    $validInput = $input -And (($input -in $availableNumbers) -Or ($input -eq "r"))
+  } while (-Not $validInput)
+
+  $selectedDisk = $input
+
+  clearLines(1)
+  Write-Host "Disk number $selectedDisk picked."
+
   return $selectedDisk
 }
 
