@@ -26,10 +26,10 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 # Patch Features
 - A full English translation of the stock Japanese BB Navigator version 0.32
 - All binaries, XML files, textures, and pictures have been translated*
-- Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#slim-ps2-console-model-scph-700xx) or similar mod, regardless of region
+- Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#slim-ps2-console-model-scph-700xx) or similar hardware mod, regardless of region
 - DNAS authorization checks bypassed to enable access the online channels
 - Online game channels from Sony, Hudson, EA, Konami, Capcom, Namco, KOEI, and Bandai have been translated into English (work in progress). Hosted courtesy of vitas155 at [psbbn.ru](https://psbbn.ru/)
-- "Audio Player" feature re-added to the Music Channel from an earlier release of PSBBN, allowing compatibility with NetMD MiniDisc Recorders
+- "Audio Player" feature re-added to the Music Channel from an earlier release of PSBBN, allowing [compatibility with NetMD MiniDisc Recorders](#known-issues)
 - Associated manual pages and troubleshooting regarding the "Audio Player" feature translated and re-added to the user guide
 - Japanese QWERTY on-screen keyboard replaced with US English on-screen keyboard**
 - The `cross` and `circle` buttons have been swapped: `cross` is now Enter, and `circle` is now Back.
@@ -323,15 +323,15 @@ New in Definitive Patch v2.11:
 </details>  
 
 # User Guide
-The PSBBN Definitive Patch scripts are essential for unlocking all the new features exclusive to version 2.0 and above. The scripts require an x86-64 processor and a 64-bit operating system. ARM-based systems, including Apple Silicon, are not supported.
+The PSBBN Definitive Patch script is essential for unlocking all the new features exclusive to version 2.0 and above. The script require an x86-64 processor and a 64-bit operating system. ARM-based systems, including Apple Silicon, are not supported.
 
-PSBBN requires a Fat PS2 console (**SCPH-3000x to SCPH-500xx**) with an expansion bay and an [official Sony Network Adapter](#known-issueslimitations-of-psbbn).  
+PSBBN requires a Fat PS2 console (**SCPH-3000x to SCPH-500xx**) with an expansion bay and an [official Sony Network Adapter](#known-issues).  
 
 It is also compatible with the PS2 Slim **SCPH-700xx** model with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar hardware mod and **SCPH-10000 to SCPH-18000** models with an official external HDD enclosure, as long as the drive in the enclosure has been replaced with one that is 200 GB or larger. [Additional setup is required for these consoles](#early-scph-10000–18000-and-slim-scph-700xx-consoles).
 
 For expansion bay type consoles, I would highly recommend using a **Kaico or BitFunx IDE to SATA Upgrade Kit**
 
-You also require a HDD/SSD for your PS2 that is larger than 200 GB, ideally 500 GB or larger. A SATA SSD is also highly recommended. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
+You also require a HDD/SSD for your PS2 that is at least 200 GB, ideally 500 GB to 2 TB. A SATA SSD is also highly recommended. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface. You can connect the HDD/SSD to your PC either directly via SATA or using a USB adapter.
 
 ### Installing on Linux
 Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based distributions using `dnf` are supported.
@@ -604,14 +604,14 @@ An application called [BBN Launcher](#bbn-launcher-bbnl) resides on the APA part
 # Patch Features
 - A full English translation of the stock Japanese BB Navigator version 0.32
 - All binaries, XML files, textures, and pictures have been translated*
-- Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#slim-ps2-console-model-scph-700xx) or similar mod, regardless of region
+- Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#slim-ps2-console-model-scph-700xx) or similar hardware mod, regardless of region
 - DNAS authorization checks bypassed to enable access the online channels
 - Online game channels from Sony, Hudson, EA, Konami, Capcom, Namco, and KOEI have been translated into English. Hosted courtesy of vitas155 at [psbbn.ru](https://psbbn.ru/)
 - "Audio Player" feature re-added to the Music Channel from an earlier release of PSBBN, allowing compatibility with NetMD MiniDisc Recorders
 - Associated manual pages and troubleshooting regarding the "Audio Player" feature translated and re-added to the user guide
 - Japanese QWERTY on-screen keyboard replaced with US English on-screen keyboard**
 - Storage capacity limited to 128 GB
-- Not compatible with the [PSBBN installer](#psbbn-installer), [PSBBN Software Updater](#update-psbbn-software), [Game Installer](#game-and-app-installer), [Media Installer](#media-installer), or [Extras](#extras)
+- Legacy versions of the PSBBN Definitive Patch are **not** compatible with the [PSBBN installer](#psbbn-installer), [PSBBN Software Updater](#update-psbbn-software), [Game Installer](#game-and-app-installer), [Media Installer](#media-installer), or [Extras](#extras)
 
 ## Version History
 
@@ -725,7 +725,7 @@ Before installing the English patch, you **must** power off your console to stan
 
 ## Notes
 
-\* Also compatible with the PS2 Slim SCPH-700xx models with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar mod. [PS2 HDD RAW Image Install](#ps2-hdd-raw-image-install) is not compatible with early model Japanese PS2 consoles (SCPH-10000, SCPH-15000 and SCPH-18000) that have an external HDD due to space limitations (unless the stock drive is replaced with a 120+ GB drive). When [patching an existing PSBBN install](#patch-an-existing-psbbn-install), Kloader might have compatibility issues with early model Japanese PS2 consoles (SCPH-10000, SCPH-15000 and SCPH-18000).  
+\* Also compatible with the PS2 Slim SCPH-700xx models with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar hardware mod. [PS2 HDD RAW Image Install](#ps2-hdd-raw-image-install) is not compatible with early model Japanese PS2 consoles (SCPH-10000, SCPH-15000 and SCPH-18000) that have an external HDD due to space limitations (unless the stock drive is replaced with a 120+ GB drive). When [patching an existing PSBBN install](#patch-an-existing-psbbn-install), Kloader might have compatibility issues with early model Japanese PS2 consoles (SCPH-10000, SCPH-15000 and SCPH-18000).  
 - Use OPL-Launcher to launch PS2 games from the Game Channel. More details can be found [here](https://github.com/ps2homebrew/OPL-Launcher).
 - Lacks support for large HDDs, drives larger than 130 GB cannot be taken full advantage of. PSBBN can only see the first 130,999 MB of data on your HDD/SSD (as reported by wLaunchELF). If there is 131,000 MB or more on your HDD/SSD, PSBBN will fail to launch. Delete data so there is less than 131,000 MB used, and PSBBN will launch again. Be extra careful if you have installed via the [PS2 HDD RAW Image](#ps2-hdd-raw-image-install) on a drive larger than 120 GB, going over 130,999 MB will corrupt the drive.
 - You may need to manually change the title of your "Favorite" folders if they were created before you [Patched an existing PSBBN install](#patch-an-existing-psbbn-install).
@@ -739,17 +739,18 @@ When you connect the drive to your PS2 console and power it on, PSBBN should aut
 
 ### Fat PS2 console models SCPH-3000x-500xx:
 If your console boots to the regular OSD or freezes, it means that your drive has not been recognised or you are experiencing a hardware issue. You should check the following:
-1. Make sure you are using an official Sony Network Adapter; 3rd-party adapters are not supported
-2. Ensure the network adapter and drive are securely connected to the console
-3. Check that the connectors on the console and network adapter are clean and free of dust/debris
-4. If using a SATA mod, make sure it has been installed correctly
-5. Try using a different HDD/SSD
+1. There is currently a known issue when installing on Fedora. It is recommended to use a Debian-based distribution or the [PSBBN Launcher for Windows](#installing-on-windows) instead.
+2. Make sure you are using an official Sony Network Adapter; 3rd-party adapters are not supported
+3. Ensure the network adapter and drive are securely connected to the console
+4. Check that the connectors on the console and network adapter are clean and free of dust/debris
+5. If using a SATA mod, make sure it has been installed correctly
+6. Try using a different HDD/SSD
 7. Try using a different IDE converter/SATA mod
 8. Try a different official Sony Network Adapter
 9. Try a different PS2 console
 
 ### Early (SCPH-10000–18000) and Slim (SCPH-700xx) Consoles
-If you are using a PS2 Slim **SCPH-700xx** model with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar mod, or **SCPH-10000 to SCPH-18000** model with an official external HDD enclosure, download the [External HDD Drivers](https://israpps.github.io/FreeMcBoot-Installer/test/8_Downloads.html). Extract the files and place `hddload.irx`, `dev9.irx`, and `atad.irx` in the appropriate system folder for your region on an official Sony PS2 Memory Card:
+If you are using a PS2 Slim **SCPH-700xx** model with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar hardware mod, or **SCPH-10000 to SCPH-18000** model with an official external HDD enclosure, download the [External HDD Drivers](https://israpps.github.io/FreeMcBoot-Installer/test/8_Downloads.html). Extract the files and place `hddload.irx`, `dev9.irx`, and `atad.irx` in the appropriate system folder for your region on an official Sony PS2 Memory Card:
 
 | Region   | Folder Name   |
 |----------|-------------- |
@@ -764,16 +765,16 @@ For the **SCPH-700xx** model if, after doing so, the console freezes at the `Pla
 ## Problems Launching Games
 If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL](#open-ps2-loader-opl) (after modifying the OPL settings as described [above](#open-ps2-loader-opl)), or fail to launch from the PSBBN Game Collection, try the following:
 
-1. If you have a [mod chip](#known-issueslimitations-of-psbbn), disable it
-2. Re-run the `[Game Installer](#game-and-app-installer) and select a different game launcher
+1. If you have a [mod chip](#known-issues), disable it
+2. Re-run the [Game Installer](#game-and-app-installer) and select the alternative game launcher ([OPL](#open-ps2-loader-opl)/[Neutrino](#neutrino-and-nhddl))
 3. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then [reinstall PSBBN](#psbbn-installer)
 4. Try using a different HDD/SSD and then [reinstall PSBBN](#psbbn-installer)
 5. Try using a different IDE converter/SATA mod on your console
 
 # Known Issues
-- Using a Definitive Patch version older than 2.10 with the latest game installer may corrupt APA partitions, rendering PSBBN unbootable. If you are running an older version, it is highly recommended that you upgrade by running selecting [Install PSBBN](#psbbn-installer) from the main menu.
+- Using a Definitive Patch version older than 2.10 with the latest game installer may corrupt APA partitions, rendering PSBBN unbootable. If you are running an older version, it is highly recommended that you upgrade by selecting [Install PSBBN](#psbbn-installer) from the main menu.
 - PSBBN only supports dates up to the end of 2030. When setting the time and date, the year must be set to 2030 or below.  
-- PSBBN will freeze when launching apps if a mod chip is detected. To use PSBBN, mod chips must be disabled.  
+- PSBBN will freeze when launching games/apps if a mod chip is active. To use PSBBN, mod chips must be disabled.  
 - PSBBN will freeze at the "PlayStation 2" logo when booting, if a 3rd party, unofficial HDD adapter is used. An official Sony Network Adapter is required.  
 - When using a drive larger than 2 TB, the first 128 GB will be allocated to the PlayStation File System (PFS), and the next 2 TB will be formatted as an exFAT partition. Any remaining space beyond that will be unusable.
 - [OPL](#open-ps2-loader-opl) cannot read settings saved on the exFAT partition of the internal drive. Settings should be saved to a PS2 memory card. If you have a MemCard Pro 2 or SD2PSX, it is recommended that you save your OPL settings to a standard PS2 memory card inserted in slot 2.
