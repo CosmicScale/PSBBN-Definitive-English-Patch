@@ -110,7 +110,7 @@ exit_script() {
     prevent_sleep_stop
     clean_up
     if [[ -n "$path_arg" ]]; then
-        cp "${LOG_FILE}" "${path_arg}"
+        cp "${LOG_FILE}" "${path_arg}" > /dev/null 2>&1
     fi
 }
 
@@ -1284,6 +1284,8 @@ fi
 if [[ -n "$path_arg" ]]; then
     if [[ -d "$path_arg" ]]; then
         GAMES_PATH="$path_arg"
+    else
+        path_arg=""
     fi
 elif [[ -f "$CONFIG_FILE" && -s "$CONFIG_FILE" ]]; then
     cfg_path="$(<"$CONFIG_FILE")"
@@ -1397,12 +1399,14 @@ while true; do
     esac
 done
 
+get_display_path
+
 if [ "$INSTALL_TYPE" = "sync" ] && \
    ! find "${GAMES_PATH}/POPS" -maxdepth 1 -type f -iname "*.vcd" -print -quit | grep -q . && \
    ! find "${GAMES_PATH}/CD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) -print -quit | grep -q . && \
    ! find "${GAMES_PATH}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) -print -quit | grep -q .; then
     echo
-    echo "Warning: No games found in the games folder: ${GAMES_PATH}"
+    echo "Warning: No games found in the games folder: ${display_path}"
     echo "All games on the PS2 drive will be deleted."
     echo
     while true; do
@@ -1493,8 +1497,6 @@ if { [ "$INSTALL_TYPE" = "sync" ] && find "${GAMES_PATH}/POPS" -maxdepth 1 -type
 fi
 
 SPLASH
-
-get_display_path
 
 echo "PS2 Drive Detected: $DEVICE" >> "${LOG_FILE}"
 echo "Linux Games Folder: $GAMES_PATH" >> "${LOG_FILE}"
