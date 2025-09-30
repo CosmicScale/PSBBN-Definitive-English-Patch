@@ -100,7 +100,7 @@ function main {
 
   # check if wsl exists
   if (-Not (Get-Command wsl -errorAction SilentlyContinue)) {
-    Write-Host "WSL is not available on this computer." -ForegroundColor Yellow
+    Write-Host "❌ WSL is not available on this computer." -ForegroundColor Red
     Exit
   }
 
@@ -126,6 +126,18 @@ function main {
 
   # install git if it is missing
   wsl -d $wslLabel -- type git `&`> /dev/null `|`| `(sudo apt update `&`& sudo apt -y install git`)
+
+  # check that git is properly installed before continuing. Some network configurations can cause apt to fail to reach the repos
+  if (-Not (wsl -d $wslLabel -- type git `2`> /dev/null)) {
+    Write-Host "
+    ❌ The script was unable to install git so it cannot continue.
+    Check your internet connection and try to run the script again.
+    If the issue persists, try setting your wsl networking mode to `"mirrored`" and try again.
+    To do so, open the `"WSL Settings`" app then open the `"Networking`" tab.
+    There you should see the option `"Networking Mode`". Select `"Mirrored`".
+    " -ForegroundColor Red
+    Exit
+  }
 
   # check if the git branch exists on the remote, and if not, use the fallback
   if (-Not (wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- git branch -r --list origin/$gitBranch)) {
@@ -300,11 +312,11 @@ function detectVirtualization {
   if ($property.$propertyName -eq $false) {
     printNG
     Write-Host "`n
-    Virtualization is not enabled. It is mandatory to run PSBBN scripts.
+    ⚠️ Virtualization is not enabled. It is mandatory to run PSBBN scripts.
     If you have an AMD CPU, enable SVM in your BIOS.
     If you have an Intel CPU, enable VT-x in your BIOS.
     Check the manual of your motherboard if you have troubles finding this setting.
-"
+    " -ForegroundColor Yellow
     Exit
   } else {
     printOK
@@ -343,7 +355,7 @@ function handleMountOutput ($mountOut) {
   } elseif ($mountOut -like "*Wsl/Service/AttachDisk/MountDisk/*0x8007000f*") {
     # attempting to mount a sdcard reader will return this error
     printNG
-    Write-Host "⚠️ USB thumbdrives and SD card readers are not supported by the PSBBN Launcher for Windows." -ForegroundColor Red
+    Write-Host "❌ USB thumbdrives and SD card readers are not supported by the PSBBN Launcher for Windows." -ForegroundColor Red
     Exit
   } elseif ($mountOut -like "*Error code*") {
     printNG
@@ -370,7 +382,7 @@ function restartAsAdminIfNeeded {
   Start-Process $shell -Verb RunAs -ArgumentList "-NoLogo -NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
 
   # close the initial non-admin shell to avoid confusion
-  exit
+  Exit
 }
 
 # handles the folder picker and return a wsl compatible path as a string
