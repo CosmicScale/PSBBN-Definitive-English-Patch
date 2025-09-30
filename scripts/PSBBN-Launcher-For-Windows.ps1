@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.0.10"
+$version = "1.1.0"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the
 # machine created by this script and not some pre-existing Debian the user had.
@@ -516,9 +516,19 @@ function isTooSmall ($item) {
 }
 
 function convertPathToWsl ($windowsPath) {
-  $driveLetter = $windowsPath.Split(":")[0].ToLower()
-  $path = $windowsPath.Split(":")[1].Replace("\", "/")
-  return "/mnt/$driveLetter$path"
+  $prefix = ""
+  $path = ""
+
+  if ($windowsPath -match '(?<driveLetter>.):\\(?<path>.+)') {
+    $driveLetter = $Matches.driveLetter.ToLower()
+    $prefix = "/mnt/$driveLetter/"
+    $path = $Matches.path.Replace("\", "/")
+  } elseif ($windowsPath -match '\\\\wsl.localhost\\PSBBN(?<path>.+)') {
+    # handle the case where the user picks a wsl filesystem location
+    $path = $Matches.path.Replace("\", "/")
+  }
+
+  return "$prefix$path"
 }
 
 restartAsAdminIfNeeded
