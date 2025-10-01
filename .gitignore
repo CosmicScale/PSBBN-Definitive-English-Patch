@@ -14,6 +14,7 @@ games/APPS/*.psu
 scripts/assets/HDD-OSD/
 games/APPS/HDD-OSD.elf
 games/APPS/PSBBN.ELF
+scripts/tmp
 *.log
 *.gz
 *.zip
@@ -32,5 +33,6 @@ games/APPS/PSBBN.ELF
 IOPRP252.IMG
 POPS.ELF
 gamepath.cfg
+media.cfg
 bnupdate.tar.gz
 path.cfg
