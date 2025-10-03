@@ -297,6 +297,10 @@ display_menu() {
 EOF
 }
 
+if [ "$wsl" = "false" ]; then
+        git_update
+fi
+
 trap 'echo; exit 130' INT
 trap copy_log EXIT
 
@@ -352,12 +356,7 @@ rm -rf "${TOOLKIT_PATH}/scripts/"{node_modules,package.json,package-lock.json} >
 rm -rf "${TOOLKIT_PATH}/scripts/assets/"psbbn-definitive-image* >/dev/null 2>&1
 rmdir "${TOOLKIT_PATH}/OPL" >/dev/null 2>&1
 
-
 check_required_files
-
-if [ "$wsl" = "false" ]; then
-        git_update
-fi
 
 if ! check_dep; then
     if ! "${TOOLKIT_PATH}/scripts/Setup.sh"; then
