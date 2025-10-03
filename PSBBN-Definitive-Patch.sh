@@ -99,7 +99,7 @@ check_required_files() {
         "./scripts/Setup.sh"
         "./scripts/helper/AppDB.csv"
         "./scripts/helper/ArtDB.csv"
-        "./scripts/helper/art_downloader.js"
+        "./scripts/helper/art_downloader.py"
         "./scripts/helper/HDL Dump.elf"
         "./scripts/helper/icon_sys_to_txt.py"
         "./scripts/helper/list-builder.py"
