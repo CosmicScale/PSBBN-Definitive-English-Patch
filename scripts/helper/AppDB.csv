@@ -3,8 +3,10 @@ BOOT|LaunchELF
 WLAUNCH|LaunchELF
 OPNPS2LD|Open PS2 Loader
 OPL12O|Open PS2 Loader
+OPL093|Open PS2 Loader
 REBOOT|Reboot System
 POWEROFF|Shutdown System
+SYSTEMSHUTDOWN|Shutdown System
 APPPOWEROFF|Shutdown System
 OSDXMB|OSD-XMB
 NICKYPS2|Nicky Boum
@@ -43,6 +45,7 @@ MECHAPWNPCK|MechaPwn
 R0004|SOCOM II Online R0004 Update
 JUMPBUMP|Jump 'n Bump
 CB10|Code Breaker
+CB92|Code Breaker
 ULAUNCHELF|uLaunchELF
 FLASHBCK|Flashback (REminiscence)
 DAVEGNUKEM|Dave Gnunkem
@@ -77,3 +80,4 @@ SM64.US.F3DEX2E|Super Mario 64
 NEOPOP|NeoPop
 PS2TEMP|PS2 Temps
 OSWANPS2|Wonderstation
+ESRGUI|ESR GUI
