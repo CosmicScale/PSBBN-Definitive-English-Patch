@@ -153,7 +153,7 @@ def process_files(folder, extensions):
 
         # Extract Game ID from filename if it meets the condition
         file_name_without_ext = os.path.splitext(image)[0]
-        if len(file_name_without_ext) >= 9 and file_name_without_ext[4] == '_' and file_name_without_ext[8] == '.':
+        if len(file_name_without_ext) >= 11 and file_name_without_ext[4] == '_' and file_name_without_ext[8] == '.':
             string = file_name_without_ext[:11].upper()
             print(f"Filename meets condition. Game ID set directly from filename: {string}")
 
