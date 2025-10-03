@@ -790,7 +790,7 @@ If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL
 PS2 Homebrew Community:
 - PSBBN Definitive English Patch project by [CosmicScale](https://github.com/CosmicScale)
 - PSBBN English translation by [CosmicScale](https://github.com/CosmicScale)
-- `Setup.sh`, `PSBBN-Installer.sh`, `Game-Installer.sh`, `Media-Installer.sh`, `music-installer.py`, `Extras.sh`, `art_downloader.js`, `list-sorter.py` `txt_to_icon_sys.py`, `vmc_groups.list` written by [CosmicScale](https://github.com/CosmicScale)
+- `Setup.sh`, `PSBBN-Installer.sh`, `Game-Installer.sh`, `Media-Installer.sh`, `music-installer.py`, `Extras.sh`, `art_downloader.py`, `list-sorter.py` `txt_to_icon_sys.py`, `vmc_groups.list` written by [CosmicScale](https://github.com/CosmicScale)
 - `ps2iconmaker.sh` written by [Sakitoshi](https://github.com/Sakitoshi) and [CosmicScale](https://github.com/CosmicScale)
 - `PSBBN-Launcher-For-Windows.ps1` written by Yornn
 - Contains code from `list_builder.py` from [XEB+ neutrino Launcher Plugin](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin) by [sync-on-luma](https://github.com/sync-on-luma), modified by [CosmicScale](https://github.com/CosmicScale)

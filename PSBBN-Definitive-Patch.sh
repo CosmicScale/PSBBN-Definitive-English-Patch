@@ -164,18 +164,6 @@ check_python_pkg() {
     fi
 }
 
-check_node_pkg() {
-    PACKAGE="$1"
-    NODE_MODULES_PATH="./scripts/node_modules"
-
-    if NODE_PATH="$NODE_MODULES_PATH" node -e "require('$PACKAGE');" >/dev/null 2>&1; then
-        echo "[✓] Node.js package '$PACKAGE' found" >> "$LOG_FILE"
-    else
-        echo "[X] Missing Node.js package: '$PACKAGE'" >> "$LOG_FILE"
-        MISSING=1
-    fi
-}
-
 check_dep(){
     MISSING=0
     echo >> "$LOG_FILE"
@@ -185,8 +173,6 @@ check_dep(){
     check_cmd convert       # from ImageMagick
     check_cmd xxd
     check_cmd python3
-    check_cmd node
-    check_cmd npm
     check_cmd bc
     check_cmd rsync
     check_cmd curl
@@ -201,7 +187,6 @@ check_dep(){
     check_cmd ldconfig
     check_cmd sfdisk
     check_cmd partprobe
-    check_cmd chromium
 
     echo >> "$LOG_FILE"
     echo "--- exFAT support ---" >> "$LOG_FILE"
@@ -239,10 +224,6 @@ check_dep(){
         echo "[X] FUSE2 (libfuse.so.2) is missing." >> "$LOG_FILE"
         MISSING=1
     fi
-
-    echo >> "$LOG_FILE"
-    echo "--- Node.js packages ---" >> "$LOG_FILE"
-    check_node_pkg puppeteer
 
     if [ "$MISSING" -ne 0 ]; then
         return 1
@@ -367,6 +348,7 @@ fi
 
 rm "${TOOLKIT_PATH}/"*.log >/dev/null 2>&1
 rm -rf "${TOOLKIT_PATH}/"{storage,node_modules,venv,gamepath.cfg} >/dev/null 2>&1
+rm -rf "${TOOLKIT_PATH}/scripts/"{node_modules,package.json,package-lock.json} >/dev/null 2>&1
 rm -rf "${TOOLKIT_PATH}/scripts/assets/"psbbn-definitive-image* >/dev/null 2>&1
 rmdir "${TOOLKIT_PATH}/OPL" >/dev/null 2>&1
 
@@ -416,7 +398,7 @@ while true; do
             ;;
         *)
             echo
-            echo "                                     Invalid option, please try again."
+            echo -n "                                     Invalid option, please try again."
             sleep 2
             ;;
     esac
