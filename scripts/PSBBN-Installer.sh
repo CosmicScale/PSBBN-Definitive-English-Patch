@@ -619,8 +619,11 @@ if [ "$MODE" = "install" ]; then
         if (( OPL_GB >= 1000 )); then
             # Store difference as TB with one decimal
             difference="$(awk "BEGIN {printf \"%.1f TB\", $OPL_GB/1024}")"
+            # Cap at 2 TB
+            CAP=$(awk "BEGIN {print ($difference > 2.0) ? 2.0 : $difference}")
+            OPL_SIZE="${CAP} TB"
         else
-            # Store difference as GB (integer)
+            # Store difference as GB
             OPL_SIZE="${OPL_GB} GB"
         fi
         echo "OPL Partition: $OPL_SIZE"
