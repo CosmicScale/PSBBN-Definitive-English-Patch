@@ -118,7 +118,7 @@ function main {
     Write-Host "After this is done, you can type 'exit' and press enter to return to this script.`n" -ForegroundColor Yellow
     Write-Host "------- Linux magic starts ---------"
 
-    wsl --install --distribution Debian --name $wslLabel
+    wsl --install --distribution Debian --version 2 --name $wslLabel
   } else {
     Write-Host "The WSL distro is already present, skipping.`t" -NoNewline
     printOK
