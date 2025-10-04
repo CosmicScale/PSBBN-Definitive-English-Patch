@@ -106,7 +106,8 @@ function main {
 
   # fetch the latest wsl update
   Write-Host "Check the latest WSL updates...`t`t`t" -NoNewline
-  $wslUpdate = wsl --update --web-download
+  $null = wsl --update --web-download
+  $null = wsl --install --no-distribution
   printOK
 
   # check if a wsl distro is installed already
