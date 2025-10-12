@@ -68,6 +68,16 @@ function main {
   clear
   printTitle
   Write-Host "Prepare Windows to run the PSBBN scripts.`n"
+  
+  # check the minimum windows build version necessary for wsl
+  $buildNumber = [System.Environment]::OSVersion.Version.Build
+  if ($buildNumber -lt 19041) {
+    Write-Host "
+    ❌ Your Windows version is not up-to-date.
+    Your build is $buildNumber. A build above 19041 is required.
+    " -ForegroundColor Red
+    Exit
+  }
 
   # check if mandatory windows features are enabled
   Write-Host "Checking if the mandatory features are enabled..."
