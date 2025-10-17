@@ -68,6 +68,16 @@ function main {
   clear
   printTitle
   Write-Host "Prepare Windows to run the PSBBN scripts.`n"
+  
+  # check the minimum windows build version necessary for wsl
+  $buildNumber = [System.Environment]::OSVersion.Version.Build
+  if ($buildNumber -lt 19041) {
+    Write-Host "
+    ❌ Your Windows version is not up-to-date.
+    Your build is $buildNumber. A build above 19041 is required.
+    " -ForegroundColor Red
+    Exit
+  }
 
   # check if mandatory windows features are enabled
   Write-Host "Checking if the mandatory features are enabled..."
@@ -106,7 +116,8 @@ function main {
 
   # fetch the latest wsl update
   Write-Host "Check the latest WSL updates...`t`t`t" -NoNewline
-  $wslUpdate = wsl --update --web-download
+  $null = wsl --update --web-download
+  $null = wsl --install --no-distribution
   printOK
 
   # check if a wsl distro is installed already
@@ -118,7 +129,7 @@ function main {
     Write-Host "After this is done, you can type 'exit' and press enter to return to this script.`n" -ForegroundColor Yellow
     Write-Host "------- Linux magic starts ---------"
 
-    wsl --install --distribution Debian --name $wslLabel
+    wsl --install --distribution Debian --version 2 --name $wslLabel
   } else {
     Write-Host "The WSL distro is already present, skipping.`t" -NoNewline
     printOK
@@ -163,8 +174,7 @@ function main {
   diskPicker
 
   # mount the disk
-  $deviceName = "\\.\PHYSICALDRIVE$global:selectedDisk"
-  mountDisk($deviceName)
+  mountDisk
 
   # give the user the opportunity to put games/homebrew in the PSBBN folder
   $path = getTargetFolder
@@ -179,7 +189,7 @@ function main {
   printTitle
 
   # unmount the disk before exiting
-  unmountDisk($deviceName)
+  unmountDisk
 
   # ensures wsl doesnt run out of resources if this script is ran repeatedly
   wsl --shutdown
@@ -325,7 +335,8 @@ function detectVirtualization {
 
 # set the disk offline and then mount it to WSL
 # offline is necessary otherwise windows processes might prevent wsl from mounting
-function mountDisk ($deviceName) {
+function mountDisk {
+  $deviceName = "\\.\PHYSICALDRIVE$global:selectedDisk"
   Write-Host "`nMounting $deviceName on wsl...`t`t" -NoNewline
   $null = Set-Disk $global:selectedDisk -isOffline $true -errorAction SilentlyContinue
   $mountOut = wsl -d $wslLabel --mount $deviceName --bare
@@ -333,7 +344,8 @@ function mountDisk ($deviceName) {
 }
 
 # unmount the disk and then set the disk back online
-function unmountDisk ($deviceName) {
+function unmountDisk {
+  $deviceName = "\\.\PHYSICALDRIVE$global:selectedDisk"
   Write-Host "Unmounting $deviceName...`t`t" -NoNewline
   $unmountOut = wsl -d $wslLabel --unmount $deviceName
   Set-Disk $global:selectedDisk -isOffline $false
@@ -413,6 +425,7 @@ function getTargetFolder {
     } while ($keyPressed -ne 'y' -and $keyPressed -ne 'n')
 
     if ($keyPressed -eq 'y') {
+      preventsPickingWslPath($initialDirectory)
       explorer $initialDirectory
       return convertPathToWsl($initialDirectory)
     }
@@ -438,6 +451,8 @@ function getTargetFolder {
   }
 
   $pickedPath = Split-Path -Parent $folderselection.FileName
+
+  preventsPickingWslPath($pickedPath)
 
   # create default folders if missing
   $defaultFolders.ForEach({
@@ -516,19 +531,26 @@ function isTooSmall ($item) {
 }
 
 function convertPathToWsl ($windowsPath) {
-  $prefix = ""
-  $path = ""
-
   if ($windowsPath -match '(?<driveLetter>.):\\(?<path>.+)') {
     $driveLetter = $Matches.driveLetter.ToLower()
-    $prefix = "/mnt/$driveLetter/"
     $path = $Matches.path.Replace("\", "/")
-  } elseif ($windowsPath -match '\\\\wsl.localhost\\PSBBN(?<path>.+)') {
-    # handle the case where the user picks a wsl filesystem location
-    $path = $Matches.path.Replace("\", "/")
+    return "/mnt/$driveLetter/$path"
   }
 
-  return "$prefix$path"
+  return ""
+}
+
+# prevents the user from picking a wsl filesystem location
+function preventsPickingWslPath ($path) {
+  if ($path -like '\\wsl.localhost\*') {
+    unmountDisk
+    Write-Host "
+    ⚠️ You should not store your files on the linux filesystem, as it can easily be deleted.
+    Create a folder on your windows disk, move your isos and others files there.
+    Once done, you can re-run this script and pick that new folder.
+    " -ForegroundColor Yellow
+    Exit
+  }
 }
 
 restartAsAdminIfNeeded
