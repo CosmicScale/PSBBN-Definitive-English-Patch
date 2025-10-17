@@ -346,8 +346,8 @@ echo "Disk Serial: $serialnumber" >> "${LOG_FILE}"
 echo "Path: $path_arg" >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 
-if [[ "$(uname -m)" != "aarch64" ]]; then
-    error_msg "Unsupported CPU architecture: $(uname -m). This script requires aarch64."
+if [[ "$(uname -m)" != "x86_64" ]]; then
+    error_msg "Unsupported CPU architecture: $(uname -m). This script requires x86-64."
     exit 1
 fi
 
