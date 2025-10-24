@@ -818,6 +818,15 @@ fi
 echo "$LATEST_VERSION" > "${OPL}/version.txt"
 echo "eng" >> "${OPL}/version.txt"
 
+# Add disk icon
+DISK_ICON="${ASSETS_DIR}/disk_icon.ico"
+cp -f "$DISK_ICON" "${OPL}/.logo.ico"
+cat << EOF > "${OPL}/autorun.inf"
+[AutoRun]
+icon=.logo.ico
+label=OPL
+EOF
+
 UNMOUNT_OPL
 CHECK_PARTITIONS
 
