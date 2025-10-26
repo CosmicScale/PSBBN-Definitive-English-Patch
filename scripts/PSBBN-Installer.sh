@@ -819,11 +819,10 @@ echo "$LATEST_VERSION" > "${OPL}/version.txt"
 echo "eng" >> "${OPL}/version.txt"
 
 # Add disk icon
-DISK_ICON="${ASSETS_DIR}/disk_icon.ico"
-cp -f "$DISK_ICON" "${OPL}/.logo.ico"
+cp -f "${ASSETS_DIR}/autorun.ico" "${OPL}"
 cat << EOF > "${OPL}/autorun.inf"
 [AutoRun]
-icon=.logo.ico
+icon=autorun.ico
 label=OPL
 EOF
 
