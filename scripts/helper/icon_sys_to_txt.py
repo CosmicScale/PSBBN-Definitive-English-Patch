@@ -27,11 +27,13 @@ def decode_title_pair(data, title_offset=0xC0, length=68):
     title1_bytes = title_block[split_offset:]
     try:
         title0 = title0_bytes.split(b'\x00')[0].decode('shift_jis', errors='ignore').strip()
+        title0 = title0.replace('?', ' ')
         title0 = unicodedata.normalize('NFKC', title0)
     except:
         title0 = "[decode error]"
     try:
         title1 = title1_bytes.split(b'\x00')[0].decode('shift_jis', errors='ignore').strip()
+        title0 = title0.replace('?', ' ')
         title1 = unicodedata.normalize('NFKC', title1)
     except:
         title1 = ""
