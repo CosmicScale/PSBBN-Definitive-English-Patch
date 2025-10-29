@@ -380,6 +380,34 @@ PS2BBL_SPLASH(){
 EOF
 }
 
+PFSSHELL_SPLASH(){
+    clear
+    cat << "EOF"
+                       ____________ _____   _____ _   _  _____ _      _
+                       | ___ \  ___/  ___| /  ___| | | ||  ___| |    | |
+                       | |_/ / |_  \ `--.  \ `--.| |_| || |__ | |    | |
+                       |  __/|  _|  `--. \  `--. \  _  ||  __|| |    | |
+                       | |   | |   /\__/ / /\__/ / | | || |___| |____| |____
+                       \_|   \_|   \____/  \____/\_| |_/\____/\_____/\_____/
+
+
+EOF
+}
+
+PFSFUSE_SPLASH(){
+    clear
+    cat << "EOF"
+                           ____________ _____  ______ _   _ _____ _____
+                           | ___ \  ___/  ___| |  ___| | | /  ___|  ___|
+                           | |_/ / |_  \ `--.  | |_  | | | \ `--.| |__
+                           |  __/|  _|  `--. \ |  _| | | | |`--. \  __|
+                           | |   | |   /\__/ / | |   | |_| /\__/ / |___
+                           \_|   \_|   \____/  \_|    \___/\____/\____/
+
+
+EOF
+}
+
 HDDOSD_SPLASH(){
     clear
     cat << "EOF"
@@ -844,6 +872,141 @@ EOF
     df >> "${LOG_FILE}"
 }
 
+# Function for Option m - Mount Partitions
+option_mount() {
+    echo "########################################################################################################" >> "${LOG_FILE}"
+
+    PFSFUSE_SPLASH
+
+    if [ $(systemd-detect-virt) != "wsl" ]; then
+        echo "[!] Available only for WSL2 at this moment."
+        echo
+        read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
+        return
+    fi
+
+    fm=xfe
+    partitions=(
+        __.POPS
+        __common
+        __system
+        __sysconf
+        +OPL
+    )
+
+    echo "[!] Warning"
+    echo
+    echo "This feature mounts some PFS partitions that can be explored with $fm file manager"
+    echo "since WSL2 natively supports X11 GUI apps. But it runs with root and if it is used"
+    echo "incorrectly, it can destroy data on the drive, even at your mounted Windows disks."
+    echo "You have been warned!"
+    echo
+    echo "Next partitions will be mounted:"
+    for partition in "${partitions[@]}"; do echo "- $partition"; done
+    echo
+
+    read -rp "Mount Partitions? (y/n): " answer
+
+    case "$answer" in
+        [Yy]*)
+
+            PFSFUSE_SPLASH
+
+            detect_drive || return
+
+            root=/mnt/pfs
+
+            if ! command -v xfe &> /dev/null; then
+                echo "File manager $fm not found. Installing..."
+                sudo apt-get -qqq update && \
+                sudo apt-get install -yqq \
+                    --no-install-recommends \
+                    --no-install-suggests \
+                        $fm && \
+                echo "File manager $fm installed!"
+                echo
+            fi
+
+            for partition in ${partitions[@]}; do
+                mount_point="${root}/${partition}"
+                sudo mkdir -p "$mount_point"
+                echo "Mounting ${partition}..."
+                sudo "${HELPER_DIR}/PFS Fuse.elf" --partition="$partition" "$DEVICE" "$mount_point" && \
+                echo "Mounted ${partition}!"
+                echo
+            done
+
+            sudo mkdir -p /root/.config/xfe
+            sudo cp -f "${ASSETS_DIR}/xferc" "/root/.config/xfe/xferc"
+
+            echo "Starting $fm. Closing the file manager will unmount partitions!"
+            sudo $fm "$root" /mnt/c/Users
+
+            for partition in ${partitions[@]}; do
+                mount_point="${root}/${partition}"
+                sudo umount -f "$mount_point"
+                sudo rmdir "$mount_point"
+            done
+
+            sudo rmdir "$root"
+
+            echo
+            echo "[✓] Partitions unmounted."
+            echo
+
+            read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
+
+            break
+        ;;
+        *) return ;;
+    esac
+}
+
+# Function for Option s - Open PFS Shell
+option_shell() {
+    echo "########################################################################################################" >> "${LOG_FILE}"
+
+    PFSSHELL_SPLASH
+
+    if [ $(systemd-detect-virt) != "wsl" ]; then
+        echo "[!] Available only for WSL2 at this moment."
+        echo
+        read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
+        return
+    fi
+
+    echo "[!] Warning"
+    echo
+    echo "This is a tool for working with the PFS filesystem on an APA-formatted disk."
+    echo "If used incorrectly, it can destroy data on the drive. Use at your own risk."
+    echo
+
+    read -rp "Open Shell? (y/n): " answer
+
+    case "$answer" in
+        [Yy]*)
+
+            PFSSHELL_SPLASH
+
+            detect_drive || return
+
+            echo Device: $DEVICE
+            echo
+
+            script -qc "sudo \"${HELPER_DIR}/PFS Shell.elf\"" -aO "${LOG_FILE}"
+
+            echo
+            echo "[✓] Exited from shell."
+            echo
+
+            read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
+
+            break
+        ;;
+        *) return ;;
+    esac
+}
+
 
 # Function to display the menu
 display_menu() {
@@ -863,6 +1026,8 @@ display_menu() {
                          4) Uninstall PlayStation 2 Basic Boot Loader (PS2BBL)
                          5) Reassign Cross and Circle Buttons
 
+                         s) Open Shell
+                         m) Mount Partitions
                          b) Back to Main Menu
 
 EOF
@@ -889,6 +1054,12 @@ while true; do
             ;;
         5)
             option_five
+            ;;
+        m|M)
+            option_mount
+            ;;
+        s|S)
+            option_shell
             ;;
         b|B)
             break

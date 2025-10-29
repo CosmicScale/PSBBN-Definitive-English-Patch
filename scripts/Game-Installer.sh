@@ -611,6 +611,25 @@ CREATE_VMC() {
             fi
         fi
     done
+    exec 3<&-
+
+    # Third pass: Copy POPS patches if there are any
+    exec 3< "$PS1_LIST"
+    while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+        folder_name="${file_name%.*}"
+        cd "${POPS_DIR}/$folder_name"
+        patches="${GAMES_PATH}/POPS/${folder_name}"
+        # Check if patches directory exists
+        if [ -d "$patches" ]; then
+            # Check if patches directory contains files with specific names:
+            # CHEATS.TXT, PATCH_[0-9].BIN, TROJAN_[0-9].BIN
+            for patch in "${patches}"/{CHEATS.TXT,PATCH_[0-9].BIN,TROJAN_[0-9].BIN}; do
+                if [ -f "$patch" ]; then
+                    cp "$patch" .
+                fi
+            done
+        fi
+    done
     cd "${TOOLKIT_PATH}"
     exec 3<&-
 
@@ -633,6 +652,14 @@ CREATE_VMC() {
         COMMANDS+="put DISCS.TXT\n"
         COMMANDS+="rm VMCDIR.TXT\n"
         COMMANDS+="put VMCDIR.TXT\n"
+        COMMANDS+="rm CHEATS.TXT\n"
+        COMMANDS+="put CHEATS.TXT\n"
+        for n in $(seq 0 9); do
+            COMMANDS+="rm PATCH_${n}.BIN\n"
+            COMMANDS+="put PATCH_${n}.BIN\n"
+            COMMANDS+="rm TROJAN_${n}.BIN\n"
+            COMMANDS+="put TROJAN_${n}.BIN\n"
+        done
     done
     COMMANDS+="cd /\n"
     COMMANDS+="cd POPS\n"

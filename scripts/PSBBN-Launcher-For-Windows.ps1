@@ -192,7 +192,13 @@ function main {
   unmountDisk
 
   # ensures wsl doesnt run out of resources if this script is ran repeatedly
-  wsl --shutdown
+
+  $wslDistrosCount = ((wsl --list --quiet) | Where-Object { $_.Trim() -ne "" }).Count
+  if ($wslDistrosCount -eq 1) {
+    wsl --shutdown
+  } elseif ($wslDistrosCount -gt 1) {
+    wsl --terminate $wslLabel
+  }
 
   Write-Host "`nHave fun exploring PSBBN!`n" -ForegroundColor Green
 }
