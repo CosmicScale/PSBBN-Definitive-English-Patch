@@ -1741,8 +1741,8 @@ SLPS_910.74|d-no-shokutaku-complete-graphics
 SLPM_805.58|d-1-grand-prix
 SLES_010.40|dbz-dead-ball-zone
 SLUS_006.58|dbz-dead-ball-zone
-SLES_034.02|dsf-fußball-manager-2001
-SLES_038.64|dsf-fußball-manager-2002
+SLES_034.02|dsf-fubball-manager-2001
+SLES_038.64|dsf-fubball-manager-2002
 SLPM_869.08|dx-hyakunin-isshu
 SLPS_029.43|dx-monopoly
 SLPS_005.70|dx-nippon-tokkyuu-ryokou-game-lets-travel-in-japan
@@ -2042,6 +2042,7 @@ SLUS_012.21|detective-barbie-the-mystery-cruise
 SLES_041.30|detective-mouse
 SLPS_018.89|devicereign
 SLUS_006.72|devil-dice
+SCES_013.12|devil-dice
 SLPS_022.75|devil-man
 SLPM_871.84|devil-summoner-soul-hackers
 SLPS_019.21|devil-summoner-soul-hackers
@@ -3312,7 +3313,7 @@ SCES_208.69|final-fantasy-vii
 SCES_209.00|final-fantasy-vii
 SCUS_941.65|final-fantasy-vii
 SLPS_007.02|final-fantasy-vii
-SCUS_949.61|final-fantasy-vii-interactive-sampler-cd
+SCUS_949.61|final-fantasy-vii
 SCUS_941.79|final-fantasy-vii-square-soft-on-playstation-previews
 SLPM_840.20|final-fantasy-vii-international
 SLPM_873.80|final-fantasy-vii-international
@@ -3482,7 +3483,7 @@ SLUS_011.29|foxkidscom-micro-maniacs-racing
 SLES_001.00|frank-thomas-big-hurt-baseball
 SLPS_004.53|frank-thomas-big-hurt-baseball
 SLUS_000.10|frank-thomas-big-hurt-baseball
-SLES_012.67|frankreich-98-die-fußball-wm
+SLES_012.67|frankreich-98-die-fubball-wm
 SCED_040.09|free-spin-demo-disc-press-kit
 SCED_040.12|free-spin-demo-disc-vollig-gratis-demo-disc
 SLPS_009.85|free-talk-studio-mari-no-kimamana-oshaberi
@@ -3882,11 +3883,11 @@ SLES_022.23|grudge-warriors
 SLUS_011.50|grudge-warriors
 SLPS_012.97|guardian-recall-shugojuu-shoukan
 SLPS_012.98|guardian-recall-shugojuu-shoukan
-SLES_017.93|guardians-crusade
-SLES_017.99|guardians-crusade
-SLES_018.00|guardians-crusade
-SLES_018.01|guardians-crusade
-SLUS_008.11|guardians-crusade
+SLES_017.93|guardians-crusade-1999
+SLES_017.99|guardians-crusade-1999
+SLES_018.00|guardians-crusade-1999
+SLES_018.01|guardians-crusade-1999
+SLUS_008.11|guardians-crusade-1999
 SLES_032.08|gubble
 SLPS_015.37|gubble
 SLUS_014.66|gubble
@@ -4146,6 +4147,7 @@ SLPS_013.02|hiza-no-ue-no-partner-kitty-on-your-lap
 SLPS_023.17|hiza-no-ue-no-partner-kitty-on-your-lap
 SLES_010.41|hogs-of-war-2000
 SLUS_011.95|hogs-of-war-2000
+SLES_027.66|hogs-of-war-2000
 SLED_030.54|hogs-of-war-2000
 SLES_027.69|hogs-of-war-nati-per-soffritto
 SLPS_003.69|hokuto-no-ken
@@ -4329,7 +4331,7 @@ SCES_021.49|in-cold-blood
 SLUS_012.94|in-cold-blood
 SCES_121.49|in-cold-blood
 SLUS_013.14|in-cold-blood
-SLES_029.83|in-einem-land-vor-unserer-zeit-die-rückkehr-ins-große-tal
+SLES_029.83|in-einem-land-vor-unserer-zeit-die-rückkehr-ins-grobe-tal
 SLES_003.42|in-the-hunt
 SLUS_001.72|in-the-hunt
 SLPS_021.42|inagawa-junji-kyoufu-no-yashiki
@@ -10457,7 +10459,7 @@ SLPS_012.13|wangan-trial
 SLPS_022.80|wangan-trial
 SLPS_012.14|wangan-trial
 SLPS_022.81|wangan-trial
-SLES_041.58|wanted
+SLES_041.58|wanted-2004
 SLES_005.38|war-gods
 SLUS_003.28|war-gods
 SLES_008.78|warcraft-ii-the-dark-saga
@@ -11412,11 +11414,11 @@ SLES_502.74|arctic-thunder
 SLUS_202.17|arctic-thunder
 SLUS_290.07|arctic-thunder
 SLUS_217.55|are-you-smarter-than-a-5th-grader-make-the-grade
-SLES_525.70|area-51
-SLES_530.75|area-51
-SLPM_664.68|area-51
-SLUS_205.95|area-51
-SLED_534.40|area-51
+SLES_525.70|area-51-2005
+SLES_530.75|area-51-2005
+SLPM_664.68|area-51-2005
+SLUS_205.95|area-51-2005
+SLED_534.40|area-51-2005
 SLUS_213.37|arena-football
 SLUS_215.68|arena-football-road-to-glory
 SCAJ_200.16|argus-zhanshi
@@ -12005,7 +12007,7 @@ SCES_554.24|buzz-brain-of-the-world
 SCES_554.25|buzz-brain-of-the-world
 SCES_544.99|buzz-das-mega-quiz
 SCES_542.59|buzz-das-sport-quiz
-SCES_538.83|buzz-das-große-quiz
+SCES_538.83|buzz-das-grobe-quiz
 SCES_554.20|buzz-de-slimste-van-nederland
 SCES_553.87|buzz-deutschlands-superquiz
 SCES_542.62|buzz-el-gran-concurso-de-deportes
@@ -12592,7 +12594,7 @@ SLES_502.02|dna-dark-native-apostle
 SLPS_250.26|doa2-hardcore
 SLPS_734.06|doa2-hardcore
 SLUS_200.71|doa2-hardcore
-SLES_505.58|dsf-fußball-manager-2002
+SLES_505.58|dsf-fubball-manager-2002
 SLUS_217.93|dt-carnage
 SLES_539.04|dt-racer
 SLUS_210.95|dt-racer
@@ -12698,7 +12700,7 @@ SLES_528.74|dark-wind
 SLES_535.64|darkwatch
 SLUS_210.42|darkwatch
 SLES_544.75|darwin
-SLES_536.40|das-große-deutsche-fußball-quiz
+SLES_536.40|das-grobe-deutsche-fubball-quiz
 SCED_520.82|das-offizielle-playstation-2-magazin-02-2004-uncut-edition
 SCED_520.89|das-offizielle-playstation-2-magazin-09-2004
 SCED_519.36|das-offizielle-playstation-2-magazin-12-2003
@@ -14353,8 +14355,8 @@ SLPM_610.52|gekitou-pro-yakyuu-mizushima-shinji-all-stars-vs-pro-yakyuu
 SCAJ_201.01|gen-houzi-wan-ba-shouwu-zuta-nao-fantian
 SLPS_259.40|gendai-daisenryaku-isshoku-sokuhatsu-gunji-balance-houkai
 SLES_536.44|gene-troopers
-SLPS_200.87|generation-of-chaos
-SLPS_200.86|generation-of-chaos
+SLPS_200.87|generation-of-chaos-2001
+SLPS_200.86|generation-of-chaos-2001
 SLPM_668.43|generation-of-chaos-desire
 SCAJ_200.26|generation-of-chaos-iii-toki-no-fuuin
 SLPM_652.78|generation-of-chaos-iii-toki-no-fuuin
@@ -16527,6 +16529,7 @@ SLPM_661.64|mahoutsukai-kuro-hime
 SLPS_255.08|mai-hime-unmei-no-keitouju
 SLPS_256.14|mai-hime-unmei-no-keitouju
 SLPS_256.81|mai-otome-hime-otome-butoushi
+SLPS_256.80|mai-otome-hime-otome-butoushi
 SLPM_550.31|majin-tantei-nougami-neuro-battle-da-yo-hannin-shuugou
 SLPM_667.55|majokko-a-la-mode-ii-mahou-to-ken-no-struggle
 SLPM_669.90|majokko-a-la-mode-ii-mahou-to-ken-no-struggle
@@ -18150,6 +18153,8 @@ PCPX_963.05|play-pre-plus-004-2000-june
 SCED_507.33|play-jan-feb-2002-press-kit
 SCED_505.69|play-sept-oct-nov-2001-press-kit
 SCUS_972.69|playonline-viewer-and-tetra-master
+SCUS_972.72|playonline-viewer-and-tetra-master
+SLPM_621.34|playonline-viewer-and-tetra-master
 SLPM_623.32|playonline-viewer-tetra-master-janhourou
 SLPM_623.33|playonline-viewer-tetra-master-janhourou
 SLPS_202.00|playonline-viewer-tetra-master-janhourou
@@ -19903,7 +19908,7 @@ SCUS_976.51|singstar-country
 SCES_541.28|singstar-deutsch-rock-pop
 SCES_547.41|singstar-deutsch-rock-pop-vol-2
 SCES_546.00|singstar-die-toten-hosen
-SCES_556.06|singstar-die-großten-solokünstler
+SCES_556.06|singstar-die-grobten-solokünstler
 SCES_545.76|singstar-eska-hity-na-czasie
 SCES_556.17|singstar-fussballhits
 SCES_551.60|singstar-hottest-hits
@@ -20350,6 +20355,7 @@ SLES_535.02|star-wars-battlefront-ii-2005
 SLES_535.03|star-wars-battlefront-ii-2005
 SLPM_661.90|star-wars-battlefront-ii-2005
 SLUS_212.40|star-wars-battlefront-ii-2005
+SLUS_291.64|star-wars-battlefront-ii-2005
 SLES_508.31|star-wars-bounty-hunter
 SLES_508.32|star-wars-bounty-hunter
 SLES_508.33|star-wars-bounty-hunter
@@ -20999,6 +21005,7 @@ SLUS_201.77|test-drive-off-road-wide-open
 SLES_537.53|test-drive-unlimited
 SLES_544.66|test-drive-unlimited
 SLUS_214.90|test-drive-unlimited
+SLUS_291.92|test-drive-unlimited
 SLUS_209.10|test-drive-eve-of-destruction
 SLUS_280.43|test-drive-eve-of-destruction
 SLES_505.51|tetris-worlds
@@ -22546,5 +22553,4 @@ SLUS_211.15|okami
 SCUS_000.00|friday-night-funkin
 SLES_020.87|plane-crazy
 LSP90902.200|unknown-variable2-ravens-ridge
-SCUS_974.52|official-us-playstation-magazine-demo-disc-100
 SLPM_840.01|alabama-meets-will-vi:-the-33rd-tokyo-motor-show
