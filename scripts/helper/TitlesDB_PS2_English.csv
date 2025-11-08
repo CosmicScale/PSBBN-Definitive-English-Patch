@@ -669,6 +669,7 @@ SLPS_202.66|Baskelian|
 SLES_518.50|Basketball Xciting|Bigben Interactive
 SLPM_660.75|Bass Landing 3|
 SLPS_253.37|Bass Landing 3|
+SLPS_252.13|Bass Landing 3|
 SLES_518.62|Bass Master Fishing|Agetec
 SLES_505.12|Bass Strike|THQ
 SLPM_621.47|Bass Strike|THQ
@@ -1149,6 +1150,7 @@ SLES_553.31|Cabela's Dangerous Adventures|SandGrainStudios
 SLES_521.06|Cabela's Dangerous Hunts|SandGrainStudios
 SLUS_207.36|Cabela's Dangerous Hunts|SandGrainStudios
 SLUS_213.50|Cabela's Dangerous Hunts 2|
+SLES_538.85|Cabela's Dangerous Hunts 2|
 SLUS_218.41|Cabela's Dangerous Hunts 2009|
 SLUS_206.65|Cabela's Deer Hunt: 2004 Season|SandGrainStudios
 SLUS_210.11|Cabela's Deer Hunt: 2005 Season|
@@ -3007,6 +3009,7 @@ SLPM_668.93|Final Fantasy XI: Vana'diel Collection|Square Enix
 SLPM_552.29|Final Fantasy XI: Vana'diel Collection 2|Square Enix
 SLPM_652.87|Final Fantasy XI: Zilart no Gen'ei|Square Enix
 SLPM_652.88|Final Fantasy XI: Zilart no Gen'ei|Square Enix
+
 PBPX_955.25|Final Fantasy XII|Square Enix
 SCKA_200.73|Final Fantasy XII|Square Enix
 SLES_543.54|Final Fantasy XII|Square Enix
@@ -5565,6 +5568,7 @@ SLPM_661.64|Mahoutsukai Kuro-hime|
 SLPS_255.08|Mai-HiME: Unmei no Keitouju|
 SLPS_256.14|Mai-HiME: Unmei no Keitouju|
 SLPS_256.81|Mai-Otome HiME: Otome Butoushi!!|
+SLPS_256.80|Mai-Otome HiME: Otome Butoushi!! (Limited Edition)|
 SLPM_550.31|Majin Tantei Nougami Neuro: Battle da yo! Hannin Shuugou!|
 SLPM_667.55|Majokko A La Mode II: Mahou to Ken no Struggle|
 SLPM_669.90|Majokko A La Mode II: Mahou to Ken no Struggle|
@@ -7535,10 +7539,12 @@ PCPX_966.39|Play-Pre 2 Volume 9: 2003 December (Taikenban)|
 PCPX_963.05|Play-Pre Plus 004: 2000 June (Disc 2) (Demo)|
 SCED_507.33|Play: Jan / Feb 2002 (Press Kit)|
 SCED_505.69|Play: Sept / Oct / Nov 2001 (Press Kit)|
-SCUS_972.69|PlayOnline Viewer and Tetra Master|
-SLPM_623.32|PlayOnline Viewer: Tetra Master & Janhourou|
-SLPM_623.33|PlayOnline Viewer: Tetra Master & Janhourou|
-SLPS_202.00|PlayOnline Viewer: Tetra Master & Janhourou|
+SCUS_972.69|PlayOnline Viewer and Tetra Master|SquareSoft
+SCUS_972.72|PlayOnline Viewer and Tetra Master (Beta)|SquareSoft
+SLPM_621.34|PlayOnline Viewer and Tetra Master (Beta)|SquareSoft
+SLPM_623.32|PlayOnline Viewer: Tetra Master & Janhourou|SquareSoft
+SLPM_623.33|PlayOnline Viewer: Tetra Master & Janhourou|SquareSoft
+SLPS_202.00|PlayOnline Viewer: Tetra Master & Janhourou|SquareSoft
 SCED_522.25|PlayStation 2 Christmas Special 2003|
 SCUS_971.55|PlayStation 2 Demo Disc Version 2.3|
 SCED_546.40|PlayStation 2 Magazine Ufficiale Italia Presenta: Speciale Sport|
@@ -8687,10 +8693,10 @@ SLPS_734.18|Shadow Hearts|Sacnoth
 SLUS_203.47|Shadow Hearts|Sacnoth
 SLPM_601.45|Shadow Hearts (Taikenban)|
 SLPM_602.19|Shadow Hearts II|
-SLES_820.30|Shadow Hearts II (Disc 1)|Nautilus
+SLES_820.30|Shadow Hearts: Covenant (Disc 1)|Nautilus
 SLPS_253.34|Shadow Hearts II (Disc 1)|Nautilus
 SLPS_253.17|Shadow Hearts II (Disc 1) (Gentei DX Pack)|
-SLES_820.31|Shadow Hearts II (Disc 2)|Nautilus
+SLES_820.31|Shadow Hearts: Covenant (Disc 2)|Nautilus
 SLPS_253.35|Shadow Hearts II (Disc 2)|Nautilus
 SLPS_253.18|Shadow Hearts II (Disc 2) (Gentei DX Pack)|
 SLPM_602.14|Shadow Hearts II (Taikenban)|Nautilus
@@ -9723,17 +9729,18 @@ SLES_522.09|Star Trek: Shattered Universe|Take 2 Interactive
 SLUS_201.12|Star Trek: Shattered Universe|Take 2 Interactive
 SLES_507.38|Star Trek: Voyager: Elite Force|Codemasters
 SLUS_202.27|Star Trek: Voyager: Elite Force|Codemasters
-SLES_525.45|Star Wars: Battlefront|Activision
-SLES_525.46|Star Wars: Battlefront|Activision
-SLES_525.47|Star Wars: Battlefront|Activision
-SLPM_656.87|Star Wars: Battlefront|Activision
-SLPM_661.48|Star Wars: Battlefront|Activision
-SLUS_208.98|Star Wars: Battlefront|Activision
-SLES_535.01|Star Wars: Battlefront II|Pandemic Studios
-SLES_535.02|Star Wars: Battlefront II|Pandemic Studios
-SLES_535.03|Star Wars: Battlefront II|Pandemic Studios
-SLPM_661.90|Star Wars: Battlefront II|Pandemic Studios
-SLUS_212.40|Star Wars: Battlefront II|Pandemic Studios
+SLES_525.45|Star Wars: Battlefront|LucasArts
+SLES_525.46|Star Wars: Battlefront|LucasArts
+SLES_525.47|Star Wars: Battlefront|LucasArts
+SLPM_656.87|Star Wars: Battlefront|LucasArts
+SLPM_661.48|Star Wars: Battlefront|LucasArts
+SLUS_208.98|Star Wars: Battlefront|LucasArts
+SLES_535.01|Star Wars: Battlefront II|Electronic Arts
+SLES_535.02|Star Wars: Battlefront II|Electronic Arts
+SLES_535.03|Star Wars: Battlefront II|Electronic Arts
+SLPM_661.90|Star Wars: Battlefront II|Electronic Arts
+SLUS_212.40|Star Wars: Battlefront II|Electronic Arts
+SLUS_291.64|Star Wars: Battlefront II (Online Public Beta)|Electronic Arts
 SLES_508.31|Star Wars: Bounty Hunter|LucasArts
 SLES_508.32|Star Wars: Bounty Hunter|LucasArts
 SLES_508.33|Star Wars: Bounty Hunter|LucasArts
@@ -10075,6 +10082,7 @@ SCES_520.33|Syphon Filter: The Omega Strain|Sony Computer Entertainment
 SCKA_200.32|Syphon Filter: The Omega Strain|Sony Computer Entertainment
 SCUS_972.64|Syphon Filter: The Omega Strain|Sony Computer Entertainment
 SCUS_973.77|Syphon Filter: The Omega Strain (Demo)|Sony Computer Entertainment
+SCUS_973.97|Syphon Filter: The Omega Strain (BETA DISC V.1.0)|Sony Computer Entertainment
 SLPM_653.69|TBS All Star Kanshasai 2003 Aki: Chou Gouka! Quiz Ketteiban|
 SLPM_652.61|TBS All Star Kanshasai Vol. 1: Chou Gouka! Quiz Ketteiban|
 SLPM_655.78|TBS All Star Kanshasai Vol. 1: Chou Gouka! Quiz Ketteiban|
@@ -10378,9 +10386,10 @@ SLPM_658.37|Terminator 3: The Redemption|Atari
 SLUS_208.52|Terminator 3: The Redemption|Atari
 SLUS_202.13|Test Drive|Pitbull Syndicate
 SLUS_201.77|Test Drive Off-Road: Wide Open|Angel Studios
-SLES_537.53|Test Drive Unlimited|Eden Games
-SLES_544.66|Test Drive Unlimited|Eden Games
-SLUS_214.90|Test Drive Unlimited|Eden Games
+SLES_537.53|Test Drive Unlimited|Atari
+SLES_544.66|Test Drive Unlimited|Atari
+SLUS_214.90|Test Drive Unlimited|Atari
+SLUS_291.92|Test Drive Unlimited (Public Beta Vol.1.0)|Atari
 SLUS_209.10|Test Drive: Eve of Destruction|Monster Games
 SLUS_280.43|Test Drive: Eve of Destruction (Trade Demo)|Monster Games
 SLES_505.51|Tetris Worlds|Blue Planet Software
@@ -11930,3 +11939,4 @@ GHCE_000.01|Guitar Hero II Deluxe|
 GHCE_000.02|Guitar Hero II Deluxe|
 GHCE_000.03|Guitar Hero 80's Deluxe|
 SCUS_974.52|Official U.S. PlayStation Magazine Demo Disc 100|
+SLUS_774.48|Anime Hero II

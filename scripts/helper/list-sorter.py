@@ -131,6 +131,8 @@ def sort_games_list(games_list_path):
             "air combat": "ace combat 1",
             "wipeout xl": "wipeout 2",
             "wipeout 2097": "wipeout 2",
+            "wip3out": "wipeout 3",
+            "tekken tag tournament": "tekken"
 
         }
 

@@ -67,7 +67,7 @@ clean_up() {
 exit_script() {
     clean_up
     if [[ -n "$path_arg" ]]; then
-        cp "${LOG_FILE}" "${path_arg}"
+        cp "${LOG_FILE}" "${path_arg}" > /dev/null 2>&1
     fi
 }
 

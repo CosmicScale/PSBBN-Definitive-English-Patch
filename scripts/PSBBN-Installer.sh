@@ -133,7 +133,7 @@ clean_up() {
 exit_script() {
     clean_up
     if [[ -n "$path_arg" ]]; then
-        cp "${LOG_FILE}" "${path_arg}"
+        cp "${LOG_FILE}" "${path_arg}" > /dev/null 2>&1
     fi
 }
 
@@ -564,7 +564,7 @@ clean_up
 
 if [ "$MODE" = "install" ]; then
     echo | tee -a "${LOG_FILE}"
-    echo -n "Initialising drive..." | tee -a "${LOG_FILE}"
+    echo -n "Initialising the drive..." | tee -a "${LOG_FILE}"
 
     {
         sudo wipefs -a ${DEVICE} &&
@@ -596,18 +596,63 @@ if [ "$MODE" = "install" ]; then
     # Calculate available space (capacity - used)
     available=$((capacity - used - 6400 - 128))
     free_space=$((available / 1024))
-    max_music=$(((available - 2048) / 1024))
+    max_pops=$(((available - 2048) / 1024))
 
     echo | tee -a "${LOG_FILE}"
-    # Prompt user for partition size for music and POPS, validate input, and keep asking until valid input is provided
+    SPLASH
+    echo "===================================================================================================="
+    echo "                                       Partitioning the Drive"
+    echo "===================================================================================================="
+    # Prompt user for partition size for POPS, Music and Contents, validate input, and keep asking until valid input is provided
     while true; do
         echo | tee -a "${LOG_FILE}"
-        echo "Partitioning the first 128 GB of the drive:"
+
+        # Convert bytes to MB
+        SIZE_MB=$(( SIZE_CHECK / 1024 / 1024 ))
+
+        # Difference in MB
+        OPL_MB=$(( SIZE_MB - capacity ))
+
+        # Convert to GB
+        OPL_GB=$(( OPL_MB / 1024 ))
+
+        if (( OPL_GB >= 1000 )); then
+            # Store difference as TB with one decimal
+            difference="$(awk "BEGIN {printf \"%.1f TB\", $OPL_GB/1024}")"
+            # Cap at 2 TB
+            CAP=$(awk "BEGIN {print ($difference > 2.0) ? 2.0 : $difference}")
+            OPL_SIZE="${CAP} TB"
+        else
+            # Store difference as GB
+            OPL_SIZE="${OPL_GB} GB"
+        fi
+        echo "OPL Partition: $OPL_SIZE"
+        echo "Remaining space: $free_space GB" | tee -a "${LOG_FILE}"
         echo
-        echo "Available: $free_space GB" | tee -a "${LOG_FILE}"
+        echo "What size would you like the \"POPS\" partition to be?"
+        echo "This partition is used to store PS1 games."
+        echo "Minimum 1 GB, maximum $max_pops GB"
+        echo
+        read -p "Enter partition size (in GB): " pops_gb
+
+        if [[ ! "$pops_gb" =~ ^[0-9]+$ ]]; then
+            echo
+            echo "Invalid input. Please enter a valid number."
+            sleep 3
+            continue
+        fi
+
+        if (( pops_gb < 1 || pops_gb > max_pops )); then
+            echo
+            echo "Invalid size. Please enter a value between 1 and $max_pops GB."
+            sleep 3
+            continue
+        fi
+
+        remaining_gb=$((free_space - pops_gb -1))
         echo
         echo "What size would you like the \"Music\" partition to be?"
-        echo "Minimum 1 GB, maximum $max_music GB"
+        echo "Minimum 1 GB, maximum $remaining_gb GB"
         echo
         read -p "Enter partition size (in GB): " music_gb
 
@@ -618,16 +663,16 @@ if [ "$MODE" = "install" ]; then
             continue
         fi
 
-        if (( music_gb < 1 || music_gb > max_music )); then
+        if (( music_gb < 1 || music_gb > remaining_gb )); then
             echo
-            echo "Invalid size. Please enter a value between 1 and $max_music GB."
+            echo "Invalid size. Please enter a value between 1 and $remaining_gb GB."
             sleep 3
             continue
         fi
 
-        remaining_gb=$((free_space - music_gb -1))
+        remaining_gb=$((free_space - pops_gb - music_gb))
         echo
-        echo "What size would you like the \"contents\" partition to be?"
+        echo "What size would you like the \"Contents\" partition to be?"
         echo "This partition is used to store movies and photos."
         echo "Minimum 1 GB, maximum $remaining_gb GB"
         echo
@@ -647,37 +692,15 @@ if [ "$MODE" = "install" ]; then
             continue
         fi
 
-        remaining_gb=$((free_space - music_gb - contents_gb))
-        echo
-        echo "What size would you like the \"POPS\" partition to be?"
-        echo "This partition is used to store PS1 games."
-        echo "Minimum 1 GB, maximum $remaining_gb GB"
-        echo
-        read -p "Enter partition size (in GB): " pops_gb
-
-        if [[ ! "$pops_gb" =~ ^[0-9]+$ ]]; then
-            echo
-            echo "Invalid input. Please enter a valid number."
-            sleep 3
-            continue
-        fi
-
-        if (( pops_gb < 1 || pops_gb > remaining_gb )); then
-            echo
-            echo "Invalid size. Please enter a value between 1 and $remaining_gb GB."
-            sleep 3
-            continue
-        fi
-
-
         allocated_gb=$((music_gb + pops_gb + contents_gb))
         unallocated_gb=$((free_space - allocated_gb))
         echo
         echo "The following partitions will be created:"
+        echo "- OPL partition: $OPL_SIZE"
+        echo "- POPS partition: $pops_gb GB"
         echo "- Music partition: $music_gb GB"
         echo "- Contents partition: $contents_gb GB"
-        echo "- POPS partition: $pops_gb GB"
-        echo "- Remaining space: $unallocated_gb GB"
+        echo "- Unallocated space: $unallocated_gb GB"
         echo
         read -p "Do you wish to proceed? (y/n): " confirm
         if [[ "$confirm" =~ ^[Yy]$ ]]; then
