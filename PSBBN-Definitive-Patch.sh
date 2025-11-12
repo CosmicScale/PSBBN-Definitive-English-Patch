@@ -46,48 +46,6 @@ copy_log() {
     fi
 }
 
-git_update() {
-    # Check if the current directory is a Git repository
-    if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-        echo "This is not a Git repository. Skipping update check." >> "${LOG_FILE}"
-    else
-        # Fetch updates from the remote
-        git fetch >> "${LOG_FILE}" 2>&1
-
-        # Check the current status of the repository
-        LOCAL=$(git rev-parse @)
-        REMOTE=$(git rev-parse @{u})
-        BASE=$(git merge-base @ @{u})
-
-        if [ "$LOCAL" = "$REMOTE" ]; then
-            echo "No updates available — running the latest version." >> "${LOG_FILE}"
-        else
-            echo "Downloading updates..." | tee -a "${LOG_FILE}"
-            # Get a list of files that have changed remotely
-            UPDATED_FILES=$(git diff --name-only "$LOCAL" "$REMOTE")
-
-            if [ -n "$UPDATED_FILES" ]; then
-                echo "Files updated in the remote repository:" | tee -a "${LOG_FILE}"
-                echo "$UPDATED_FILES" | tee -a "${LOG_FILE}"
-
-                # Reset only the files that were updated remotely (discard local changes to them)
-                echo "$UPDATED_FILES" | xargs git checkout -- >> "${LOG_FILE}" 2>&1
-
-                # Pull the latest changes
-                if ! git pull --ff-only >> "${LOG_FILE}" 2>&1; then
-                    error_msg "Update failed. Delete the PSBBN-Definitive-English-Patch directory and run the command:" "git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git" "Then try running the script again."
-                fi
-                echo
-                echo "[✓] The repository has been successfully updated." | tee -a "${LOG_FILE}"
-                echo
-                read -n 1 -s -r -p "Press any key to exit, then run the script again." </dev/tty
-                echo
-                exit 0
-            fi
-        fi
-    fi
-}
-
 check_required_files() {
     local missing=false
 
@@ -296,10 +254,6 @@ display_menu() {
 
 EOF
 }
-
-if [ "$wsl" = "false" ]; then
-        git_update
-fi
 
 trap 'echo; exit 130' INT
 trap copy_log EXIT
