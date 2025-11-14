@@ -60,7 +60,7 @@ if [ "$MODE" = "install" ]; then
     LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.6" "__linux.7" "__linux.8" "__linux.9" )
     PFS_PARTITIONS=("__contents" "__system" "__sysconf" "__common" )
 else
-    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.7" "__linux.9" )
+    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.9" )
     PFS_PARTITIONS=("__system" "__sysconf" )
 fi
 
