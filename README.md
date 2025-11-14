@@ -56,6 +56,8 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 <b>Release Notes:</b>
 
+[![PSBBN Definitive Patch v4.0 - OSDMenu, 3rd Party HDD adapters and more!](https://github.com/user-attachments/assets/1a3f2d69-6bec-4fe4-aa27-c367f5d98f98)](https://www.youtube.com/watch?v=fT368C90Trc)
+
 **[NEW! OSDMenu MBR:](#osdmenu-mbr)**  
 Replaced Sony’s original MBR application with **[OSDMenu MBR](#osdmenu-mbr)**, a homebrew alternative that:
 - Handles launching games and apps directly instead of relying on **BBN Launcher (BBNL)**
