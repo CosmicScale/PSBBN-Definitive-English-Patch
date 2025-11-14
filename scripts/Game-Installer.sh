@@ -1432,6 +1432,8 @@ for folder in APPS ART CFG CHT LNG THM VMC POPS CD DVD; do
     }
 done
 
+rm -f "${GAMES_PATH}/APPS/"{HDD-OSD.elf,PSBBN.ELF}
+
 # Check if GAMES_PATH is custom
 if [[ "${GAMES_PATH}" != "${TOOLKIT_PATH}/games" ]]; then
     echo "Using custom game path." >> "${LOG_FILE}"
