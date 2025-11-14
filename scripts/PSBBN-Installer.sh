@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export LC_ALL=en_US.UTF-8
+export LC_ALL=C.UTF-8
 
 # Set paths
 version_check="2.10"
@@ -10,6 +10,29 @@ HELPER_DIR="${SCRIPTS_DIR}/helper"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
 OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/PSBBN-installer.log"
+arch="$(uname -m)"
+
+if [[ "$arch" = "x86_64" ]]; then
+    # x86-64
+    CUE2POPS="${HELPER_DIR}/cue2pops"
+    HDL_DUMP="${HELPER_DIR}/HDL Dump.elf"
+    MKFS_EXFAT="${HELPER_DIR}/mkfs.exfat"
+    PFS_FUSE="${HELPER_DIR}/PFS Fuse.elf"
+    PFS_SHELL="${HELPER_DIR}/PFS Shell.elf"
+    APA_FIXER="${HELPER_DIR}/PS2 APA Header Checksum Fixer.elf"
+    PSU_EXTRACT="${HELPER_DIR}/PSU Extractor.elf"
+    SQLITE="${HELPER_DIR}/sqlite"
+elif [[ "$arch" = "aarch64" ]]; then
+    # ARM64
+    CUE2POPS="${HELPER_DIR}/aarch64/cue2pops"
+    HDL_DUMP="${HELPER_DIR}/aarch64/HDL Dump.elf"
+    MKFS_EXFAT="${HELPER_DIR}/aarch64/mkfs.exfat"
+    PFS_FUSE="${HELPER_DIR}/aarch64/PFS Fuse.elf"
+    PFS_SHELL="${HELPER_DIR}/aarch64/PFS Shell.elf"
+    APA_FIXER="${HELPER_DIR}/aarch64/PS2 APA Header Checksum Fixer.elf"
+    PSU_EXTRACT="${HELPER_DIR}/aarch64/PSU Extractor.elf"
+    SQLITE="${HELPER_DIR}/aarch64/sqlite"
+fi
 
 serialnumber="$2"
 path_arg="$3"
@@ -27,12 +50,18 @@ case "$1" in
     ;;
 esac
 
+version_le() { # returns 0 (true) if $1 <= $2
+    [ "$1" = "$2" ] && return 0
+    smallest=$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1)
+    [ "$smallest" = "$1" ]
+}
+
 if [ "$MODE" = "install" ]; then
     LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.6" "__linux.7" "__linux.8" "__linux.9" )
-    APA_PARTITIONS=("__contents" "__system" "__sysconf" "__common" )
+    PFS_PARTITIONS=("__contents" "__system" "__sysconf" "__common" )
 else
-    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.9" )
-    APA_PARTITIONS=("__system" "__sysconf" )
+    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.7" "__linux.9" )
+    PFS_PARTITIONS=("__system" "__sysconf" )
 fi
 
 error_msg() {
@@ -41,6 +70,7 @@ error_msg() {
     error_3="$3"
     error_4="$4"
 
+    echo | tee -a "${LOG_FILE}"
     echo | tee -a "${LOG_FILE}"
     echo "$error_1" | tee -a "${LOG_FILE}"
     [ -n "$error_2" ] && echo "$error_2" | tee -a "${LOG_FILE}"
@@ -79,58 +109,44 @@ spinner() {
     if [ $exit_code -eq 0 ]; then
         printf "\r[✓] %s\n" "$message" | tee -a "${LOG_FILE}"
     else
-        printf "\r[X]%s\n" "$message" | tee -a "${LOG_FILE}"
+        printf "\r[X] %s\n" "$message" | tee -a "${LOG_FILE}"
     fi
 }
 
 clean_up() {
     failure=0
 
-    # Build list of partitions we care about
-    targets=("${LINUX_PARTITIONS[@]}" "${APA_PARTITIONS[@]}")
-    if [ "$MODE" = "install" ]; then
-        targets+=("__linux.2")
+    if [ -d "${STORAGE_DIR}" ]; then
+        submounts=$(findmnt -nr -o TARGET | grep "^${STORAGE_DIR}/")
+
+        if [ -z "$submounts" ]; then
+            echo "Deleting ${STORAGE_DIR}..." >> "$LOG_FILE"
+            sudo rm -rf "${STORAGE_DIR}" || { echo "[X] Error: Failed to delete ${STORAGE_DIR}" >> "$LOG_FILE"; failure=1; }
+            echo "Deleted ${STORAGE_DIR}." >> "$LOG_FILE"
+        else
+            echo "Some mounts remain under ${STORAGE_DIR}, not deleting." >> "$LOG_FILE"
+            failure=1
+        fi
+    else
+        echo "Directory ${STORAGE_DIR} does not exist." >> "$LOG_FILE"
     fi
 
-    # Unmount if mounted
-    for PARTITION_NAME in "${targets[@]}"; do
-        MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
-        if mountpoint -q "$MOUNT_PATH"; then
-            if ! sudo umount "$MOUNT_PATH" 2>/dev/null; then
-                echo "Error: Failed to unmount ${PARTITION_NAME}." >> "${LOG_FILE}"
-                failure=1
-            fi
-        fi
-    done
-
-    # Force-remove any existing dmsetup maps for just our partitions
-    for PARTITION_NAME in "${targets[@]}"; do
-        map_name=$(sudo dmsetup ls | awk -v devcut="$(basename "$DEVICE")" -v part="$PARTITION_NAME" '$1 == devcut"-"part {print $1}')
-        if [ -n "$map_name" ]; then
-            if ! sudo dmsetup remove -f "$map_name" 2>/dev/null; then
-                echo "Error: Failed to delete mapper ${map_name}." >> "${LOG_FILE}"
-                failure=1
-            fi
-        fi
-    done
+    # Abort if any failures occurred
+    if [ "$failure" -ne 0 ]; then
+        error_msg "Error" "Cleanup error(s) occurred. Aborting."
+    fi
 
     # Clean up directories and temp files
     sudo rm -rf /tmp/{apa_header_checksum.bin,apa_header_full.bin,apajail_magic_number.bin,apa_index.xz,gpt_2nd.xz} >> "${LOG_FILE}" 2>&1
-    sudo rm -rf "${STORAGE_DIR}/bootstrap.xin" >> "${LOG_FILE}" 2>&1
-    sudo rm -rf "${STORAGE_DIR}/__linux.7"/* >> "${LOG_FILE}" 2>&1
-    sudo rm -rf "${STORAGE_DIR}/__contents"/* >> "${LOG_FILE}" 2>&1
-    
+    sudo rm -rf "${SCRIPTS_DIR}/tmp"    
     # Abort if any failures occurred
     if [ "$failure" -ne 0 ]; then
         error_msg "Cleanup error(s) occurred. Aborting."
     fi
-
-    if [[ -n "$path_arg" ]]; then
-        cp "${LOG_FILE}" "$path_arg" > /dev/null 2>&1
-    fi
 }
 
 exit_script() {
+    UNMOUNT_ALL
     clean_up
     if [[ -n "$path_arg" ]]; then
         cp "${LOG_FILE}" "${path_arg}" > /dev/null 2>&1
@@ -138,10 +154,10 @@ exit_script() {
 }
 
 PFS_COMMANDS() {
-PFS_COMMANDS=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1)
-if echo "$PFS_COMMANDS" | grep -q "Exit code is"; then
-    error_msg "PFS Shell returned an error. See ${LOG_FILE}"
-fi
+    PFS_COMMANDS=$(echo -e "$COMMANDS" | sudo "${PFS_SHELL}" >> "${LOG_FILE}" 2>&1)
+    if echo "$PFS_COMMANDS" | grep -q "Exit code is"; then
+        error_msg "PFS Shell returned an error. See ${LOG_FILE}"
+    fi
 }
 
 mapper_probe() {
@@ -154,13 +170,13 @@ mapper_probe() {
     done
 
     # 2) Build keep list
-    keep_partitions=( "${LINUX_PARTITIONS[@]}" "${APA_PARTITIONS[@]}" )
+    keep_partitions=( "${LINUX_PARTITIONS[@]}" "${PFS_PARTITIONS[@]}" )
     if [ "$MODE" = "install" ]; then
         keep_partitions+=("__linux.2")
     fi
 
     # 3) Get HDL Dump --dm output, split semicolons into lines
-    dm_output=$(sudo "${HELPER_DIR}/HDL Dump.elf" toc "${DEVICE}" --dm | tr ';' '\n')
+    dm_output=$(sudo "${HDL_DUMP}" toc "${DEVICE}" --dm | tr ';' '\n')
 
     # 4) Create each kept partition individually
     while IFS= read -r line; do
@@ -180,17 +196,21 @@ mount_cfs() {
     for PARTITION_NAME in "${LINUX_PARTITIONS[@]}"; do
         MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
         if [ -e "${MAPPER}${PARTITION_NAME}" ]; then
-            if [[ "$PARTITION_NAME" = "__linux.8" || "$PARTITION_NAME" = "__linux.9" ]]; then
+            if [[ "$PARTITION_NAME" = "__linux.9" ]] && ! version_le "${psbbn_version:-0}" "3.00"; then
+                echo "Skipping mke2fs for __linux.9" >>"${LOG_FILE}"
+            elif [[ "$PARTITION_NAME" = "__linux.7" ]] && [ "$MODE" = "update" ]; then
+                 echo "Skipping mke2fs for __linux.7" >>"${LOG_FILE}"
+            elif [[ "$PARTITION_NAME" = "__linux.8" || "$PARTITION_NAME" = "__linux.9" ]]; then
                 if ! sudo mkfs.vfat -F 32 "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
                     error_msg "Failed to create filesystem ${PARTITION_NAME}."
-                fi
+                fi            
             else
                 if ! sudo mke2fs -t ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
                     error_msg "Failed to create filesystem ${PARTITION_NAME}."
                 fi
             fi
 
-            [ -d "${MOUNT_PATH}" ] || sudo mkdir -p "${MOUNT_PATH}"
+            [ -d "${MOUNT_PATH}" ] || mkdir -p "${MOUNT_PATH}"
                 if ! sudo mount "${MAPPER}${PARTITION_NAME}" "${MOUNT_PATH}" >>"${LOG_FILE}" 2>&1; then
                     error_msg "Failed to mount ${PARTITION_NAME} partition."
                 fi
@@ -207,10 +227,10 @@ mount_cfs() {
 }
 
 mount_pfs() {
-    for PARTITION_NAME in "${APA_PARTITIONS[@]}"; do
+    for PARTITION_NAME in "${PFS_PARTITIONS[@]}"; do
         MOUNT_POINT="${STORAGE_DIR}/$PARTITION_NAME/"
-        sudo mkdir -p "$MOUNT_POINT"
-        if ! sudo "${HELPER_DIR}/PFS Fuse.elf" \
+        mkdir -p "$MOUNT_POINT"
+        if ! sudo "${PFS_FUSE}" \
             -o allow_other \
             --partition="$PARTITION_NAME" \
             "${DEVICE}" \
@@ -222,7 +242,7 @@ mount_pfs() {
 
 apa_checksum_fix() {
 	sudo dd if=${DEVICE} of=/tmp/apa_header_full.bin bs=512 count=2 >> "${LOG_FILE}" 2>&1
-	"${HELPER_DIR}/PS2 APA Header Checksum Fixer.elf" /tmp/apa_header_full.bin | sed -n 8p | awk '{print $6}' | xxd -r -p > /tmp/apa_header_checksum.bin 2>> "${LOG_FILE}"
+	"${APA_FIXER}" /tmp/apa_header_full.bin | sed -n 8p | awk '{print $6}' | xxd -r -p > /tmp/apa_header_checksum.bin 2>> "${LOG_FILE}"
 	sudo dd if=/tmp/apa_header_checksum.bin of=${DEVICE} conv=notrunc >> "${LOG_FILE}" 2>&1
 }
 
@@ -232,10 +252,10 @@ apajail_magic_number() {
 }
 
 BOOTSTRAP() {
-    if [ -f "${STORAGE_DIR}/bootstrap.xin" ]; then
+    if [ -f "${ASSETS_DIR}/osdmenu/OSDMBR.XLF" ]; then
 	    # BOOTSTRAP METADATA:
 	    BOOTSTRAP_ADDRESS_HEX_BE=0020
-	    BOOTSTRAP_SIZE=$(wc -c "${STORAGE_DIR}/bootstrap.xin" | cut -d' ' -f 1)
+	    BOOTSTRAP_SIZE=$(wc -c "${ASSETS_DIR}/osdmenu/OSDMBR.XLF" | cut -d' ' -f 1)
 	    BOOTSTRAP_SIZE_LBA=$(echo "$((${BOOTSTRAP_SIZE}/512))")
 	    BOOTSTRAP_SIZE_LBA_HEX_BE=$(printf "%04X" ${BOOTSTRAP_SIZE_LBA} | tac -rs .. | echo "$(tr -d '\n')")
 	    echo "${BOOTSTRAP_ADDRESS_HEX_BE}0000${BOOTSTRAP_SIZE_LBA_HEX_BE}0000" | xxd -r -p > /tmp/apa_header_boot.bin 2>> "${LOG_FILE}"
@@ -244,27 +264,29 @@ BOOTSTRAP() {
 	    # 130h = 304d
 	    sudo dd if=/tmp/apa_header_boot.bin of=${DEVICE} bs=1 seek=304 >> "${LOG_FILE}" 2>&1
 	    # 2000h * 200h = 8192d * 512d = 4194304d = 400000h
-	    sudo dd if=${STORAGE_DIR}/bootstrap.xin of=${DEVICE} bs=1M count=1 seek=4 conv=notrunc >> "${LOG_FILE}" 2>&1
+	    sudo dd if="${ASSETS_DIR}/osdmenu/OSDMBR.XLF" of=${DEVICE} bs=1M count=1 seek=4 conv=notrunc >> "${LOG_FILE}" 2>&1
     else
-	    error_msg "Failed to inject bootstrap."
+	    error_msg "Failed to inject OSDMenu MBR."
     fi
 }
 
 CHECK_PARTITIONS() {
-# Run the command and capture output
-    apa_checksum_fix
-    TOC_OUTPUT=$(sudo "${HELPER_DIR}/HDL Dump.elf" toc "${DEVICE}")
+    TOC_OUTPUT=$(sudo "${HDL_DUMP}" toc "${DEVICE}")
     STATUS=$?
 
     if [ $STATUS -ne 0 ]; then
         error_msg "APA partition is broken on ${DEVICE}. Install failed."
     fi
 
-    if echo "${TOC_OUTPUT}" | grep -Eq '\b(__linux\.(1|4|5|6|7|8|9)|__contents|__system|__sysconf|__.POPS|__common)\b'; then
-        echo "All partitions exist." >> "${LOG_FILE}"
-    else
-        error_msg "Some partitions are missing on ${DEVICE}. See log for details."
-    fi
+    # List of required partitions
+    required=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.8 __linux.9 __contents __system __sysconf __.POPS __common)
+
+    # Check all required partitions
+    for part in "${required[@]}"; do
+        if ! echo "$TOC_OUTPUT" | grep -Fq "$part"; then
+            error_msg "Some partitions are missing on ${DEVICE}. See log for details."
+        fi
+    done
 }
 
 UNMOUNT_ALL() {
@@ -279,7 +301,31 @@ UNMOUNT_ALL() {
             echo "[✓] Successfully unmounted $mount_point." >> "${LOG_FILE}"
         else
             error_msg "Failed to unmount $mount_point. Please unmount manually."
+        fi
+    done
 
+    submounts=$(findmnt -nr -o TARGET | grep "^${STORAGE_DIR}/" | sort -r)
+
+    if [ -n "$submounts" ]; then
+        echo "Found mounts under ${STORAGE_DIR}, attempting to unmount..." >> "$LOG_FILE"
+        while read -r mnt; do
+            [ -z "$mnt" ] && continue
+            echo "Unmounting $mnt..." >> "$LOG_FILE"
+            sudo umount "$mnt" || error_msg "Error" "Failed to unmount $mnt"
+        done <<< "$submounts"
+    fi
+
+    # Get the device basename
+    DEVICE_CUT=$(basename "$DEVICE")
+
+    # List all existing maps for this device
+    existing_maps=$(sudo dmsetup ls 2>/dev/null | awk -v dev="$DEVICE_CUT" '$1 ~ "^"dev"-" {print $1}')
+
+    # Force-remove each existing map
+    for map_name in $existing_maps; do
+        echo "Removing existing mapper $map_name..." >> "$LOG_FILE"
+        if ! sudo dmsetup remove -f "$map_name" 2>/dev/null; then
+            error_msg "Error" "Failed to delete mapper $map_name."
         fi
     done
 }
@@ -311,13 +357,13 @@ MOUNT_OPL() {
 HDL_TOC() {
     rm -f "$hdl_output"
     hdl_output=$(mktemp)
-    if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc "$DEVICE" 2>>"${LOG_FILE}" > "$hdl_output"; then
+    if ! sudo "${HDL_DUMP}" toc "$DEVICE" 2>>"${LOG_FILE}" > "$hdl_output"; then
         rm -f "$hdl_output"
         error_msg "Failed to extract list of partitions." "APA partition could be broken on ${DEVICE}"
     fi
 }
 
-SPLASH(){
+INSTALL_SPLASH(){
     clear
         cat << "EOF"
               ______  _________________ _   _   _____          _        _ _           
@@ -331,7 +377,21 @@ SPLASH(){
 EOF
 }
 
-clear
+UPDATE_SPLASH(){
+    clear
+    cat << "EOF"
+               ______  _________________ _   _   _   _           _       _            
+               | ___ \/  ___| ___ \ ___ \ \ | | | | | |         | |     | |           
+               | |_/ /\ `--.| |_/ / |_/ /  \| | | | | |_ __   __| | __ _| |_ ___ _ __ 
+               |  __/  `--. \ ___ \ ___ \ . ` | | | | | '_ \ / _` |/ _` | __/ _ \ '__|
+               | |    /\__/ / |_/ / |_/ / |\  | | |_| | |_) | (_| | (_| | ||  __/ |   
+               \_|    \____/\____/\____/\_| \_/  \___/| .__/ \__,_|\__,_|\__\___|_|   
+                                                      | |                             
+                                                      |_|                             
+
+EOF
+}
+
 mkdir -p "${TOOLKIT_PATH}/logs" >/dev/null 2>&1
 
 echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
@@ -363,32 +423,29 @@ echo >> "${LOG_FILE}"
 trap 'echo; exit 130' INT
 trap exit_script EXIT
 
-if ! sudo rm -rf "${STORAGE_DIR}"; then
-    error_msg "Failed to remove $STORAGE_DIR folder."
-fi
-
 if [ "$MODE" = "install" ]; then
+    INSTALL_SPLASH
     # Choose the PS2 storage device
     if [[ -n "$serialnumber" ]]; then
-            DEVICE=$(lsblk -p -o NAME,SERIAL | awk -v sn="$serialnumber" '$2 == sn {print $1; exit}')
-            drive_model=$(lsblk -ndo VENDOR,MODEL,SIZE,SERIAL "$DEVICE" | xargs)
+        DEVICE=$(lsblk -p -o NAME,SERIAL | awk -v sn="$serialnumber" '$2 == sn {print $1; exit}')
+        drive_model=$(lsblk -ndo VENDOR,MODEL,SIZE,SERIAL "$DEVICE" | xargs)
     fi
     if [ -z "$DEVICE" ]; then
         while true; do
-        SPLASH
+            INSTALL_SPLASH
             lsblk -dp -o NAME,MODEL,SIZE,SERIAL | tee -a "${LOG_FILE}"
             echo | tee -a "${LOG_FILE}"
         
             read -p "Choose your PS2 HDD from the list above (e.g., /dev/sdx): " DEVICE
         
-        # Check if the device exists
-        if [[ -n "$DEVICE" ]] && lsblk -dp -n -o NAME | grep -q "^$DEVICE$"; then
-            break
-        else
-            echo
-            echo -n "Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
-            sleep 3
-        fi
+            # Check if the device exists
+            if [[ -n "$DEVICE" ]] && lsblk -dp -n -o NAME | grep -q "^$DEVICE$"; then
+                break
+            else
+                echo
+                echo -n "Invalid input. Please enter a valid device name (e.g., /dev/sdx)."
+                sleep 3
+            fi
         done
         drive_model=$(lsblk -ndo MODEL,SIZE,SERIAL "$DEVICE" | xargs)
     fi
@@ -399,8 +456,8 @@ if [ "$MODE" = "install" ]; then
     # Convert size to GB (1 GB = 1,000,000,000 bytes)
     size_gb=$(echo "$SIZE_CHECK / 1000000000" | bc)
         
-    if (( size_gb < 200 )); then
-        error_msg "Device is $size_gb GB. Required minimum is 200 GB."
+    if (( size_gb < 32 )); then
+        error_msg "Device is $size_gb GB. Required minimum is 32 GB."
     else
         echo "Device Name: $DEVICE" >> "${LOG_FILE}"
         [[ -z "$drive_model" ]] && drive_model="$DEVICE"
@@ -408,7 +465,7 @@ if [ "$MODE" = "install" ]; then
         echo
         echo "Selected drive: $drive_model" | tee -a "${LOG_FILE}"
         echo
-        echo "Are you sure you want to install to the selected dive?" | tee -a "${LOG_FILE}"
+        echo "Are you sure you want to install to the selected drive?" | tee -a "${LOG_FILE}"
         echo
         read -p "This will erase all data on the drive. (yes/no): " CONFIRM
             if [[ $CONFIRM != "yes" ]]; then
@@ -419,33 +476,30 @@ if [ "$MODE" = "install" ]; then
                 exit 1
             fi
     fi
+    LANG="eng"
 else
-    clear
+
+    UPDATE_SPLASH
+
     DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
 
     if [[ -z "$DEVICE" ]]; then
-        error_msg "Unable to detect the PS2 drive. Please ensure the drive is properly connected." "If this is your first time using the installer, select 'Install PSBBN' from the main menu."
+        error_msg "Unable to detect the PS2 drive. Please ensure the drive is properly connected." " " "You must install PSBBN first before updating."
     fi
 
     echo "OPL partition found on $DEVICE" >> "${LOG_FILE}"
-    
-    cat << "EOF"
-               ______  _________________ _   _   _   _           _       _            
-               | ___ \/  ___| ___ \ ___ \ \ | | | | | |         | |     | |           
-               | |_/ /\ `--.| |_/ / |_/ /  \| | | | | |_ __   __| | __ _| |_ ___ _ __ 
-               |  __/  `--. \ ___ \ ___ \ . ` | | | | | '_ \ / _` |/ _` | __/ _ \ '__|
-               | |    /\__/ / |_/ / |_/ / |\  | | |_| | |_) | (_| | (_| | ||  __/ |   
-               \_|    \____/\____/\____/\_| \_/  \___/| .__/ \__,_|\__,_|\__\___|_|   
-                                                      | |                             
-                                                      |_|                             
-
-EOF
 
     UNMOUNT_ALL
+    clean_up
     HDL_TOC
+    CHECK_PARTITIONS
     MOUNT_OPL
 
     psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
+    LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
+    if [ -z "$LANG" ]; then
+        LANG="eng"
+    fi
 
     # Compare using sort -V
     if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
@@ -456,12 +510,13 @@ EOF
 fi
 
 if [ "$MODE" = "install" ]; then
-    SPLASH
+    INSTALL_SPLASH
     UNMOUNT_ALL
+    clean_up
 fi
 
 # URL of the webpage
-URL="https://archive.org/download/psbbn-definitive-patch-v3"
+URL="https://archive.org/download/psbbn-definitive-patch-v4"
 
 # Download the HTML of the page
 HTML_FILE=$(mktemp)
@@ -471,11 +526,11 @@ WGET_PID=$!
 spinner $WGET_PID "Checking for latest version of the PSBBN Definitive Patch"
 
 # Extract .gz filenames from the HTML
-COMBINED_LIST=$(grep -oP 'psbbn-definitive-patch-v[0-9]+\.[0-9]+\.tar.gz' "$HTML_FILE")
+COMBINED_LIST=$(grep -oP 'psbbn-definitive-patch-v[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz' "$HTML_FILE")
 
 # Extract version numbers and sort them
 VERSION_LIST=$(echo "$COMBINED_LIST" | \
-    grep -oP 'v[0-9]+\.[0-9]+' | \
+    grep -oP 'v[0-9]+\.[0-9]+\.[0-9]+' | \
     sed 's/v//' | \
     sort -V)
 
@@ -485,17 +540,16 @@ LATEST_VERSION=$(echo "$VERSION_LIST" | tail -n 1)
 if [ -z "$LATEST_VERSION" ]; then
     echo | tee -a "${LOG_FILE}"
     echo "Could not find the latest version." | tee -a "${LOG_FILE}"
+    echo "Please check the status of archive.org. You may need to use a VPN depending on your location."
     # If $LATEST_VERSION is empty, check for psbbn-definitive-patch*.gz files
     PATCH_FILE=$(ls "${ASSETS_DIR}"/psbbn-definitive-patch*.tar.gz 2>/dev/null)
     if [ -n "$PATCH_FILE" ]; then
         # If patch file exists, set LATEST_FILE to the patch file name
         LATEST_VERSION=$(echo "$PATCH_FILE" | sed -E 's/.*-v([0-9.]+)\.tar.gz/\1/')
         LATEST_FILE=$(basename "$PATCH_FILE")
-        echo | tee -a "${LOG_FILE}"
-        echo "Found local file: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
     else
         rm -f "$HTML_FILE"
-        error_msg "Failed to download PSBBN patch file. Aborting."
+        error_msg "Failed to find the PSBBN patch file. Aborting."
     fi
 else
     # Set the default latest file based on remote version
@@ -529,10 +583,14 @@ if [ "$MODE" = "update" ]; then
     fi
 fi
 
+if [[ "$(printf '%s\n' "$LATEST_VERSION" "4.0.0" | sort -V | head -n1)" != "4.0.0" ]]; then
+    error_msg "The latest version currently available is v$LATEST_VERSION." "The installer requires version v4.0.0 or higher. Please try again later."
+fi
+
 # Check if the latest file exists in ${ASSETS_DIR}
 if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
     echo | tee -a "${LOG_FILE}"
-    echo "File ${LATEST_FILE} exists in ${ASSETS_DIR}. Skipping download." | tee -a "${LOG_FILE}"
+    echo "File ${LATEST_FILE} exists. Skipping download." | tee -a "${LOG_FILE}"
 else
     # Check for and delete older files
     for file in "${ASSETS_DIR}"/psbbn-definitive-patch*.tar.gz; do
@@ -555,15 +613,52 @@ else
     fi
 fi
 
-# Clean up
+if [ "$MODE" = "update" ]; then
+    UPDATE_SPLASH
+else
+    INSTALL_SPLASH
+fi
+echo "================================== PSBBN Definitive Patch v$LATEST_VERSION ==================================="
+if [ "$LATEST_VERSION" = "4.0.0" ]; then
+    echo
+    echo "       PSBBN Installer:"
+    echo "       - The PSBBN Installer and Updater now install HOSDMenu alongside PSBBN"
+    echo "       - Supports smaller drives - minimum capacity reduced from 200 GB to 32 GB"
+    echo "       - After partitioning, any unallocated space is now assigned to the OPL partition"
+    echo
+    echo "       NEW! OSDMenu MBR - Replaces Sony's original MBR application:"
+    echo "       - Removed BBN Launch (BBNL), OSDMenu MBR now handles launching games and apps directly"
+    echo "       - Improves boot speed and game startup times"
+    echo "       - Eliminates the need for the PlayStation 2 Basic Boot Loader (PS2BBL)"
+    echo "       - PS2 Linux is now booted directly by holding CIRCLE at power-on instead of"
+    echo "         interrupting PSBBN startup"
+    echo "       - Removed Launch Disc app, simply insert a game disc to play — Fully compatible"
+    echo "         with Game ID and MechaPwn!"
+    echo
+    echo "       NEW! HOSDMenu - Patches HDD-OSD:"
+    echo "       - Hold CROSS at startup to boot into HOSDMenu"
+    echo "       - Supports larger drives (HDD-OSD previously limited to 1 TB)"
+    echo "       - Launch installed homebrew apps directly from the OSDSYS menu"
+    echo "       - Launch SAS-compatible applications from Memory Cards and and from the internal drive"
+    echo "         in Browser 2.0 and much more..."
+    echo
+    echo "    Full Release notes on GitHub: https://github.com/CosmicScale/PSBBN-Definitive-English-Patch"  
+    echo
+    echo "    Watch the latest video covering this update: https://www.youtube.com/watch?v=fT368C90Trc"
+fi
+echo
+echo "===================================================================================================="
+echo
+read -n 1 -s -r -p "                               Press any key to return to continue..." </dev/tty
+echo
+
 rm -f "$HTML_FILE"
 
 PSBBN_PATCH="${ASSETS_DIR}/${LATEST_FILE}"
 
-clean_up
-
 if [ "$MODE" = "install" ]; then
     echo | tee -a "${LOG_FILE}"
+    INSTALL_SPLASH
     echo -n "Initialising the drive..." | tee -a "${LOG_FILE}"
 
     {
@@ -587,11 +682,11 @@ if [ "$MODE" = "install" ]; then
 
     # Retreive avaliable space
 
-    output=$(sudo "${HELPER_DIR}"/HDL\ Dump.elf toc ${DEVICE} 2>&1)
+    output=$(sudo "${HDL_DUMP}" toc ${DEVICE} 2>&1)
 
     # Extract the "used" value, remove "MB" and any commas
     used=$(echo "$output" | awk '/used:/ {print $6}' | sed 's/,//; s/MB//')
-    capacity=129960
+    capacity=131072
 
     # Calculate available space (capacity - used)
     available=$((capacity - used - 6400 - 128))
@@ -599,34 +694,12 @@ if [ "$MODE" = "install" ]; then
     max_pops=$(((available - 2048) / 1024))
 
     echo | tee -a "${LOG_FILE}"
-    SPLASH
-    echo "===================================================================================================="
-    echo "                                       Partitioning the Drive"
-    echo "===================================================================================================="
     # Prompt user for partition size for POPS, Music and Contents, validate input, and keep asking until valid input is provided
     while true; do
+        INSTALL_SPLASH
+        echo "====================================== Partitioning the Drive ======================================"
         echo | tee -a "${LOG_FILE}"
-
-        # Convert bytes to MB
-        SIZE_MB=$(( SIZE_CHECK / 1024 / 1024 ))
-
-        # Difference in MB
-        OPL_MB=$(( SIZE_MB - capacity ))
-
-        # Convert to GB
-        OPL_GB=$(( OPL_MB / 1024 ))
-
-        if (( OPL_GB >= 1000 )); then
-            # Store difference as TB with one decimal
-            difference="$(awk "BEGIN {printf \"%.1f TB\", $OPL_GB/1024}")"
-            # Cap at 2 TB
-            CAP=$(awk "BEGIN {print ($difference > 2.0) ? 2.0 : $difference}")
-            OPL_SIZE="${CAP} TB"
-        else
-            # Store difference as GB
-            OPL_SIZE="${OPL_GB} GB"
-        fi
-        echo "OPL Partition: $OPL_SIZE"
+        echo "Partitioning the first 128 GB of the drive."
         echo "Remaining space: $free_space GB" | tee -a "${LOG_FILE}"
         echo
         echo "What size would you like the \"POPS\" partition to be?"
@@ -637,15 +710,17 @@ if [ "$MODE" = "install" ]; then
 
         if [[ ! "$pops_gb" =~ ^[0-9]+$ ]]; then
             echo
-            echo "Invalid input. Please enter a valid number."
+            echo -n "Invalid input. Please enter a valid number."
             sleep 3
+            echo | tee -a "${LOG_FILE}"
             continue
         fi
 
         if (( pops_gb < 1 || pops_gb > max_pops )); then
             echo
-            echo "Invalid size. Please enter a value between 1 and $max_pops GB."
+            echo -n "Invalid size. Please enter a value between 1 and $max_pops GB."
             sleep 3
+            echo | tee -a "${LOG_FILE}"
             continue
         fi
 
@@ -658,15 +733,17 @@ if [ "$MODE" = "install" ]; then
 
         if [[ ! "$music_gb" =~ ^[0-9]+$ ]]; then
             echo
-            echo "Invalid input. Please enter a valid number."
+            echo -n "Invalid input. Please enter a valid number."
             sleep 3
+            echo | tee -a "${LOG_FILE}"
             continue
         fi
 
         if (( music_gb < 1 || music_gb > remaining_gb )); then
             echo
-            echo "Invalid size. Please enter a value between 1 and $remaining_gb GB."
+            echo -n "Invalid size. Please enter a value between 1 and $remaining_gb GB."
             sleep 3
+            echo | tee -a "${LOG_FILE}"
             continue
         fi
 
@@ -680,62 +757,138 @@ if [ "$MODE" = "install" ]; then
 
         if [[ ! "$contents_gb" =~ ^[0-9]+$ ]]; then
             echo
-            echo "Invalid input. Please enter a valid number."
+            echo -n "Invalid input. Please enter a valid number."
             sleep 3
+            echo | tee -a "${LOG_FILE}"
             continue
         fi
 
         if (( contents_gb < 1 || contents_gb > remaining_gb )); then
             echo
-            echo "Invalid size. Please enter a value between 1 and $remaining_gb GB."
+            echo -n "Invalid size. Please enter a value between 1 and $remaining_gb GB."
             sleep 3
+            echo | tee -a "${LOG_FILE}"
             continue
         fi
 
-        allocated_gb=$((music_gb + pops_gb + contents_gb))
-        unallocated_gb=$((free_space - allocated_gb))
+        remaining_gb=$((free_space - pops_gb - music_gb - contents_gb ))
+
+        if (( remaining_gb > 0 )); then
+            echo
+            echo "Would you like to reserve some space for future use?"
+            echo "You'll need at least 3 GB reserved to install PS2 Linux."
+            echo
+            read -p "Reserve space? (y/n): " answer
+
+            if [[ "$answer" =~ ^[Yy]$ ]]; then
+                echo
+                echo "How much space would you like to reserve?"
+                echo "Minimum 1 GB, maximum $remaining_gb GB"
+                echo
+                read -rp "Enter partition size (in GB): " reserve_gb
+
+                # Check if input is a valid number
+                if [[ ! "$reserve_gb" =~ ^[0-9]+$ ]]; then
+                    echo
+                    echo "Invalid input. Please enter a valid number."
+                    sleep 3
+                    echo | tee -a "${LOG_FILE}"
+                    continue
+                fi
+
+                # Check if input is within valid range
+                if (( reserve_gb < 1 || reserve_gb > remaining_gb )); then
+                    echo
+                    echo "Invalid size. Please enter a value between 1 and $remaining_gb GB."
+                    sleep 3
+                    echo | tee -a "${LOG_FILE}"
+                    continue
+                fi
+            elif [[ "$answer" =~ ^[Nn]$ ]]; then
+                reserve_gb="0"
+            else
+                echo
+                echo -n "Invalid input. Please enter y or n."
+                sleep 3
+                echo | tee -a "${LOG_FILE}"
+                continue
+            fi
+        else
+            reserve_gb="0"
+        fi
+
+        allocated_mb=$(( (music_gb + pops_gb + contents_gb + reserve_gb) * 1024 ))
+        SIZE_MB=$(( SIZE_CHECK / 1024 / 1024 ))
+        APA_MiB=$(( allocated_mb + used + 6400 +128 ))
+        DIFF_MB=$(( SIZE_MB - APA_MiB - 32 ))
+
+        # Convert to GiB for display (1 GiB = 1024 MiB) with 2 decimal places
+        OPL_GB=$(awk "BEGIN { printf \"%.2f\", ${DIFF_MB}/1024 }")
+
+        if awk "BEGIN {exit !($OPL_GB >= 1000)}"; then
+            # Store difference as TB with one decimal
+            difference="$(awk "BEGIN {printf \"%.1f TB\", $OPL_GB/1024}")"
+            # Cap at 2 TB
+            CAP=$(awk "BEGIN {print ($difference > 2.0) ? 2.0 : $difference}")
+            OPL_SIZE="${CAP} TB"
+        else
+            # Store as GB
+            OPL_SIZE="${OPL_GB} GB"
+        fi
+
         echo
         echo "The following partitions will be created:"
         echo "- OPL partition: $OPL_SIZE"
         echo "- POPS partition: $pops_gb GB"
         echo "- Music partition: $music_gb GB"
         echo "- Contents partition: $contents_gb GB"
-        echo "- Unallocated space: $unallocated_gb GB"
+        echo "- Reserved space: $reserve_gb GB"
         echo
         read -p "Do you wish to proceed? (y/n): " confirm
         if [[ "$confirm" =~ ^[Yy]$ ]]; then
             music_partition=$((music_gb * 1024))
             pops_partition=$((pops_gb * 1024))
             contents_partition=$((contents_gb * 1024))
+            reserved_space=$((reserve_gb * 1024))
             break
         fi
     done
 
     echo >> "${LOG_FILE}"
+    echo "##########################################################################" >> "${LOG_FILE}"
     echo "Music partition size: $music_partition" >> "${LOG_FILE}"
     echo "POPS partition size: $pops_partition" >> "${LOG_FILE}"
     echo "Contents partition size: $contents_partition" >> "${LOG_FILE}"
+    echo "Reserved space: $reserved_space MB" >> "${LOG_FILE}"
+    echo "Total APA size: $APA_MiB MB" >> "${LOG_FILE}"
+    echo "OPL partition size: $DIFF_MB MB" >> "${LOG_FILE}"
+    echo "##########################################################################"  >> "${LOG_FILE}"
 
     COMMANDS="device ${DEVICE}\n"
     COMMANDS+="mkpart __linux.8 ${music_partition}M EXT2\n"
     COMMANDS+="mkpart __.POPS ${pops_partition}M PFS\n"
     COMMANDS+="mkpart __contents ${contents_partition}M PFS\n"
-    COMMANDS+="mkpart +OPL 128M PFS\n"
     COMMANDS+="exit"
     echo "Creating partitions..." >>"${LOG_FILE}"
     PFS_COMMANDS
 fi
 
 echo | tee -a "${LOG_FILE}"
-echo -n "Installing PSBBN..." | tee -a "${LOG_FILE}"
+if [ "$MODE" = "update" ]; then
+    UPDATE_SPLASH
+    echo -n "Updating PSBBN..." | tee -a "${LOG_FILE}"
+else
+    echo -n "Installing PSBBN..." | tee -a "${LOG_FILE}"
+fi
+
 mapper_probe
 mount_cfs
 mount_pfs
 
 if [ "$MODE" = "install" ]; then
-    sudo mkdir -p "${STORAGE_DIR}/__linux.8/MusicCh/contents"
-    sudo mkdir -p "${STORAGE_DIR}/__common"/{POPS,"Your Saves"}
-    sudo cp "${ASSETS_DIR}/POPStarter/eng"/{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} "${STORAGE_DIR}/__common/POPS/"
+    sudo mkdir -p "${STORAGE_DIR}/__linux.8/MusicCh/contents" || error_msg "Failed to create __linux.8/MusicCh/contents"
+    mkdir -p "${STORAGE_DIR}/__common"/{POPS,"Your Saves"} 2>> "${LOG_FILE}"
+    sudo cp "${ASSETS_DIR}/POPStarter/eng"/{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} "${STORAGE_DIR}/__common/POPS/" 2>> "${LOG_FILE}"
 fi
 
 ALL_ERRORS=$(sudo tar zxpf "${PSBBN_PATCH}" -C "${STORAGE_DIR}/" 2>&1 >/dev/null)
@@ -747,21 +900,135 @@ if [ -n "$FILTERED_ERRORS" ]; then
     error_msg "Failed to install PSBBN." "See ${LOG_FILE} for details."
 fi
 
-if [ "$MODE" = "update" ]; then
-    sudo tee -a "${STORAGE_DIR}/__linux.1/etc/rc.d/rc.sysinit" >/dev/null <<'EOF'
-BUTTON=`cat /proc/ps2pad | awk '$1==0 { print $5; }'`
-[ "$BUTTON" != "" -a "$BUTTON" != "FFFF" ] && /sbin/akload -r /boot/linux
-EOF
+cp -f "${ASSETS_DIR}/osdmenu/"{hosdmenu.elf,version.txt} "${STORAGE_DIR}/__system/osdmenu/" 2>> "${LOG_FILE}" || error_msg "Failed to copy hosdmenu.elf."
+
+# Check if OSDMBR.CNF exists
+if [ ! -f "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" ]; then
+    if sudo "${HDL_DUMP}" toc ${DEVICE} | grep -q "__linux.3"; then
+        cp -f "${ASSETS_DIR}/kernel/ps2-linux-"{ntsc,vga} "${STORAGE_DIR}/__system/p2lboot/" 2>> "${LOG_FILE}" || error_msg "Failed to copy kernel files."
+        cat > "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" <<EOL || error_msg "Error" "Failed to write OSDMBR.CNF."
+boot_auto = \$PSBBN
+boot_cross = \$HOSDSYS
+boot_circle = \$PSBBN
+boot_circle_arg1 = --kernel
+boot_circle_arg2 = pfs0:/p2lboot/ps2-linux-ntsc
+boot_circle_arg3 = -noflags
+boot_square =
+boot_triangle =
+boot_start = 
+cdrom_skip_ps2logo = 1
+cdrom_disable_gameid = 0
+cdrom_use_dkwdrv = 0
+ps1drv_enable_fast = 0
+ps1drv_enable_smooth = 0
+ps1drv_use_ps1vn = 1
+app_gameid = 1
+prefer_bbn = 1
+osd_language = $LANG
+EOL
+    else
+        cat > "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" <<EOL || error_msg "Error" "Failed to write OSDMBR.CNF."
+boot_auto = \$PSBBN
+boot_cross = \$HOSDSYS
+boot_circle = 
+boot_square =
+boot_triangle = 
+boot_start = 
+cdrom_skip_ps2logo = 1
+cdrom_disable_gameid = 0
+cdrom_use_dkwdrv = 0
+ps1drv_enable_fast = 0
+ps1drv_enable_smooth = 0
+ps1drv_use_ps1vn = 1
+app_gameid = 1
+prefer_bbn = 1
+osd_language = $LANG
+EOL
+    fi
 fi
 
-BOOTSTRAP
+# Check if OSDMENU.CNF exists
+if [ ! -f "${STORAGE_DIR}/__sysconf/osdmenu/OSDMENU.CNF" ]; then
+    echo "OSDMENU.CNF not found — creating default version." >> "${LOG_FILE}"
+    cat > "${STORAGE_DIR}/__sysconf/osdmenu/OSDMENU.CNF" <<'EOL' || error_msg "Error" "Failed to write OSDMBR.CNF."
+boot_auto = $HOSDSYS
+hacked_OSDSYS = 1
+OSDSYS_video_mode = AUTO
+OSDSYS_Inner_Browser = 0
+OSDSYS_Browser_Launcher = 1
+OSDSYS_selected_color = 0x10,0x80,0xE0,0x80
+OSDSYS_unselected_color = 0x33,0x33,0x33,0x80
+OSDSYS_scroll_menu = 1
+OSDSYS_menu_x = 320
+OSDSYS_menu_y = 110
+OSDSYS_enter_x = 30
+OSDSYS_enter_y = -1
+OSDSYS_version_x = -1
+OSDSYS_version_y = -1
+OSDSYS_cursor_max_velocity = 1500
+OSDSYS_cursor_acceleration = 150
+OSDSYS_left_cursor =
+OSDSYS_right_cursor =
+OSDSYS_menu_top_delimiter =
+OSDSYS_menu_bottom_delimiter =
+OSDSYS_num_displayed_items = 5
+OSDSYS_Skip_MC = 1
+OSDSYS_Skip_HDD = 1
+OSDSYS_Skip_Disc = 0
+OSDSYS_Skip_Logo = 1
+cdrom_skip_ps2logo = 1
+cdrom_disable_gameid = 0
+cdrom_use_dkwdrv = 0
+ps1drv_enable_fast = 0
+ps1drv_enable_smooth = 0
+ps1drv_use_ps1vn = 1
+app_gameid = 1
+EOL
+else
+    echo "OSDMENU.CNF already exists — skipping." >> "${LOG_FILE}"
+fi
+
+if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
+        echo "Cleaning up files from older installs:" >> "${LOG_FILE}"
+        rm -rf "${STORAGE_DIR}/__system/osd110u" 2>> "${LOG_FILE}"
+        rm -f "${STORAGE_DIR}/__system/p2lboot/PSBBN.ELF" 2>> "${LOG_FILE}"
+        rm -rf "${STORAGE_DIR}/__sysconf/PS2BBL" 2>> "${LOG_FILE}"
+        
+        mkdir -p "${SCRIPTS_DIR}/tmp"
+        sudo cp "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0" "${SCRIPTS_DIR}/tmp" >> "${LOG_FILE}" 2>&1
+        TARGET="${SCRIPTS_DIR}/tmp/shortcut_0"
+
+        # If TARGET exists, remove lines ending with PP.LAUNCHELF, PP.HOSDMENU and PP.LAUNCHDISC
+        if [ -f "$TARGET" ]; then
+            sudo sed -i '/PP\.LAUNCHELF$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+            sudo sed -i '/PP\.HOSDMENU\.HIDDEN$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+            sudo sed -i '/PP\.LAUNCHDISC$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+        fi
+
+        sudo cp -f "${TARGET}" "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0"  >> "${LOG_FILE}" 2>&1
+fi
+
+UNMOUNT_ALL
+
+if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="rmpart PP.LAUNCHDISC\n"
+    COMMANDS+="rmpart PP.HDDOSD\n"
+    COMMANDS+="rmpart PP.LAUNCHELF\n"
+    COMMANDS+="rmpart PP.BBNAVIGATOR\n"
+    COMMANDS+="exit"
+    echo -e "$COMMANDS" | sudo "${PFS_SHELL}" >> "${LOG_FILE}" 2>&1
+fi
+
 clean_up
+BOOTSTRAP
+
 echo | tee -a "${LOG_FILE}"
 
+################################### APA-Jail code by Berion ###################################
 if [ "$MODE" = "install" ]; then
     echo | tee -a "${LOG_FILE}"
     echo -n "Running APA-Jail..." | tee -a "${LOG_FILE}"
-    ################################### APA-Jail code by Berion ###################################
 
     # Signature injection (type A2):
     MAGIC_NUMBER="4150414A2D413200"
@@ -769,15 +1036,15 @@ if [ "$MODE" = "install" ]; then
 
     # Setting up MBR:
     {
-    echo -e ",128GiB,17\n,32MiB,17\n,,07" | sudo sfdisk ${DEVICE}
-    sudo partprobe ${DEVICE}
-    if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
-	    sudo mke2fs -t ext2 -L "RECOVERY" ${DEVICE}p2
-	    sudo "${HELPER_DIR}/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}p3
-	else
-		sleep 4
-		sudo mke2fs -t ext2 -L "RECOVERY" ${DEVICE}2
-		sudo "${HELPER_DIR}/mkfs.exfat" -c 32K -L "OPL" ${DEVICE}3
+        echo -e ",${APA_MiB}MiB,17\n,32MiB,17\n,,07" | sudo sfdisk ${DEVICE}
+        sudo partprobe ${DEVICE}
+        if [ "$(echo ${DEVICE} | grep -o /dev/loop)" = "/dev/loop" ]; then
+	        sudo mke2fs -t ext2 -L "RECOVERY" ${DEVICE}p2
+	        sudo "${MKFS_EXFAT}" -c 32K -L "OPL" ${DEVICE}p3
+	    else
+		    sleep 4
+		    sudo mke2fs -t ext2 -L "RECOVERY" ${DEVICE}2
+		    sudo "${MKFS_EXFAT}" -c 32K -L "OPL" ${DEVICE}3
         fi
     } >> "${LOG_FILE}" 2>&1
 
@@ -794,7 +1061,7 @@ if [ "$MODE" = "install" ]; then
         sudo mount ${DEVICE}2 "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
     fi
 
-    sudo dd if=${DEVICE} bs=128M count=1 status=noxfer 2>> "${LOG_FILE}" | xz -z > /tmp/apa_index.xz 2>> "${LOG_FILE}" 
+    sudo dd if=${DEVICE} bs=128M count=1 status=noxfer 2>> "${LOG_FILE}" | xz -z > /tmp/apa_index.xz 2>> "${LOG_FILE}"
     sudo cp /tmp/apa_index.xz "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
     LBA_MAX=$(sudo blockdev --getsize ${DEVICE})
     LBA_GPT_BUP=$(echo $(($LBA_MAX-33)))
@@ -802,24 +1069,45 @@ if [ "$MODE" = "install" ]; then
     sudo cp /tmp/gpt_2nd.xz "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
     sync 2>> "${LOG_FILE}"
     sudo umount -l "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
-    CHECK_PARTITIONS
-    MOUNT_OPL
-
-    if ! mkdir -p "${OPL}"/{APPS,ART,CFG,CHT,LNG,THM,VMC,CD,DVD,bbnl}; then
-        error_msg "Failed to create OPL folders."
-    fi
-
     echo | tee -a "${LOG_FILE}"
-    ###############################################################################################
-else
-    MOUNT_OPL
 fi
 
-echo "$LATEST_VERSION" > "${OPL}/version.txt"
-echo "eng" >> "${OPL}/version.txt"
+apa_checksum_fix
+
+###############################################################################################
+
+CHECK_PARTITIONS
+
+MOUNT_OPL
+
+if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
+        rm -rf "${OPL}/APPS/LAUNCHDISC" 2>> "${LOG_FILE}"
+        rm -rf "${OPL}/APPS/HDDOSD" 2>> "${LOG_FILE}"
+        rm -rf "${OPL}/APPS/LAUNCHELF" 2>> "${LOG_FILE}"
+        rm -rf "${OPL}/APPS/BBNAVIGATOR" 2>> "${LOG_FILE}"
+        rm -f "${TOOLKIT_PATH}/games/APPS/"{Launch-Disc.elf,HDD-OSD.elf,PSBBN.ELF,BOOT.ELF}
+fi
+
+if [ "$MODE" = "install" ]; then
+    mkdir -p "${OPL}"/{APPS,ART,CFG,CHT,LNG,THM,VMC,CD,DVD,bbnl} 2>>"${LOG_FILE}" || error_msg "Failed to create OPL folders."
+    echo "$LATEST_VERSION" > "${OPL}/version.txt"
+    echo "APA_SIZE = $APA_MiB" >> "${OPL}/version.txt"
+    echo "LANG = eng" >> "${OPL}/version.txt"
+else
+    if [[ -f "${OPL}/version.txt" ]]; then
+        sed -i "1s|.*|$LATEST_VERSION|" "${OPL}/version.txt"
+        if ! grep -q "APA_SIZE *=" "${OPL}/version.txt"; then
+            echo "APA_SIZE = 131072" >> "${OPL}/version.txt"
+        fi
+        if grep -q "^eng" "${OPL}/version.txt"; then
+            sed -i "s/^eng.*/LANG = eng/" "${OPL}/version.txt"
+        fi
+    else
+        error_msg "Error" "Failed to update version.txt."
+    fi
+fi
 
 UNMOUNT_OPL
-CHECK_PARTITIONS
 
 echo >> "${LOG_FILE}"
 echo "${TOC_OUTPUT}" >> "${LOG_FILE}"
@@ -828,12 +1116,22 @@ lsblk -p -o MODEL,NAME,SIZE,LABEL,MOUNTPOINT >> "${LOG_FILE}"
 
 echo | tee -a "${LOG_FILE}"
 if [ "$MODE" = "install" ]; then
-    echo "[✓] PSBBN successfully installed." | tee -a "${LOG_FILE}"
+    echo "[✓] PSBBN Successfully Installed!" | tee -a "${LOG_FILE}"
 else
-    echo "[✓] PSBBN successfully updated." | tee -a "${LOG_FILE}"
+    echo "================================== [✓] PSBBN Successfully Updated =================================" | tee -a "${LOG_FILE}"
     echo
-    echo "Now connect the drive to your PS2 console and boot into PSBBN to complete the installation."
-    echo "If you had PS2BBL installed before, you'll need to reinstall it from the Extras menu."
+    if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "2.11"; then
+        echo "  Now connect the drive to your PS2 console and boot into PSBBN to complete the installation."
+        echo
+    fi
+
+    if [ "$MODE" = "update" ] && [ "$LATEST_VERSION" = "4.0.0" ]; then
+        echo "  It's recommended to rerun the Game Installer and choose \"Add Additional Games and Apps\" to"
+        echo "  improve game startup times and add apps to the System Menu in HOSDMenu."
+        echo
+    fi
+    echo "  If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
+    echo "===================================================================================================="
 fi
 echo
 read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty

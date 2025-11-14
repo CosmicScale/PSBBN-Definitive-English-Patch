@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export LC_ALL=en_US.UTF-8
+export LC_ALL=C.UTF-8
 
 clear
 
@@ -13,6 +13,29 @@ TMP_DIR="${SCRIPTS_DIR}/tmp"
 OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/media.log"
 CONFIG_FILE="${TOOLKIT_PATH}/scripts/media.cfg"
+arch="$(uname -m)"
+
+if [[ "$arch" = "x86_64" ]]; then
+    # x86-64
+    CUE2POPS="${HELPER_DIR}/cue2pops"
+    HDL_DUMP="${HELPER_DIR}/HDL Dump.elf"
+    MKFS_EXFAT="${HELPER_DIR}/mkfs.exfat"
+    PFS_FUSE="${HELPER_DIR}/PFS Fuse.elf"
+    PFS_SHELL="${HELPER_DIR}/PFS Shell.elf"
+    APA_FIXER="${HELPER_DIR}/PS2 APA Header Checksum Fixer.elf"
+    PSU_EXTRACT="${HELPER_DIR}/PSU Extractor.elf"
+    SQLITE="${HELPER_DIR}/sqlite"
+elif [[ "$arch" = "aarch64" ]]; then
+    # ARM64
+    CUE2POPS="${HELPER_DIR}/aarch64/cue2pops"
+    HDL_DUMP="${HELPER_DIR}/aarch64/HDL Dump.elf"
+    MKFS_EXFAT="${HELPER_DIR}/aarch64/mkfs.exfat"
+    PFS_FUSE="${HELPER_DIR}/aarch64/PFS Fuse.elf"
+    PFS_SHELL="${HELPER_DIR}/aarch64/PFS Shell.elf"
+    APA_FIXER="${HELPER_DIR}/aarch64/PS2 APA Header Checksum Fixer.elf"
+    PSU_EXTRACT="${HELPER_DIR}/aarch64/PSU Extractor.elf"
+    SQLITE="${HELPER_DIR}/aarch64/sqlite"
+fi
 
 PARTITION_NAMES=("__linux.7" "__linux.8")
 
@@ -29,7 +52,7 @@ elif [[ -f "$CONFIG_FILE" && -s "$CONFIG_FILE" ]]; then
     fi
 fi
 
-MUSIC_SPLASH() {
+MEDIA_SPLASH() {
   clear
   cat << "EOF"
                 ___  ___         _ _         _____          _        _ _           
@@ -38,6 +61,9 @@ MUSIC_SPLASH() {
                 | |\/| |/ _ \/ _` | |/ _` |   | || '_ \/ __| __/ _` | | |/ _ \ '__|
                 | |  | |  __/ (_| | | (_| |  _| || | | \__ \ || (_| | | |  __/ |   
                 \_|  |_/\___|\__,_|_|\__,_|  \___/_| |_|___/\__\__,_|_|_|\___|_|
+
+
+
 EOF
 }
 
@@ -71,11 +97,8 @@ EOF
 
 # Function to display the menu
 display_menu() {
-    MUSIC_SPLASH
+    MEDIA_SPLASH
     cat << "EOF"
- 
-
-
                                     1) Install Music
                                     
                                     4) Set Media Location
@@ -143,19 +166,55 @@ prevent_sleep_stop() {
 }
 
 clean_up() {
-	for PARTITION_NAME in "${PARTITION_NAMES[@]}"; do
-    	MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
-    	sudo umount "${MOUNT_PATH}" 2>/dev/null
-  	done
-  	if [ -n "${DEVICE_CUT}" ]; then
-    	existing_maps=$(sudo dmsetup ls | grep -o "^${DEVICE_CUT}-[^ ]*" || true)
-    	for map in $existing_maps; do
-      		sudo dmsetup remove "$map" 2>/dev/null
-    	done
-  	fi
+    failure=0
 
-    sudo rm -rf "${TMP_DIR}" 2>>"$LOG_FILE" \
-        || { error_msg "Cleanup failed. See ${LOG_FILE} for details."; exit 1; }
+    sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1
+
+    submounts=$(findmnt -nr -o TARGET | grep "^${STORAGE_DIR}/" | sort -r)
+
+    if [ -n "$submounts" ]; then
+        echo "Found mounts under ${STORAGE_DIR}, attempting to unmount..." >> "$LOG_FILE"
+        while read -r mnt; do
+            [ -z "$mnt" ] && continue
+            echo "Unmounting $mnt..." >> "$LOG_FILE"
+            sudo umount "$mnt" >> "${LOG_FILE}" 2>&1 || failure=1
+        done <<< "$submounts"
+    fi
+
+    if [ -d "${STORAGE_DIR}" ]; then
+    submounts=$(findmnt -nr -o TARGET | grep "^${STORAGE_DIR}/" | sort -r)
+        if [ -z "$submounts" ]; then
+            echo "Deleting ${STORAGE_DIR}..." >> "$LOG_FILE"
+            sudo rm -rf "${STORAGE_DIR}" || { echo "[X] Error: Failed to delete ${STORAGE_DIR}" >> "$LOG_FILE"; failure=1; }
+            echo "Deleted ${STORAGE_DIR}." >> "$LOG_FILE"
+        else
+            echo "Some mounts remain under ${STORAGE_DIR}, not deleting." >> "$LOG_FILE"
+            failure=1
+        fi
+    else
+        echo "Directory ${STORAGE_DIR} does not exist." >> "$LOG_FILE"
+    fi
+
+    # Get the device basename
+    DEVICE_CUT=$(basename "$DEVICE")
+
+    # List all existing maps for this device
+    existing_maps=$(sudo dmsetup ls 2>/dev/null | awk -v dev="$DEVICE_CUT" '$1 ~ "^"dev"-" {print $1}')
+
+    # Force-remove each existing map
+    for map_name in $existing_maps; do
+        echo "Removing existing mapper $map_name..." >> "$LOG_FILE"
+        if ! sudo dmsetup remove -f "$map_name" 2>/dev/null; then
+            echo "Failed to delete mapper $map_name." >> "$LOG_FILE"
+            failure=1
+        fi
+    done
+
+    # Abort if any failures occurred
+    if [ "$failure" -ne 0 ]; then
+        error_msg "[X] Error: Cleanup error(s) occurred. Aborting."
+        return 1
+    fi
 }
 
 exit_script() {
@@ -190,7 +249,7 @@ detect_drive() {
     DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
 
     if [[ -z "$DEVICE" ]]; then
-        error_msg "Unable to detect the PS2 drive. Please ensure the drive is properly connected." "If this is your first time using the installer, select 'Install PSBBN' from the main menu."
+        error_msg "Unable to detect the PS2 drive. Please ensure the drive is properly connected." "You must install PSBBN first before insalling media."
         exit 1
     fi
 
@@ -211,7 +270,7 @@ detect_drive() {
         fi
     done
 
-    if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc $DEVICE >> /dev/null 2>&1; then
+    if ! sudo "${HDL_DUMP}" toc $DEVICE >> /dev/null 2>&1; then
         error_msg "APA partition is broken on ${DEVICE}."
         exit 1
     else
@@ -249,13 +308,33 @@ UNMOUNT_OPL() {
     fi
 }
 
+CHECK_PARTITIONS() {
+    TOC_OUTPUT=$(sudo "${HDL_DUMP}" toc "${DEVICE}")
+    STATUS=$?
+
+    if [ $STATUS -ne 0 ]; then
+        error_msg "APA partition is broken on ${DEVICE}. Install failed."
+    fi
+
+    # List of required partitions
+    required=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.8 __linux.9 __contents __system __sysconf __.POPS __common)
+
+    # Check all required partitions
+    for part in "${required[@]}"; do
+        if ! echo "$TOC_OUTPUT" | grep -Fq "$part"; then
+            error_msg "This feature requires PSBBN." "Some partitions are missing on ${DEVICE}. See log for details."
+            exit 1
+        fi
+    done
+}
+
 mapper_probe() {
   DEVICE_CUT=$(basename "${DEVICE}")
   existing_maps=$(sudo dmsetup ls | grep -o "^${DEVICE_CUT}-[^ ]*" || true)
   for map in $existing_maps; do
     sudo dmsetup remove "$map" 2>/dev/null
   done
-  sudo "${HELPER_DIR}/HDL Dump.elf" toc "${DEVICE}" --dm | sudo dmsetup create --concise
+  sudo "${HDL_DUMP}" toc "${DEVICE}" --dm | sudo dmsetup create --concise
   MAPPER="/dev/mapper/${DEVICE_CUT}-"
 }
 
@@ -341,15 +420,18 @@ EOF
   get_display_path
 
   cat << EOF
+==================================== Using the Music Installer ====================================
+
 Supported formats:
 The music installer supports mp3, m4a, flac, and ogg files.
 
-Music location:
 Place your music files in:
 ${display_path}music
 
 Note:
 If you encounter any problems, please initialise the music partition from the Media Installer menu.
+
+====================================================================================================
 EOF
 
   echo
@@ -374,7 +456,7 @@ EOF
     echo "Converting music..." >> "${LOG_FILE}"
 
     if [ -f "${STORAGE_DIR}/__linux.7/database/sqlite/music.db" ]; then
-      "${HELPER_DIR}/sqlite" "${STORAGE_DIR}/__linux.7/database/sqlite/music.db" .dump > "${TMP_DIR}/music_dump.sql"
+      "${SQLITE}" "${STORAGE_DIR}/__linux.7/database/sqlite/music.db" .dump > "${TMP_DIR}/music_dump.sql"
     fi
 
     if ! sudo "${SCRIPTS_DIR}/venv/bin/python" "${HELPER_DIR}/music-installer.py" "${MEDIA_DIR}/music"; then
@@ -385,7 +467,7 @@ EOF
       echo "[✓] Music successfully converted." >> "${LOG_FILE}"
     fi
 
-    if ! "${HELPER_DIR}/sqlite" "${TMP_DIR}/music.db" < "${TMP_DIR}/music_reconstructed.sql"; then
+    if ! "${SQLITE}" "${TMP_DIR}/music.db" < "${TMP_DIR}/music_reconstructed.sql"; then
       error_msg "Failed to create music.db" | tee -a "${LOG_FILE}"
       return 1
     fi
@@ -395,7 +477,7 @@ EOF
       return 1
     fi
 
-    clean_up
+    clean_up || return 1
     echo
     echo "[✓] Music successfully converted and database updated." | tee -a "${LOG_FILE}"
     echo
@@ -544,7 +626,7 @@ option_five() {
     }
   fi
 
-  clean_up
+  clean_up || return 1
 
   echo
   echo
@@ -581,11 +663,14 @@ echo >> "${LOG_FILE}"
 echo "Path: $path_arg" >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 
+MEDIA_SPLASH
+
 if ! sudo rm -rf "${STORAGE_DIR}"; then
     error_msg "Failed to remove $STORAGE_DIR folder."
 fi
 
 detect_drive
+CHECK_PARTITIONS
 MOUNT_OPL
 
 psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)

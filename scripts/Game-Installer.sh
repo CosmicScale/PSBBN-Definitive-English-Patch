@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-export LC_ALL=en_US.UTF-8
+export LC_ALL=C.UTF-8
 
-version_check="2.10"
+version_check="4.0.0"
 
 # Set paths
 TOOLKIT_PATH="$(pwd)"
@@ -22,11 +22,42 @@ MISSING_ICON="${LOGS_DIR}/missing-icon.log"
 MISSING_VMC="${LOGS_DIR}/missing-vmc.log"
 GAMES_PATH="${TOOLKIT_PATH}/games"
 CONFIG_FILE="${SCRIPTS_DIR}/gamepath.cfg"
-
+STORAGE_DIR="${SCRIPTS_DIR}/storage"
 OPL="${SCRIPTS_DIR}/OPL"
 PS1_LIST="${SCRIPTS_DIR}/tmp/ps1.list"
 PS2_LIST="${SCRIPTS_DIR}/tmp/ps2.list"
 ALL_GAMES="${SCRIPTS_DIR}/tmp/master.list"
+ELF_LIST="${SCRIPTS_DIR}/tmp/elf.list"
+SAS_LIST="${SCRIPTS_DIR}/tmp/sas.list"
+APPS_LIST="${SCRIPTS_DIR}/tmp/app.list"
+OSDMENU_CNF="${SCRIPTS_DIR}/tmp/OSDMENU.CNF"
+arch="$(uname -m)"
+
+if [[ "$arch" = "x86_64" ]]; then
+    # x86-64
+    CUE2POPS="${HELPER_DIR}/cue2pops"
+    HDL_DUMP="${HELPER_DIR}/HDL Dump.elf"
+    MKFS_EXFAT="${HELPER_DIR}/mkfs.exfat"
+    PFS_FUSE="${HELPER_DIR}/PFS Fuse.elf"
+    PFS_SHELL="${HELPER_DIR}/PFS Shell.elf"
+    APA_FIXER="${HELPER_DIR}/PS2 APA Header Checksum Fixer.elf"
+    PSU_EXTRACT="${HELPER_DIR}/PSU Extractor.elf"
+    SQLITE="${HELPER_DIR}/sqlite"
+elif [[ "$arch" = "aarch64" ]]; then
+    # ARM64
+    CUE2POPS="${HELPER_DIR}/aarch64/cue2pops"
+    HDL_DUMP="${HELPER_DIR}/aarch64/HDL Dump.elf"
+    MKFS_EXFAT="${HELPER_DIR}/aarch64/mkfs.exfat"
+    PFS_FUSE="${HELPER_DIR}/aarch64/PFS Fuse.elf"
+    PFS_SHELL="${HELPER_DIR}/aarch64/PFS Shell.elf"
+    APA_FIXER="${HELPER_DIR}/aarch64/PS2 APA Header Checksum Fixer.elf"
+    PSU_EXTRACT="${HELPER_DIR}/aarch64/PSU Extractor.elf"
+    SQLITE="${HELPER_DIR}/aarch64/sqlite"
+fi
+
+PFS_PARTITIONS=("__common" "__system" "__sysconf" "__.POPS" )
+LINUX_PARTITIONS=("__linux.7" )
+
 
 path_arg="$1"
 
@@ -87,6 +118,8 @@ prevent_sleep_stop() {
 }
 
 clean_up() {
+    failure=0
+
     # Remove unwanted directories inside $ICONS_DIR except 'art' and 'ico'
     for item in "$ICONS_DIR"/*; do
         if [ -d "$item" ] && [[ $(basename "$item") != art && $(basename "$item") != ico ]]; then
@@ -103,19 +136,40 @@ clean_up() {
 
     # Remove listed files
     sudo rm -rf "${ARTWORK_DIR}/tmp" "${ICONS_DIR}/ico/tmp" "${SCRIPTS_DIR}/tmp" 2>>"$LOG_FILE" \
-        || { echo "Error: Cleanup failed. See ${LOG_FILE} for details."; exit 1; }
+        || { echo "[X] Error: Failed to remove tmp files." >> "${LOG_FILE}"; failure=1; }
+
+    unmount_apa
+
+    if [ -d "${STORAGE_DIR}" ]; then
+        submounts=$(findmnt -nr -o TARGET | grep "^${STORAGE_DIR}/")
+
+        if [ -z "$submounts" ]; then
+            echo "Deleting ${STORAGE_DIR}..." >> "$LOG_FILE"
+            sudo rm -rf "${STORAGE_DIR}" || { echo "[X] Error: Failed to delete ${STORAGE_DIR}" >> "$LOG_FILE"; failure=1; }
+            echo "Deleted ${STORAGE_DIR}." >> "$LOG_FILE"
+        else
+            echo "Some mounts remain under ${STORAGE_DIR}, not deleting." >> "$LOG_FILE"
+            failure=1
+        fi
+    else
+        echo "Directory ${STORAGE_DIR} does not exist." >> "$LOG_FILE"
+    fi
+
+    # Abort if any failures occurred
+    if [ "$failure" -ne 0 ]; then
+        error_msg "Error" "Cleanup error(s) occurred. Aborting."
+    fi
+
 }
 
 exit_script() {
     prevent_sleep_stop
+    
     clean_up
     if [[ -n "$path_arg" ]]; then
         cp "${LOG_FILE}" "${path_arg}" > /dev/null 2>&1
     fi
 }
-
-trap 'echo; exit 130' INT
-trap exit_script EXIT
 
 error_msg() {
     type=$1
@@ -136,8 +190,7 @@ error_msg() {
     [ -n "$error_4" ] && echo "$error_4" | tee -a "${LOG_FILE}"
     echo
     if [ "$type" = "Error" ]; then
-        sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1
-        read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
+        read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
         echo
         exit 1;
     else
@@ -171,7 +224,7 @@ MOUNT_OPL() {
     fi
 
     # Create necessary folders if they don't exist
-    for folder in APPS ART CFG CHT LNG THM VMC CD DVD bbnl; do
+    for folder in APPS ART CFG CHT LNG THM VMC CD DVD; do
         dir="${OPL}/${folder}"
         [[ -d "$dir" ]] || mkdir -p "$dir" || { 
             error_msg "Error" "Failed to create $dir."
@@ -182,14 +235,50 @@ MOUNT_OPL() {
 HDL_TOC() {
     rm -f "$hdl_output"
     hdl_output=$(mktemp)
-    if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc "$DEVICE" 2>>"${LOG_FILE}" > "$hdl_output"; then
+    if ! sudo "${HDL_DUMP}" toc "$DEVICE" 2>>"${LOG_FILE}" > "$hdl_output"; then
         rm -f "$hdl_output"
         error_msg "Error" "Failed to extract list of partitions." " " "APA partition could be broken on ${DEVICE}"
     fi
 }
 
+CHECK_PARTITIONS() {
+
+    # only grab the partition name column from lines that begin with 0x0100 or 0x0001
+    mapfile -t names < <(grep -E '^0x0[01][0-9A-Fa-f]{2}' "${hdl_output}" | awk '{print $NF}')
+
+    has_all() {
+        local targets=("$@")
+        for t in "${targets[@]}"; do
+            local found=false
+            for n in "${names[@]}"; do
+                if [[ "$n" == "$t" ]]; then
+                    found=true
+                    break
+                fi
+            done
+            # If any required partition is missing, return failure immediately
+            $found || return 1
+        done
+        return 0  # all partitions found
+        }
+
+    psbbn_parts=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.8 __linux.9 __contents)
+    hosd_parts=(__system __sysconf __.POPS __common)
+
+    if has_all "${psbbn_parts[@]}"; then
+        echo "PSBBN Detected" >> "${LOG_FILE}"
+        OS="PSBBN"
+    elif has_all "${hosd_parts[@]}"; then
+        echo "HOSDMenu Detected" >> "${LOG_FILE}"
+        OS="HOSD"
+    else
+        error_msg "Error" "Failed to detect PSBBN or HOSDMenu on ${DEVICE}."
+    fi
+
+}
+
 PFS_COMMANDS() {
-PFS_COMMANDS=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1)
+PFS_COMMANDS=$(echo -e "$COMMANDS" | sudo "${PFS_SHELL}" >> "${LOG_FILE}" 2>&1)
 if echo "$PFS_COMMANDS" | grep -q "Exit code is"; then
     error_msg "Error" "PFS Shell returned an error. See ${LOG_FILE}"
 fi
@@ -205,197 +294,9 @@ process_psu_files() {
             [ -e "$file" ] || continue  # Skip if no PSU files exist
 
             echo "Extracting $file..."
-            "${HELPER_DIR}/PSU Extractor.elf" "$file" >> "${LOG_FILE}" 2>&1
+            "${PSU_EXTRACT}" "$file" >> "${LOG_FILE}" 2>&1
         done
     fi
-}
-
-POPS_SIZE_CKECK() {
-
-    # Get total size of VCD files only on PC
-    LOCAL_SIZE=0
-    while IFS= read -r file; do
-        if [[ -f "$POPS_FOLDER/$file" ]]; then
-            size=$(du --block-size=1M "$POPS_FOLDER/$file" | cut -f1)
-            if [ "${PIPESTATUS[0]}" -ne 0 ]; then
-                error_msg "Error" "Failed to calclate the size of local .VCD files. See ${LOG_FILE}"
-            fi
-            LOCAL_SIZE=$((LOCAL_SIZE + size))
-        fi
-    done <<< "$files_only_in_local"
-
-    # Get total size of VCD files on PS2 drive
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="mount __.POPS\n"
-    COMMANDS+="ls -l\n"
-    COMMANDS+="umount\n"
-    COMMANDS+="exit"
-    ps1_size=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" 2>/dev/null)
-    if echo "$ps1_size" | grep -q "Exit code is"; then
-        echo "$ps1_size" >> "${LOG_FILE}"
-        error_msg "Error" "PFS Shell returned an error. See ${LOG_FILE}"
-    fi
-    
-    ps1_size=$(echo "$ps1_size" | grep -iE "\.vcd$" | sort)
-
-    # Sum the total size in bytes
-    REMOTE_SIZE=$(echo "$ps1_size" | awk '{sum += $2} END {print sum}')
-
-    # Round up to MB and MiB
-    remote_mb=$(awk -v size="$REMOTE_SIZE" 'BEGIN {printf "%d", (size + 1000000 - 1) / 1000000}')
-
-    POPS_SIZE=$((remote_mb + LOCAL_SIZE))
-
-    echo | tee -a "${LOG_FILE}"
-    echo "Total size of PS1 games: $POPS_SIZE MB" | tee -a "${LOG_FILE}"
-
-    # Get the POPS partition size in MB
-
-    HDL_TOC
-    POPS_PARTITION=$(grep '__\.POPS' "$hdl_output" | awk '{print $4}' | grep -oE '[0-9]+')
-
-    echo "Available space: ${POPS_PARTITION} MB"| tee -a "${LOG_FILE}"
-
-    # Check if POPS_SIZE is greater than POPS_PARTITION - 128
-    THRESHOLD=$((POPS_PARTITION - 128))
-
-    if [ "$POPS_SIZE" -gt "$THRESHOLD" ]; then
-        error_msg "Error" "Total size of PS1 games is ${POPS_SIZE} MB, exceeds available space of ${THRESHOLD} MB." " " "Remove some VCD files from the local POPS folder and try again."
-    fi
-}
-
-POPS_SYNC() {
-    echo | tee -a "${LOG_FILE}"
-    echo "Preparing to $INSTALL_TYPE PS1 games..." | tee -a "${LOG_FILE}"
-
-    rm -f "$POPS_FOLDER"/*.[eE][lL][fF] 2>> "${LOG_FILE}"
-
-    # Generate the local file list directly in a variable
-    local_files=$( { ls -1 "$POPS_FOLDER" | grep -Ei '\.VCD$' | sort; } 2>> "${LOG_FILE}" )
-    if [ "${PIPESTATUS[0]}" -ne 0 ]; then
-        error_msg "Error" "Failed to create list of local .VCD files. See ${LOG_FILE}"
-    fi
-
-    # Build the commands for PFS Shell
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="mount __.POPS\n"
-    COMMANDS+="ls\n"
-    COMMANDS+="umount\n"
-    COMMANDS+="exit"
-
-    # Get the PS1 file list directly from PFS Shell output, filtered and sorted
-    ps1_files=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" 2>/dev/null)
-    if echo "$ps1_files" | grep -q "Exit code is"; then
-        echo "$ps1_files" >> "${LOG_FILE}"
-        error_msg "Error" "PFS Shell returned an error. See ${LOG_FILE}"
-    fi
-    
-    ps1_files=$(echo "$ps1_files" | grep -iE "\.vcd$" | sort)
-    
-
-    if [ "$INSTALL_TYPE" = "copy" ] && [ -f "${OPL}/ps1.list" ]; then
-
-        # Create an array of POPS files for easy comparison
-        mapfile -t pops_array < <(echo "$ps1_files")
-
-        # Initialize a temporary file
-        temp_list="${SCRIPTS_DIR}/tmp/ps1.list.tmp"
-
-        # Track whether any POPS file is missing from ps1.list
-        missing_from_list=false
-
-        while IFS= read -r line; do
-            vcd_file=$(echo "$line" | awk -F '|' '{print $5}')
-            if printf '%s\n' "${pops_array[@]}" | grep -Fxq "$vcd_file"; then
-                echo "$line" >> "$temp_list"
-            fi
-        done < "${OPL}/ps1.list"
-
-        # Check if any file in __.POPS is missing from ps1.list
-        for pops_file in "${pops_array[@]}"; do
-            if ! grep -Fq "|$pops_file" "${OPL}/ps1.list"; then
-                missing_from_list=true
-                break
-            fi
-        done
-
-        if $missing_from_list; then
-            echo "A file in __.POPS is missing from ps1.list — deleting ps1.list"
-            rm -f "${OPL}/ps1.list"
-        else
-            [ -f "$temp_list" ] && ! cp "$temp_list" "${OPL}/ps1.list" 2>>"${LOG_FILE}" && error_msg "Error" "Failed to copy $temp_list to ${OPL}/ps1.list"
-        fi
-    fi
-
-    # Compute differences and store them in variables
-    files_only_in_local=$(comm -23 <(echo "$local_files") <(echo "$ps1_files"))
-
-    if [ "$INSTALL_TYPE" = "sync" ] || [ ! -f "${OPL}/ps1.list" ]; then
-        files_only_in_ps2=$(comm -13 <(echo "$local_files") <(echo "$ps1_files"))
-        if [ "$INSTALL_TYPE" != "sync" ] && [ -n "$files_only_in_ps2" ]; then
-            error_msg "Warning" "Could not find ps1.list. PS1 games will be synced instead."
-        fi
-    fi
-
-    cd "$POPS_FOLDER" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to POPS folder."
-
-    # Delete PS1 VCDs
-    if [ -n "$files_only_in_ps2" ]; then
-        echo | tee -a "${LOG_FILE}"
-        echo "Deleteing PS1 games:" | tee -a "${LOG_FILE}"
-        echo "$files_only_in_ps2" | tee -a "${LOG_FILE}"
-
-        COMMANDS="device ${DEVICE}\n"
-        COMMANDS+="mount __.POPS\n"
-        # Add delete commands for files_only_in_ps2
-        if [ -n "$files_only_in_ps2" ]; then
-            while IFS= read -r file; do
-                COMMANDS+="rm \"$file\"\n"
-            done <<< "$files_only_in_ps2"
-        fi
-
-        COMMANDS+="umount\n"
-        COMMANDS+="exit"
-
-        # Execute the combined commands with PFS Shell
-        PFS_COMMANDS
-    else
-        if [ "$INSTALL_TYPE" = "sync" ]; then
-            echo | tee -a "${LOG_FILE}"
-            echo "No PS1 games to delete." | tee -a "${LOG_FILE}"
-        fi
-    fi
-
-    # Copy PS1 VCDs
-    if [ -z "$files_only_in_local" ]; then
-        echo | tee -a "${LOG_FILE}"
-        echo "No PS1 games to copy." | tee -a "${LOG_FILE}"
-    else
-        POPS_SIZE_CKECK
-        echo | tee -a "${LOG_FILE}"
-        echo "Copying PS1 games:" | tee -a "${LOG_FILE}"
-        echo "$files_only_in_local" | tee -a "${LOG_FILE}"
-
-        COMMANDS="device ${DEVICE}\n"
-        COMMANDS+="mount __.POPS\n"
-        # Add put commands for files_only_in_local
-        if [ -n "$files_only_in_local" ]; then
-            while IFS= read -r file; do
-                COMMANDS+="put \"$file\"\n"
-            done <<< "$files_only_in_local"
-        fi
-
-        COMMANDS+="umount\n"
-        COMMANDS+="exit"
-
-        # Execute the combined commands with PFS Shell
-        echo | tee -a "${LOG_FILE}"
-        echo -n "Copying..."
-        PFS_COMMANDS
-        echo | tee -a "${LOG_FILE}"
-        echo "[✓] PS1 games copied successfully." | tee -a "${LOG_FILE}"
-    fi
-    cd "${TOOLKIT_PATH}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to $TOOLKIT_PATH."
 }
 
 VMC_TITLE() {
@@ -614,37 +515,25 @@ CREATE_VMC() {
     cd "${TOOLKIT_PATH}"
     exec 3<&-
 
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="mount __common\n"
+    cp -rf "${POPS_DIR}/${VMC_FOLDER}/"* "${STORAGE_DIR}/__common/POPS"
+}
 
-    for dir in "$POPS_DIR"/*/; do
-        [ -d "$dir" ] || continue
-        VMC_FOLDER="$(basename "$dir")"
-        COMMANDS+="cd /\n"
-        COMMANDS+="cd POPS\n"
-        COMMANDS+="mkdir '${VMC_FOLDER}'\n"
-        COMMANDS+="cd '${VMC_FOLDER}'\n"
-        COMMANDS+="lcd '${POPS_DIR}/${VMC_FOLDER}'\n"
-        COMMANDS+="rm icon.sys\n"
-        COMMANDS+="put icon.sys\n"
-        COMMANDS+="rm list.ico\n"
-        COMMANDS+="put list.ico\n"
-        COMMANDS+="rm DISCS.TXT\n"
-        COMMANDS+="put DISCS.TXT\n"
-        COMMANDS+="rm VMCDIR.TXT\n"
-        COMMANDS+="put VMCDIR.TXT\n"
-    done
-    COMMANDS+="cd /\n"
-    COMMANDS+="cd POPS\n"
-    COMMANDS+="rm icon.sys\n"
-    COMMANDS+="rm list.ico\n"
-    COMMANDS+="rm DISCS.TXT\n"
-    COMMANDS+="rm VMCDIR.TXT\n"
-    COMMANDS+="cd /\n"
-    COMMANDS+="umount\n"
-    COMMANDS+="exit"
-    echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-    echo | tee -a "${LOG_FILE}"
+POPS_SIZE_CKECK() {
+
+    if [ "$INSTALL_TYPE" = "sync" ]; then
+        pops_size=$(df -m --output=size "${STORAGE_DIR}/__.POPS" | tail -n 1 | awk '{$1=$1};1')
+        available_mb=$((pops_size - 128))
+        needed_mb=$(find "${GAMES_PATH}/POPS" -type f -iname '*.vcd' -printf '%s\n' | awk '{s+=$1} END {print int((s + 1048575) / 1048576)}')
+
+    elif [ "$INSTALL_TYPE" = "copy" ]; then
+        pops_freespace=$(df -m "${STORAGE_DIR}/__.POPS" | awk 'NR==2 {print $5}')
+        available_mb=$((pops_freespace - 128))
+        needed_mb=$(rsync -dL --progress --ignore-existing --dry-run --out-format="%l" --include='*.VCD' --exclude='.*' --exclude='*' "${GAMES_PATH}/POPS/" "${STORAGE_DIR}/__.POPS/" | awk '{s+=$1} END {printf "%.0f\n", s / (1024*1024)}')
+    fi
+
+    if (( available_mb < needed_mb )); then
+        error_msg "Error" "Total size of PS1 games are ${needed_mb} MB, exceeds available space of ${available_mb} MB." " " "Remove some VCD files from the local POPS folder and try again."
+    fi
 }
 
 OPL_SIZE_CKECK() {
@@ -652,15 +541,15 @@ OPL_SIZE_CKECK() {
     if [ "$INSTALL_TYPE" = "sync" ]; then
         opl_size=$(df -m --output=size "${OPL}" | tail -n 1 | awk '{$1=$1};1')
         available_mb=$((opl_size - 128))
-        needed_mb=$(ls -l "${GAMES_PATH}/CD" "${GAMES_PATH}/DVD" | awk '{s+=$5} END {print int((s + 1048575) / 1048576)}')
+        needed_mb=$(find "${GAMES_PATH}/CD" "${GAMES_PATH}/DVD" -type f \( -iname '*.iso' -o -iname '*.zso' \) -printf '%s\n' | awk '{s+=$1} END {print int((s + 1048575) / 1048576)}')
 
     elif [ "$INSTALL_TYPE" = "copy" ]; then
         opl_freespace=$(df -m "${OPL}/" | awk 'NR==2 {print $4}')
         available_mb=$((opl_freespace - 128))
-        cd_size=$(rsync -rL --ignore-existing --exclude=".*" --dry-run --out-format="%l" "${GAMES_PATH}/CD/" "${OPL}/CD/" | awk '{s+=$1} END {printf "%.0f\n", s / (1024*1024)}')
-        dvd_size=$(rsync -rL --ignore-existing --exclude=".*" --dry-run --out-format="%l" "${GAMES_PATH}/DVD/" "${OPL}/DVD/" | awk '{s+=$1} END {printf "%.0f\n", s / (1024*1024)}')
+        cd_size=$(rsync -dL --progress --ignore-existing --dry-run --out-format="%l" --include='*.iso' --include='*.ISO' --include='*.zso' --include='*.ZSO' --exclude='.*' --exclude='*' "${GAMES_PATH}/CD/" "${OPL}/CD/" | awk '{s+=$1} END {printf "%.0f\n", s / (1024*1024)}')
+        dvd_size=$(rsync -dL --progress --ignore-existing --dry-run --out-format="%l" --include='*.iso' --include='*.ISO' --include='*.zso' --include='*.ZSO' --exclude='.*' --exclude='*' "${GAMES_PATH}/DVD/" "${OPL}/DVD/" | awk '{s+=$1} END {printf "%.0f\n", s / (1024*1024)}')
         needed_mb=$((cd_size + dvd_size))
-    fi 
+    fi
 
     if (( available_mb < needed_mb )); then
         error_msg "Error" "Total size of PS2 games are ${needed_mb} MB, exceeds available space of ${available_mb} MB." " " "Remove some ISO/ZSO files from the local CD/DVD folders and try again."
@@ -673,17 +562,16 @@ APA_SIZE_CHECK() {
 
     # Extract the "used" value, remove "MB" and any commas
     used=$(cat "$hdl_output" | awk '/used:/ {print $6}' | sed 's/,//; s/MB//')
-    capacity=129960
 
-    # Calculate available space (capacity - used)
-    available=$((capacity - used))
+    # Calculate available space (APA_SIZE - used)
+    available=$((APA_SIZE - used))
     pp_max=$(((available / 8) - 1))
 }
 
 app_success_check() {
     local name="$1"
     if [ $exit_code -ne 0 ]; then
-        error_msg "Error" "Failed to update $name. See "${LOG_FILE}" for details."
+        error_msg "Error" "Failed to update $name. See game-installer.log for details."
     else
         echo | tee -a "${LOG_FILE}"
         echo "[✓] Successfully updated $name." | tee -a "${LOG_FILE}"
@@ -702,6 +590,31 @@ ps2_rsync_check() {
     fi
 }
 
+BOOTSTRAP() {
+    if [ -f "${ASSETS_DIR}/osdmenu/OSDMBR.XLF" ]; then
+	    # BOOTSTRAP METADATA:
+	    BOOTSTRAP_ADDRESS_HEX_BE=0020
+	    BOOTSTRAP_SIZE=$(wc -c "${ASSETS_DIR}/osdmenu/OSDMBR.XLF" | cut -d' ' -f 1)
+	    BOOTSTRAP_SIZE_LBA=$(echo "$((${BOOTSTRAP_SIZE}/512))")
+	    BOOTSTRAP_SIZE_LBA_HEX_BE=$(printf "%04X" ${BOOTSTRAP_SIZE_LBA} | tac -rs .. | echo "$(tr -d '\n')")
+	    echo "${BOOTSTRAP_ADDRESS_HEX_BE}0000${BOOTSTRAP_SIZE_LBA_HEX_BE}0000" | xxd -r -p > /tmp/apa_header_boot.bin 2>> "${LOG_FILE}"
+
+	    # METADATA & BOOTSTRAP WRITING:
+	    # 130h = 304d
+	    sudo dd if=/tmp/apa_header_boot.bin of=${DEVICE} bs=1 seek=304 >> "${LOG_FILE}" 2>&1
+	    # 2000h * 200h = 8192d * 512d = 4194304d = 400000h
+	    sudo dd if="${ASSETS_DIR}/osdmenu/OSDMBR.XLF" of=${DEVICE} bs=1M count=1 seek=4 conv=notrunc >> "${LOG_FILE}" 2>&1
+    else
+	    error_msg "Error" "Failed to inject OSDMenu MBR."
+    fi
+}
+
+apa_checksum_fix() {
+	sudo dd if=${DEVICE} of=/tmp/apa_header_full.bin bs=512 count=2 >> "${LOG_FILE}" 2>&1
+	"${APA_FIXER}" /tmp/apa_header_full.bin | sed -n 8p | awk '{print $6}' | xxd -r -p > /tmp/apa_header_checksum.bin 2>> "${LOG_FILE}"
+	sudo dd if=/tmp/apa_header_checksum.bin of=${DEVICE} conv=notrunc >> "${LOG_FILE}" 2>&1
+}
+
 update_apps() {
     local name="$1"
     local source="$2"
@@ -713,7 +626,8 @@ update_apps() {
 
     local needs_update=false
 
-    if [[ "$name" == "NHDDL" || "$name" == "OPL" || "$name" == "POPStarter" ]]; then
+    if [[ "$name" == "NHDDL" || "$name" == "OPL" ]]; then
+        mkdir -p "${STORAGE_DIR}/__system/launcher"
         if [ -f "$source" ] && [ -f "$destination" ]; then
             local src_hash
             local dst_hash
@@ -741,6 +655,17 @@ update_apps() {
         if [[ "$(echo -e "$current_ver\n$latest_ver" | sort -V | tail -n 1)" != "$current_ver" ]]; then
             needs_update=true
         fi
+    elif [[ "$name" == "OSDMenu"  ]]; then
+        latest_ver=$(<"${ASSETS_DIR}/osdmenu/version.txt")
+        current_ver=$(<"${STORAGE_DIR}/__system/osdmenu/version.txt")
+        if [[ -n "$current_ver" ]]; then
+            echo "Current version is $current_ver" | tee -a "${LOG_FILE}"
+        fi
+
+        # Compare versions
+        if [[ "$(echo -e "$current_ver\n$latest_ver" | sort -V | tail -n 1)" != "$current_ver" ]]; then
+            needs_update=true
+        fi
     else
         local output
         output=$(rsync $options --dry-run "$source" "$destination")
@@ -751,38 +676,24 @@ update_apps() {
 
     if [ "$needs_update" = true ]; then
         echo "Updating $name..." | tee -a "${LOG_FILE}"
-        rsync $options "$source" "$destination" >>"${LOG_FILE}" 2>&1
-        exit_code=${PIPESTATUS[0]}
-        app_success_check "$name"
+        if [[ "$name" == "OSDMenu"  ]]; then
+            cp -rf "${ASSETS_DIR}/osdmenu/"{hosdmenu.elf,version.txt} "${STORAGE_DIR}/__system/osdmenu"
+            app_success_check "$name"
+            exit_code=$?
+            BOOTSTRAP
+            apa_checksum_fix
+        else
+            rsync $options "$source" "$destination" >>"${LOG_FILE}" 2>&1
+            exit_code=${PIPESTATUS[0]}
+            app_success_check "$name"
+        fi
     else
         echo "$name is already up-to-date." | tee -a "${LOG_FILE}"
     fi
 }
 
 install_pops() {
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="mount __common\n"
-    COMMANDS+="ls\n"
-    COMMANDS+="umount\n"
-    COMMANDS+="exit"
-    pops_folder=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" 2>/dev/null)
-
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="mount __common\n"
-    COMMANDS+="cd POPS\n"
-    COMMANDS+="ls\n"
-    COMMANDS+="umount\n"
-    COMMANDS+="exit"
-    pops_files=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" 2>/dev/null)
-
-
-    if echo "$pops_folder" | grep -q "POPS/"; then
-        mkfolder="NO"
-    else
-        mkfolder="YES"
-    fi
-
-    if echo "$pops_folder" | grep -q "POPS/" && echo "$pops_files" | grep -q "POPS\.ELF" && echo "$pops_files" | grep -q "IOPRP252\.IMG"; then
+    if [ -d "${STORAGE_DIR}/__common/POPS" ] && [ -f "${STORAGE_DIR}/__common/POPS/POPS.ELF" ] && [ -f "${STORAGE_DIR}/__common/POPS/IOPRP252.IMG" ]; then
         echo "POPS-binaries are already installed."| tee -a "${LOG_FILE}"
     else
         echo "Checking for POPS binaries..." | tee -a "${LOG_FILE}"
@@ -819,24 +730,17 @@ install_pops() {
 
         echo "Installing POPS binaries..." | tee -a "${LOG_FILE}"
 
-        # Copy POPS files to __common
-        COMMANDS="device ${DEVICE}\n"
-        COMMANDS+="mount __common\n"
-        if [[ "$mkfolder" == "YES" ]]; then
-            COMMANDS+="mkdir POPS\n"
+        mkdir -p "${STORAGE_DIR}/__common/POPS"
+        if cp "${ASSETS_DIR}/POPS-binaries-main/"{POPS.ELF,IOPRP252.IMG} "${STORAGE_DIR}/__common/POPS"; then
+            echo "[✓] POPS-binaries successfully installed." | tee -a "${LOG_FILE}"
+        else
+            error_msg "Warning" "One or both files (POPS.ELF, IOPRP252.IMG) are missing" "Without these files PS1 games will not be playable."
         fi
-        COMMANDS+="cd POPS\n"
-        COMMANDS+="lcd '${ASSETS_DIR}/POPS-binaries-main'\n"
-        COMMANDS+="put POPS.ELF\n"
-        COMMANDS+="put IOPRP252.IMG\n"
-        COMMANDS+="cd /\n"
-        COMMANDS+="umount\n"
-        COMMANDS+="exit"
+    fi
 
-        PFS_COMMANDS
-
-        echo "[✓] POPS-binaries successfully installed." | tee -a "${LOG_FILE}"
-
+    if [ -f "${STORAGE_DIR}/__common/POPS/IGR_BG.TM2" ] || [ -f "${STORAGE_DIR}/__common/POPS/IGR_YES.TM2" ] || [ -f "${STORAGE_DIR}/__common/POPS/IGR_NO.TM2" ] || [ -f "${STORAGE_DIR}/__common/POPS/POPSTARTER.ELF" ]; then
+        cp -f "${ASSETS_DIR}/POPStarter/eng/"{IGR_BG.TM2,IGR_YES.TM2,IGR_NO.TM2} "${STORAGE_DIR}/__common/POPS"
+        cp -f "${ASSETS_DIR}/POPStarter/POPSTARTER.ELF" "${STORAGE_DIR}/__common/POPS" || error_msg "Error" "Failed to copy POPSTARTER.ELF."
     fi
 }
 
@@ -856,6 +760,7 @@ install_elf() {
             # Extract filename without path and extension
             elf=$(basename "$file")
             elf_no_ext="${elf%.*}"
+
             echo "Installing ${dir}/APPS/$elf..." | tee -a "${LOG_FILE}"
 
             app_name="${elf_no_ext%%(*}" # Remove anything after an open bracket '('
@@ -945,25 +850,12 @@ install_elf() {
                 mv "${dir}/APPS/$elf" "${elf_dir}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to move $elf to $elf_dir."
             fi
 
-            if [[ "$title_id" == "LAUNCHDISC" ]]; then
-                publisher="github.com/cosmicscale"
-            elif [[ "$title_id" == "HDDOSD" ]]; then
-                publisher="Sony Computer Entertainment"
-            elif [[ "$title_id" == "BBNAVIGATOR" ]]; then
-                publisher="Sony Computer Entertainment"
-            elif [[ "$title_id" == "LAUNCHELF" ]]; then
-                publisher="israpps.github.io"
-                title="wLaunchELF 4.43x_isr-EXFAT-MMCE"
-            else
-                publisher=""
-            fi
-
             cat > "${elf_dir}/title.cfg" <<EOL
 title=$title
 boot=$elf
 Title=$title
 CfgVersion=8
-Developer=$publisher
+Developer=
 Genre=Homebrew
 EOL
         done
@@ -972,7 +864,7 @@ EOL
 
 activate_python() {
     echo
-    msg="Preparing to $INSTALL_TYPE PS2 games"
+    msg="Preparing to $INSTALL_TYPE games..."
     spin='|/-\'
     printf "\r[%c] %s" "${spin:0:1}" "$msg"
     SECONDS=0
@@ -989,7 +881,6 @@ activate_python() {
         return
     fi
 
-    echo | tee -a "${LOG_FILE}"
     echo "Activating Python virtual environment..." >> "${LOG_FILE}"
     # Try activating the virtual environment twice before failing
     if ! source "${SCRIPTS_DIR}/venv/bin/activate" 2>>"${LOG_FILE}"; then
@@ -1004,10 +895,6 @@ activate_python() {
 }
 
 convert_zso() {
-    if [[ "$LAUNCHER" != "NEUTRINO" ]]; then
-        return
-    fi
-
     if [[ "$INSTALL_TYPE" == "sync" ]]; then
         search_dirs=("${GAMES_PATH}/CD" "${GAMES_PATH}/DVD")
     else
@@ -1034,6 +921,85 @@ convert_zso() {
     fi
 }
 
+convert_bin(){
+    if find "${GAMES_PATH}/CD/" -maxdepth 1 -type f \( -iname "*.cue" \) | grep -q .; then
+        # Loop over all .cue files in the folder
+        for cue in "${GAMES_PATH}/CD"/*.[cC][uU][eE]; do
+            base="${cue%.[cC][uU][eE]}"        # Full path minus .cue
+            iso="${base}.iso"
+
+            if [[ -f "${base}.bin" ]]; then
+                bin="${base}.bin"
+            elif [[ -f "${base}.BIN" ]]; then
+                bin="${base}.BIN"
+            else
+                echo "[!] Missing BIN file for '$(basename "$cue")', skipping." | tee -a "${LOG_FILE}"
+                continue
+            fi
+
+            if [[ -f "$iso" ]] || [[ -f "${OPL}/CD/$(basename "${cue%.*}").iso" ]]; then
+                echo "ISO already exists for '$(basename "$cue")'. Skipping conversion." | tee -a "${LOG_FILE}"
+                continue
+            fi
+
+            echo "Converting '$(basename "$cue")'..."
+
+            # Run bchunk (creates ${base}01.iso)
+            bchunk "$bin" "$cue" "$base"
+            echo
+
+            # Rename output file (remove the 01)
+            if [[ -f "${base}01.iso" ]]; then
+                mv -f "${base}01.iso" "$iso"
+            fi
+        done
+    else
+        echo "No PS2 .cue files to convert in ${GAMES_PATH}/CD." | tee -a "${LOG_FILE}"
+    fi
+}
+
+convert_vcd(){
+    # Check if any .cue files exist
+    if find "${GAMES_PATH}/POPS/" -maxdepth 1 -type f -iname "*.cue" | grep -q .; then
+        # Loop over all .cue files in the folder
+        echo | tee -a "${LOG_FILE}"
+        for cue in "${GAMES_PATH}/POPS"/*.[cC][uU][eE]; do
+            base="${cue%.[cC][uU][eE]}"        # Full path minus .cue
+            vcd="${base}.VCD"
+            merged="$(basename "$cue" .cue)"
+
+            if [[ -f "$vcd" ]] || [[ -f "${STORAGE_DIR}/__.POPS/$(basename "${cue%.*}").VCD" ]]; then
+                echo "VCD already exists for '$(basename "$cue")'. Skipping conversion." | tee -a "${LOG_FILE}"
+                continue
+            fi
+
+            # Count all .bin files starting with the same base name
+            bin_count=$(find "${GAMES_PATH}/POPS/" -maxdepth 1 -type f -iname "$(basename "$base")*.bin" | wc -l)
+
+            if (( bin_count > 1 )); then
+                echo -n "Merging '$(basename "$cue")'..."
+                python3 "${HELPER_DIR}/binmerge.py" "$cue" "${SCRIPTS_DIR}/tmp/$merged" >>"${LOG_FILE}" 2>&1
+                echo | tee -a "${LOG_FILE}"
+
+                cd "${SCRIPTS_DIR}/tmp"
+                echo -n "Converting '$(basename "$cue")' to VCD..."
+                "${CUE2POPS}" "${SCRIPTS_DIR}/tmp/$merged.cue" "${GAMES_PATH}/POPS/$merged.VCD" >> "${LOG_FILE}"
+                rm "${SCRIPTS_DIR}/tmp/${merged}.cue" "${SCRIPTS_DIR}/tmp/${merged}.bin"
+                echo | tee -a "${LOG_FILE}"
+            else
+                echo "Skipping $(basename "$cue") because it has $bin_count BIN file(s)." >> "${LOG_FILE}"
+                cd "${GAMES_PATH}/POPS"
+                echo -n "Converting '$(basename "$cue")' to VCD..."
+                "${CUE2POPS}" "$cue" "$vcd" >> "${LOG_FILE}" >> "${LOG_FILE}"
+                echo | tee -a "${LOG_FILE}"
+            fi
+        done
+    else
+        echo "No PS1 .cue files to convert in ${GAMES_PATH}/POPS." | tee -a "${LOG_FILE}"
+    fi
+    cd "${TOOLKIT_PATH}"
+}
+
 PP_NAME() {
 # Format game id correctly for partition
     title_id=$(echo "$game_id" | sed -E 's/_(...)\./-\1/;s/\.//')
@@ -1049,9 +1015,14 @@ create_info_sys() {
     local publisher="$3"
     local content_type="255"
 
-    if [ "$title_id" = "BBNAVIGATOR" ]; then
+    if [ "$title_id" = "SCPN-60160" ]; then
         content_type="0"
     fi
+
+    title_id="${title_id//_/-}"
+    title_id="${title_id//[^A-Za-z0-9-]/}"
+    title_id="${title_id:0:11}"
+    title_id="${title_id%-}"
 
     cat > "$info_sys_filename" <<EOL
 title = $title
@@ -1113,24 +1084,30 @@ EOL
     fi
 }
 
-create_bbnl_cfg() {
+create_system_cnf() {
     local file_name="$1"
     local title_id="$2"
     local arg="$3"
 
-    {
-        echo "file_name=$file_name"
-        echo "title_id=$title_id"
-        echo "launcher=ELF"
-        if [ -n "$arg" ]; then
-            echo "arg=$arg"
-        fi
-    } > "$bbnl_cfg"
+    title_id="${title_id//_/-}"
+    title_id="${title_id//[^A-Za-z0-9-]/}"
+    title_id="${title_id:0:11}"
+    title_id="${title_id%-}"
 
-    if [ -f "$bbnl_cfg" ]; then
-        echo "Created: $bbnl_cfg"  | tee -a "${LOG_FILE}"
+    {
+        echo "BOOT2 = PATINFO"
+        echo "HDDUNITPOWER = NICHDD"
+        echo "path = ata:$file_name"
+        if [ -n "$arg" ]; then
+            echo "arg = $arg"
+        fi
+        echo "titleid = $title_id"
+    } > "$system_cnf"
+
+    if [ -f "$system_cnf" ]; then
+        echo "Created: $system_cnf"  | tee -a "${LOG_FILE}"
     else
-        error_msg "Error" "Failed to create $bbnl_cfg"
+        error_msg "Error" "Failed to create $system_cnf"
     fi
 }
 
@@ -1138,8 +1115,10 @@ APP_ART() {
     png_file="${ARTWORK_DIR}/${title_id}.png"
     # Copy the matching PNG file from ART_DIR, or default to APP.png
     if [ -f "$png_file" ]; then
-        cp "$png_file" "$dir/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/jkt_001.png. See ${LOG_FILE} for details."
-        echo "Created: $dir/jkt_001.png"  | tee -a "${LOG_FILE}"
+        if [ "$OS" = "PSBBN" ]; then
+            cp "$png_file" "$dir/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/jkt_001.png. See ${LOG_FILE} for details."
+            echo "Created: $dir/jkt_001.png"  | tee -a "${LOG_FILE}"
+        fi
         cp "$png_file" "${GAMES_PATH}/ART/${elf}_COV.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create ${GAMES_PATH}/ART/${elf}_COV.png. See ${LOG_FILE} for details."
         echo "Created: ${GAMES_PATH}/ART/${elf}_COV.png"  | tee -a "${LOG_FILE}"
     else
@@ -1149,14 +1128,18 @@ APP_ART() {
         
         if [[ -s "$png_file" ]]; then
             echo "[✓] Successfully downloaded artwork for $title_id" | tee -a "${LOG_FILE}"
-            cp "$png_file" "$dir/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/jkt_001.png. See ${LOG_FILE} for details."
-            echo "Created: $dir/jkt_001.png"  | tee -a "${LOG_FILE}"
+            if [ "$OS" = "PSBBN" ]; then
+                cp "$png_file" "$dir/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/jkt_001.png. See ${LOG_FILE} for details."
+                echo "Created: $dir/jkt_001.png"  | tee -a "${LOG_FILE}"
+            fi
             cp "$png_file" "${GAMES_PATH}/ART/${elf}_COV.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create ${GAMES_PATH}/ART/${elf}_COV.png. See ${LOG_FILE} for details."
             echo "Created: ${GAMES_PATH}/ART/${elf}_COV.png"  | tee -a "${LOG_FILE}"
         else
             rm -f "$png_file"
-            cp "$ARTWORK_DIR/APP.png" "$dir/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/jkt_001.png. See ${LOG_FILE} for details."
-            echo "Created: $dir/jkt_001.png using default image."  | tee -a "${LOG_FILE}"
+            if [ "$OS" = "PSBBN" ]; then
+                cp "$ARTWORK_DIR/APP.png" "$dir/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/jkt_001.png. See ${LOG_FILE} for details."
+                echo "Created: $dir/jkt_001.png using default image."  | tee -a "${LOG_FILE}"
+            fi
             echo "$title_id,$title,$elf" >> "${MISSING_APP_ART}"
         fi
     fi
@@ -1178,6 +1161,92 @@ else
 fi
 }
 
+mapper_probe() {
+    DEVICE_CUT=$(basename "${DEVICE}")
+
+    # 1) Remove existing maps for this device
+    existing_maps=$(sudo dmsetup ls 2>/dev/null | awk -v p="^${DEVICE_CUT}-" '$1 ~ p {print $1}')
+    for map in $existing_maps; do
+        sudo dmsetup remove -f "$map" || error_msg "Error" "Failed to remove $map, might be in use"
+    done
+
+    # 2) Build keep list
+    keep_partitions=( "${LINUX_PARTITIONS[@]}" "${PFS_PARTITIONS[@]}" )
+
+    # 3) Get HDL Dump --dm output, split semicolons into lines
+    dm_output=$(sudo "${HDL_DUMP}" toc "${DEVICE}" --dm | tr ';' '\n')
+
+    # 4) Create each kept partition individually
+    while IFS= read -r line; do
+        for part in "${keep_partitions[@]}"; do
+            if [[ "$line" == "${DEVICE_CUT}-${part},"* ]]; then
+                echo "$line" | sudo dmsetup create --concise
+                break
+            fi
+        done
+    done <<< "$dm_output"
+
+    # 5) Export base mapper path
+    MAPPER="/dev/mapper/${DEVICE_CUT}-"
+}
+
+mount_cfs() {
+  for PARTITION_NAME in "${LINUX_PARTITIONS[@]}"; do
+    MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
+    if [ -e "${MAPPER}${PARTITION_NAME}" ]; then
+        [ -d "${MOUNT_PATH}" ] || mkdir -p "${MOUNT_PATH}"
+        if ! sudo mount "${MAPPER}${PARTITION_NAME}" "${MOUNT_PATH}" >>"${LOG_FILE}" 2>&1; then
+            error_msg "Error" "Failed to mount ${PARTITION_NAME} partition."
+        fi
+    else
+        error_msg "Error" "Partition ${PARTITION_NAME} not found on disk."
+    fi
+  done
+}
+
+mount_pfs() {
+    for PARTITION_NAME in "${PFS_PARTITIONS[@]}"; do
+        MOUNT_POINT="${STORAGE_DIR}/$PARTITION_NAME/"
+        mkdir -p "$MOUNT_POINT"
+        if ! sudo "${PFS_FUSE}" \
+            -o allow_other \
+            --partition="$PARTITION_NAME" \
+            "${DEVICE}" \
+            "$MOUNT_POINT" >>"${LOG_FILE}" 2>&1; then
+            error_msg "Error" "Failed to mount $PARTITION_NAME partition." "Check the device or filesystem and try again."
+        fi
+    done
+}
+
+unmount_apa(){
+# Unmount if mounted
+    # Get all mounts under STORAGE_DIR
+    submounts=$(findmnt -nr -o TARGET | grep "^${STORAGE_DIR}/" | sort -r)
+
+    if [ -n "$submounts" ]; then
+        echo "Found mounts under ${STORAGE_DIR}, attempting to unmount..." >> "$LOG_FILE"
+        while read -r mnt; do
+            [ -z "$mnt" ] && continue
+            echo "Unmounting $mnt..." >> "$LOG_FILE"
+            sudo umount "$mnt" || error_msg "Error" "Failed to unmount $mnt"
+        done <<< "$submounts"
+    fi
+
+    # Get the device basename
+    DEVICE_CUT=$(basename "$DEVICE")
+
+    # List all existing maps for this device
+    existing_maps=$(sudo dmsetup ls 2>/dev/null | awk -v dev="$DEVICE_CUT" '$1 ~ "^"dev"-" {print $1}')
+
+    # Force-remove each existing map
+    for map_name in $existing_maps; do
+        echo "Removing existing mapper $map_name..." >> "$LOG_FILE"
+        if ! sudo dmsetup remove -f "$map_name" 2>/dev/null; then
+            error_msg "Error" "Failed to delete mapper $map_name."
+        fi
+    done
+}
+
 SPLASH() {
     clear
     cat << "EOF"
@@ -1191,6 +1260,9 @@ SPLASH() {
 
 EOF
 }
+
+trap 'echo; exit 130' INT
+trap exit_script EXIT
 
 mkdir -p "${LOGS_DIR}" >/dev/null 2>&1
 
@@ -1210,23 +1282,22 @@ echo >> "${LOG_FILE}"
 echo "Path: $path_arg" >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 
-clear
-clean_up
-
-sudo rm -f "${MISSING_ART}" "${MISSING_APP_ART}" "${MISSING_ICON}" "${MISSING_VMC}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to remove missing artwork files. See ${LOG_FILE} for details."
-
-mkdir -p "${SCRIPTS_DIR}/tmp" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create tmp folder. See ${LOG_FILE} for details."
+SPLASH
 
 DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
 
 if [[ -z "$DEVICE" ]]; then
-    clear
-    error_msg "Error" "Unable to detect the PS2 drive. Please ensure the drive is properly connected." "If this is your first time using the installer, select 'Install PSBBN' from the main menu."
+    error_msg "Error" "Unable to detect the PS2 drive. Please ensure the drive is properly connected." "You must install PSBBN or HDOSDMenu first before insalling games."
 fi
 
 echo "OPL partition found on $DEVICE" >> "${LOG_FILE}"
 
-SPLASH
+clean_up
+sudo rm -f "${MISSING_ART}" "${MISSING_APP_ART}" "${MISSING_ICON}" "${MISSING_VMC}" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to remove missing artwork files. See ${LOG_FILE} for details."
+mkdir -p "${SCRIPTS_DIR}/tmp" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create tmp folder. See ${LOG_FILE} for details."
+
+HDL_TOC
+CHECK_PARTITIONS
 
 # Find all mounted volumes associated with the device
 mounted_volumes=$(lsblk -ln -o MOUNTPOINT "$DEVICE" | grep -v "^$")
@@ -1243,33 +1314,32 @@ for mount_point in $mounted_volumes; do
     fi
 done
 
-HDL_TOC
-
 MOUNT_OPL
 
-psbbn_version=$(head -n 1 "${OPL}/version.txt" 2>/dev/null)
+rm -rf "${OPL}/bbnl"
 
-# Compare using sort -V
-if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
-    echo "Warning: Your PSBBN Definitive Patch version ($psbbn_version) is older than the recommended version ($version_check)."
-    echo "It is strongly recommended to update by selecting 'Install PSBBN' from the main menu."
-    echo "Proceed with caution."
-    echo
-    while true; do
-        read -rp "Do you want to continue anyway? [Y]es / [N]o: " response
-        case "$response" in
-            [Yy]* )
-                rm -f "${OPL}/conf_apps.cfg" || error_msg "Error" "Failed to delete ${OPL}/conf_apps.cfg."
-                break
-                ;;
-            [Nn]* )
-                exit 0
-                ;;
-            * )
-                echo "Please answer Y (yes) or N (no)."
-                ;;
-        esac
-    done
+if [ "$OS" = "PSBBN" ]; then
+    psbbn_version=$(head -n 1 "${OPL}/version.txt" 2>/dev/null)
+
+    # Compare using sort -V
+    if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
+        echo "Warning: Your PSBBN Definitive Patch version ($psbbn_version) is older than the required version ($version_check)."
+        if (( $(echo "${psbbn_version:-0} < 2.11" | bc -l) )); then
+            echo "Please select 'Install PSBBN' from the main menu to update."
+        else
+            echo "Please select 'Update PSBBN Software' from the main menu to update."
+        fi
+        echo
+        read -n 1 -s -r -p "Press any key to return to the main menu..." </dev/tty
+        exit 0
+    fi
+fi
+
+APA_SIZE=$(awk -F' *= *' '$1=="APA_SIZE"{print $2}' "${OPL}/version.txt")
+LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
+
+if [ -z "$APA_SIZE" ] || [ -z "$LANG" ]; then
+    error_msg "Error" "Missing required value(s) in ${OPL}/version.txt"
 fi
 
 # Check if the Python virtual environment exists
@@ -1293,6 +1363,8 @@ elif [[ -f "$CONFIG_FILE" && -s "$CONFIG_FILE" ]]; then
         GAMES_PATH="$cfg_path"
     fi
 fi
+
+SPLASH
 
 if [[ -z "$path_arg" ]]; then
     get_display_path
@@ -1363,7 +1435,28 @@ done
 # Check if GAMES_PATH is custom
 if [[ "${GAMES_PATH}" != "${TOOLKIT_PATH}/games" ]]; then
     echo "Using custom game path." >> "${LOG_FILE}"
-    cp "${TOOLKIT_PATH}/games/APPS/"{BOOT.ELF,Launch-Disc.elf,HDD-OSD.elf,PSBBN.ELF} "${GAMES_PATH}/APPS" >> "${LOG_FILE}" 2>&1
+    rm -f "${GAMES_PATH}/APPS/"{Launch-Disc.elf,HDD-OSD.elf,PSBBN.ELF}
+
+    FILE="${GAMES_PATH}/APPS/BOOT.ELF"
+    TARGET_MD5="20a5b2c1ffb86e742fb5705b5d9d7370"
+
+    # Check if file exists
+    if [[ -f "$FILE" ]]; then
+        # Get md5 checksum
+        FILE_MD5=$(md5sum "$FILE" | awk '{print $1}')
+
+        # Compare and delete if matches
+        if [[ "$FILE_MD5" == "$TARGET_MD5" ]]; then
+            rm -f "$FILE"
+            echo "Deleted $FILE (MD5 matched)" >> "${LOG_FILE}"
+        else
+            echo "MD5 does not match, file not deleted." >> "${LOG_FILE}"
+        fi
+    else
+        echo "File not found: $FILE" >> "${LOG_FILE}"
+    fi
+
+    cp "${TOOLKIT_PATH}/games/APPS/APP_WLE-ISR-XF-MM.psu" "${GAMES_PATH}/APPS" >> "${LOG_FILE}" 2>&1
 else
     echo "Using default game path." >> "${LOG_FILE}"
 fi
@@ -1402,8 +1495,8 @@ done
 get_display_path
 
 if [ "$INSTALL_TYPE" = "sync" ] && \
-   ! find "${GAMES_PATH}/POPS" -maxdepth 1 -type f -iname "*.vcd" -print -quit | grep -q . && \
-   ! find "${GAMES_PATH}/CD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) -print -quit | grep -q . && \
+   ! find "${GAMES_PATH}/POPS" -maxdepth 1 -type f \( -iname "*.vcd" -o -iname "*.bin" -o -iname "*.cue" \) -print -quit | grep -q . && \
+   ! find "${GAMES_PATH}/CD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" -o -iname "*.bin" -o -iname "*.cue" \) -print -quit | grep -q . && \
    ! find "${GAMES_PATH}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) -print -quit | grep -q .; then
     echo
     echo "Warning: No games found in the games folder: ${display_path}"
@@ -1452,7 +1545,7 @@ if [ "$INSTALL_TYPE" = "copy" ]; then
     COMMANDS+="ls -l\n"
     COMMANDS+="umount\n"
     COMMANDS+="exit"
-    ps1_games=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" 2>/dev/null)
+    ps1_games=$(echo -e "$COMMANDS" | sudo "${PFS_SHELL}" 2>/dev/null)
     if echo "$ps1_games" | grep -qi '\.vcd$'; then
         ps1_games_found=true
     fi
@@ -1556,13 +1649,21 @@ else
     echo "No PP partitions to delete." | tee -a "${LOG_FILE}"
 fi
 
-update_apps "POPStarter" "${POPSTARTER}" "${OPL}/bbnl/POPSTARTER.ELF" "-ut --progress"
-install_pops
-update_apps "OPL" "${ASSETS_DIR}/OPL/OPNPS2LD.ELF" "${OPL}/bbnl/OPNPS2LD.ELF" "-ut --progress"
-update_apps "NHDDL" "${ASSETS_DIR}/NHDDL/nhddl.elf" "${OPL}/bbnl/nhddl.elf" "-ut --progress"
 update_apps "Neutrino" "${NEUTRINO_DIR}/" "${OPL}/neutrino/" "-rut --progress --delete --exclude='.*'"
+UNMOUNT_OPL
+mount_pfs
 
-################################### Synchronize Games & Apps ###################################
+update_apps "OPL" "${ASSETS_DIR}/OPL/OPNPS2LD.ELF" "${STORAGE_DIR}/__system/launcher/OPNPS2LD.ELF" "-ut --progress"
+update_apps "NHDDL" "${ASSETS_DIR}/NHDDL/nhddl.elf" "${STORAGE_DIR}/__system/launcher/nhddl.elf" "-ut --progress"
+
+install_pops
+
+update_apps "OSDMenu" "${ASSETS_DIR}/osdmenu/hosdmenu.elf" "${STORAGE_DIR}/__system/osdmenu" "-ut --progress"
+
+unmount_apa
+MOUNT_OPL
+
+################################### Synchronize & Copy Apps ###################################
 
 if [ "$INSTALL_TYPE" = "sync" ]; then
     echo | tee -a "${LOG_FILE}"
@@ -1573,102 +1674,121 @@ if [ "$INSTALL_TYPE" = "sync" ]; then
 
     install_elf "${GAMES_PATH}"
 
-    rsync -rut --progress --delete --exclude='.*' "${GAMES_PATH}/APPS/" "${OPL}/APPS/" >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed sync apps. See $LOG_FILE for details."
-
-    find "${OPL}/APPS/" -maxdepth 1 -type f -exec rm -f {} + 2>>"${LOG_FILE}" || error_msg "Error" "Failed to tidy up ${OPL}/APPS/"
-
-    POPS_SYNC
-    activate_python
-    convert_zso
-    OPL_SIZE_CKECK
-
-    cd=$(rsync -rL --progress --ignore-existing --delete --exclude='.*' --dry-run "${GAMES_PATH}/CD/" "${OPL}/CD/")
-    dvd=$(rsync -rL --progress --ignore-existing --delete --exclude='.*' --dry-run "${GAMES_PATH}/DVD/" "${OPL}/DVD/")
-
-    # Check if either output contains more than one line
-    if [ $(echo "$cd" | wc -l) -ne 1 ] || [ $(echo "$dvd" | wc -l) -ne 1 ]; then
-        needs_update=true
-    fi
-
-    if [ "$needs_update" = true ]; then
-        echo "Total size of PS2 games to be synced: $needed_mb MB" | tee -a "${LOG_FILE}"
-        echo "Available space: $available_mb MB" | tee -a "${LOG_FILE}"
-        echo | tee -a "${LOG_FILE}"
-        echo "Syncing PS2 games..." | tee -a "${LOG_FILE}"
-        rsync -rL --progress --ignore-existing --delete --exclude='.*' "${GAMES_PATH}/CD/" "${OPL}/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
-        cd_status=${PIPESTATUS[0]}
-        rsync -rL --progress --ignore-existing --delete --exclude='.*' "${GAMES_PATH}/DVD/" "${OPL}/DVD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
-        dvd_status=${PIPESTATUS[0]}
-        ps2_rsync_check Synced
-    else
-        echo "PS2 games are already up-to-date." | tee -a "${LOG_FILE}"
-    fi
-
-################################### Add Games & Apps ###################################
+    rsync -rut --progress --delete --prune-empty-dirs --include='*/' --include='*/**' --exclude='.*' --exclude='*Zone.Identifier' --exclude='*' "${GAMES_PATH}/APPS/" "${OPL}/APPS/" >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed sync apps. See $LOG_FILE for details."
 
 elif [ "$INSTALL_TYPE" = "copy" ]; then
-    echo | tee -a "${LOG_FILE}"
     echo "Preparing to copy apps..." | tee -a "${LOG_FILE}"
 
     cd "${OPL}/APPS/" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to ${OPL}/APPS."
     process_psu_files "${GAMES_PATH}/APPS/"
     process_psu_files "${OPL}/APPS/"
+    cd "${TOOLKIT_PATH}"
 
     rm -rf "${OPL}/APPS/PSBBN"
     install_elf "${GAMES_PATH}"
     install_elf "${OPL}"
 
     find "${GAMES_PATH}/APPS/" -mindepth 1 -maxdepth 1 -type d -exec cp -r {} "${OPL}/APPS/" \; || error_msg "Error" "Failed copy apps. See $LOG_FILE for details."
-
-    POPS_SYNC
-    activate_python
-    convert_zso
-    OPL_SIZE_CKECK
-
-    if (( needed_mb > 0 )); then
-        echo "Total size of PS2 games to be copied: $needed_mb MB" | tee -a "${LOG_FILE}"
-        echo "Available space: $available_mb MB" | tee -a "${LOG_FILE}"
-        echo | tee -a "${LOG_FILE}"
-        echo "Copying PS2 games..."
-        # Update PS2 CD games
-        rsync -rL --progress --ignore-existing --exclude=".*" "${GAMES_PATH}/CD/" "${OPL}/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
-        cd_status=${PIPESTATUS[0]}
-        # Update PS2 DVD games
-        rsync -rL --progress --ignore-existing --exclude=".*" "${GAMES_PATH}/DVD/" "${OPL}/DVD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
-        dvd_status=${PIPESTATUS[0]}
-        ps2_rsync_check copied
-    else
-        echo "No PS2 games to copy." | tee -a "${LOG_FILE}"
-    fi
 fi
 
-# Sends a list of apps and games synced/copied to the log file
-echo >> "${LOG_FILE}"
-echo "APPS on PS2 drive:" >> "${LOG_FILE}"
-ls -1 "${OPL}/APPS/" >> "${LOG_FILE}" 2>&1
-echo >> "${LOG_FILE}"
-echo "PS1 games on PS2 drive:" >> "${LOG_FILE}"
-COMMANDS="device ${DEVICE}\n"
-COMMANDS+="mount __.POPS\n"
-COMMANDS+="ls\n"
-COMMANDS+="umount\n"
-COMMANDS+="exit"
-echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" 2>&1 | grep -i '\.vcd$' >> "${LOG_FILE}"
-echo >> "${LOG_FILE}"
-echo "PS2 games on PS2 drive:" >> "${LOG_FILE}"
-ls -1 "${OPL}/CD/" >> "${LOG_FILE}" 2>&1
-ls -1 "${OPL}/DVD/" >> "${LOG_FILE}" 2>&1
+################################### Synchronize & Copy PS1 Games ###################################
 
-# Create games list of PS1 and PS2 games to be installed
-if find "${GAMES_PATH}/POPS" -maxdepth 1 -type f \( -iname "*.vcd" \) | grep -q .; then
+activate_python
+UNMOUNT_OPL
+mount_pfs
+
+# Rename .vcd to .VCD
+for file in "${GAMES_PATH}/POPS"/*.vcd; do
+    [ -e "$file" ] || continue  # skip if no match
+    newfile="${file%.vcd}.VCD"
+    mv -v -- "$file" "$newfile" >> "$LOG_FILE" 2>&1 || error_msg "Error" "Failed to rename $file."
+done
+
+convert_vcd
+
+if [ "$INSTALL_TYPE" = "sync" ]; then
+    ps1_update=$(rsync -dL --dry-run --delete --ignore-existing --itemize-changes --include='*.VCD' --exclude='.*' --exclude='*' "${GAMES_PATH}/POPS/" "${STORAGE_DIR}/__.POPS/")
+elif [ "$INSTALL_TYPE" = "copy" ]; then
+    ps1_update=$(rsync -dL --dry-run --ignore-existing --itemize-changes --include='*.VCD' --exclude='.*' --exclude='*' "${GAMES_PATH}/POPS/" "${STORAGE_DIR}/__.POPS/")
+fi
+
+# Set flag if any changes
+if [ -n "$ps1_update" ]; then
+    POPS_SIZE_CKECK
+    echo | tee -a "${LOG_FILE}"
+    echo "Total size of PS1 games to be synced: $needed_mb MB" | tee -a "${LOG_FILE}"
+    echo "Available space: $available_mb MB" | tee -a "${LOG_FILE}"
+    echo | tee -a "${LOG_FILE}"
+    if [ "$INSTALL_TYPE" = "sync" ]; then
+        rsync -dL --progress --delete --ignore-existing --include='*.VCD' --exclude='.*' --exclude='*' "${GAMES_PATH}/POPS/" "${STORAGE_DIR}/__.POPS/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+        if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+            error_msg "Error" "Failed to sync PS1 games."
+        fi
+    else
+        rsync -dL --progress --ignore-existing --include='*.VCD' --exclude='.*' --exclude='*' "${GAMES_PATH}/POPS/" "${STORAGE_DIR}/__.POPS/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+        if [ "${PIPESTATUS[0]}" -ne 0 ]; then
+            error_msg "Error" "Failed to copy PS1 games."
+        fi
+    fi
+else
+    echo | tee -a "${LOG_FILE}"
+    echo "PS1 games are already up-to-date." | tee -a "${LOG_FILE}"
+fi
+
+if find "${STORAGE_DIR}/__.POPS/" -maxdepth 1 -type f \( -iname "*.vcd" \) | grep -q .; then
     echo | tee -a "${LOG_FILE}"
     echo "Creating PS1 games list..." | tee -a "${LOG_FILE}"
-    python3 -u "${HELPER_DIR}/list-builder.py" "${GAMES_PATH}" "${PS1_LIST}" | tee -a "${LOG_FILE}"
+    python3 -u "${HELPER_DIR}/list-builder.py" "${STORAGE_DIR}" "${PS1_LIST}" | tee -a "${LOG_FILE}"
     if [ "${PIPESTATUS[0]}" -ne 0 ]; then
         error_msg "Error" "Failed to create PS1 games list."
     fi
 fi
 
+unmount_apa
+
+################################### Synchronize & Copy PS2 Games ###################################
+
+MOUNT_OPL
+
+if [[ "$LAUNCHER" = "NEUTRINO" ]]; then
+    convert_zso
+fi
+
+convert_bin
+
+if [ "$INSTALL_TYPE" = "sync" ]; then
+    cd=$(rsync -dL --dry-run --delete --ignore-existing --itemize-changes --include='*.iso' --include='*.ISO' --include='*.zso' --include='*.ZSO' --exclude='.*' --exclude='*' "${GAMES_PATH}/CD/" "${OPL}/CD/")
+    dvd=$(rsync -dL --dry-run --delete --ignore-existing --itemize-changes --include='*.iso' --include='*.ISO' --include='*.zso' --include='*.ZSO' --exclude='.*' --exclude='*' "${GAMES_PATH}/DVD/" "${OPL}/DVD/")
+elif [ "$INSTALL_TYPE" = "copy" ]; then
+    cd=$(rsync -dL --dry-run --ignore-existing --itemize-changes --include='*.iso' --include='*.ISO' --include='*.zso' --include='*.ZSO' --exclude='.*' --exclude='*' "${GAMES_PATH}/CD/" "${OPL}/CD/")
+    dvd=$(rsync -dL --dry-run --ignore-existing --itemize-changes --include='*.iso' --include='*.ISO' --include='*.zso' --include='*.ZSO' --exclude='.*' --exclude='*' "${GAMES_PATH}/DVD/" "${OPL}/DVD/")
+fi
+
+if [ -n "$cd" ] || [ -n "$dvd" ]; then
+    OPL_SIZE_CKECK
+    echo | tee -a "${LOG_FILE}"
+    echo "Total size of PS2 games to be synced: $needed_mb MB" | tee -a "${LOG_FILE}"
+    echo "Available space: $available_mb MB" | tee -a "${LOG_FILE}"
+    echo | tee -a "${LOG_FILE}"
+    if [ "$INSTALL_TYPE" = "sync" ]; then
+        rsync -dL --progress --delete --ignore-existing --include='*.iso' --include='*.ISO' --include='*.zso' --include='*.ZSO' --exclude='.*' --exclude='*' "${GAMES_PATH}/CD/" "${OPL}/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+        cd_status=${PIPESTATUS[0]}
+        rsync -dL --progress --delete --ignore-existing --include='*.iso' --include='*.ISO' --include='*.zso' --include='*.ZSO' --exclude='.*' --exclude='*' "${GAMES_PATH}/DVD/" "${OPL}/DVD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+        dvd_status=${PIPESTATUS[0]}
+        ps2_rsync_check Synced
+    else
+        rsync -dL --progress --ignore-existing --include='*.iso' --include='*.ISO' --include='*.zso' --include='*.ZSO' --exclude='.*' --exclude='*' "${GAMES_PATH}/CD/" "${OPL}/CD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+        cd_status=${PIPESTATUS[0]}
+        rsync -dL --progress --ignore-existing --include='*.iso' --include='*.ISO' --include='*.zso' --include='*.ZSO' --exclude='.*' --exclude='*' "${GAMES_PATH}/DVD/" "${OPL}/DVD/" 2>>"${LOG_FILE}" | tee -a "${LOG_FILE}"
+        dvd_status=${PIPESTATUS[0]}
+        ps2_rsync_check Copied
+    fi
+else
+    echo | tee -a "${LOG_FILE}"
+    echo "PS2 games are already up-to-date." | tee -a "${LOG_FILE}"
+fi
+
+# Create games list of PS2 games to be installed
 if find "${OPL}/CD" "${OPL}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) | grep -q .; then
     echo | tee -a "${LOG_FILE}"
     echo "Creating PS2 games list..." | tee -a "${LOG_FILE}"
@@ -1676,12 +1796,6 @@ if find "${OPL}/CD" "${OPL}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname
     if [ "${PIPESTATUS[0]}" -ne 0 ]; then
         error_msg "Error" "Failed to create PS2 games list."
     fi
-fi
-
-if [[ "$INSTALL_TYPE" = "copy" && -f "${OPL}/ps1.list" ]]; then
-    cat "${OPL}/ps1.list" >> "${PS1_LIST}"
-    # Remove duplicate lines
-    sort -u "${PS1_LIST}" -o "${PS1_LIST}"
 fi
 
 if [ -f "${PS1_LIST}" ]; then
@@ -1716,7 +1830,6 @@ rm -f "${OPL}/ps1.list"
 # Check for master.list
 if [[ -s "${ALL_GAMES}" ]]; then
     # Count the number of games to be installed
-    [ -f "$PS1_LIST" ] && ! cp "${PS1_LIST}" "${OPL}" && error_msg "Error" "Failed to copy $PS1_LIST to ${OPL}"
     count=$(grep -c '^[^[:space:]]' "${ALL_GAMES}")
     echo | tee -a "${LOG_FILE}"
     echo "Number of games to install: $count" | tee -a "${LOG_FILE}"
@@ -1727,21 +1840,42 @@ if [[ -s "${ALL_GAMES}" ]]; then
     cat "${ALL_GAMES}" >> "${LOG_FILE}"
 fi
 
+# Sends a list of apps and games synced/copied to the log file
+echo >> "${LOG_FILE}"
+echo "APPS on PS2 drive:" >> "${LOG_FILE}"
+ls -1 "${OPL}/APPS/" >> "${LOG_FILE}" 2>&1
+echo >> "${LOG_FILE}"
+echo "PS1 games on PS2 drive:" >> "${LOG_FILE}"
+COMMANDS="device ${DEVICE}\n"
+COMMANDS+="mount __.POPS\n"
+COMMANDS+="ls\n"
+COMMANDS+="umount\n"
+COMMANDS+="exit"
+echo -e "$COMMANDS" | sudo "${PFS_SHELL}" 2>&1 | grep -i '\.vcd$' >> "${LOG_FILE}"
+echo >> "${LOG_FILE}"
+echo "PS2 games on PS2 drive:" >> "${LOG_FILE}"
+ls -1 "${OPL}/CD/" >> "${LOG_FILE}" 2>&1
+ls -1 "${OPL}/DVD/" >> "${LOG_FILE}" 2>&1
+
 ################################### Creating Assets ###################################
 
 echo
 echo -n "Preparing to create assets..."
 echo | tee -a "${LOG_FILE}"
 
-mkdir -p "${ICONS_DIR}/bbnl" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ICONS_DIR}/bbnl."
 mkdir -p "${ICONS_DIR}/SAS" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ICONS_DIR}/SAS."
 mkdir -p "${ICONS_DIR}/APPS" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ICONS_DIR}/APPS."
 mkdir -p "${ARTWORK_DIR}/tmp" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${ARTWORK_DIR}/tmp."
 mkdir -p "${TOOLKIT_PATH}/icons/ico/tmp/vmc" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${TOOLKIT_PATH}/icons/ico/tmp/vmc."
 mkdir -p "${TOOLKIT_PATH}/icons/ico/vmc" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create ${TOOLKIT_PATH}/icons/ico/tmp/vmc."
 
-# Set maximum number of items for the Game Channel (799 + 1 for chosen launcher)
-pp_cap="799"
+# Set maximum number of items for the Game Channel
+
+if [ "$OS" = "PSBBN" ]; then
+    pp_cap="798"
+else
+    pp_cap="799"
+fi
 
 ################################### Assets for SAS Apps ###################################
 
@@ -1822,20 +1956,26 @@ else
         done < "$dir/title.cfg"
 
         # Generate the info.sys file
-        info_sys_filename="$dir/info.sys"
+        info_sys_filename="${dir}/info.sys"
         create_info_sys "$title" "$title_id" "$publisher"
 
         APP_ART
 
-        # Generate the bbnl cfg file
-        bbnl_cfg="${ICONS_DIR}/bbnl/$title_id.cfg"
-        create_bbnl_cfg "/APPS/$title_id/$elf" "$title_id"
+        # Generate the system.cnf file
+        system_cnf="${dir}/system.cnf"
+        create_system_cnf "/APPS/$title_id/$elf" "$title_id"
 
-        cp "${ASSETS_DIR}/BBNL"/{boot.kelf,system.cnf} "$dir" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create boot.kelf or system.cnf. See ${LOG_FILE} for details."
-        echo "Created: $dir/boot.kelf" | tee -a "${LOG_FILE}"
-        echo "Created: $dir/system.cnf" | tee -a "${LOG_FILE}"
+        if [ "$title_id" = "APP_WLE-ISR-" ]; then
+            LAUNCHELF_INSTALLED="yes"
+        fi
 
+        [ ${#title} -gt 79 ] && title="${title:0:76}..."
+
+        cat >> "${SAS_LIST}" <<EOL
+$title,ata:/APPS/$title_id/$elf,$title_id
+EOL
     done < <(find "${ICONS_DIR}/SAS" -mindepth 1 -maxdepth 1 -type d | sort)
+    sort -t',' -k1,1 -f "${SAS_LIST}" -o "${SAS_LIST}"
 fi
 
 ################################### Assets for ELF Files ###################################
@@ -1887,51 +2027,29 @@ else
             esac
         done < "$dir/title.cfg"
 
-        echo | tee -a "${LOG_FILE}"
         info_sys_filename="$dir/info.sys"
-        if [[ "$title_id" == "LAUNCHELF" ]]; then
-            title="LaunchELF"
-        fi
         create_info_sys "$title" "$title_id" "$publisher"
 
         # Generate the icon.sys file
         icon_sys_filename="$dir/icon.sys"
         create_icon_sys "$title"
 
-        if [[ "$title_id" == "LAUNCHELF" ]]; then
-            cp "${ICONS_DIR}/ico/wle.ico" "$dir/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
-            echo "Created: $dir/list.ico" | tee -a "${LOG_FILE}"
-            cp "${ICONS_DIR}/ico/wle-del.ico" "$dir/del.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/del.ico. See ${LOG_FILE} for details."
-            echo "Created: $dir/del.ico" | tee -a "${LOG_FILE}"
-        elif [[ "$title_id" == "BBNAVIGATOR" ]]; then
-            cp "${ICONS_DIR}/ico/psbbn.ico" "$dir/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
-            echo "Created: $dir/list.ico" | tee -a "${LOG_FILE}"
-            cp "${ICONS_DIR}/ico/psbbn-del.ico" "$dir/del.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
-            echo "Created: $dir/del.ico" | tee -a "${LOG_FILE}"
-        elif [[ "$title_id" == "HDDOSD" ]]; then
-            cp "${ICONS_DIR}/ico/hdd-osd.ico" "$dir/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
-            echo "Created: $dir/list.ico" | tee -a "${LOG_FILE}"
-        else
-            cp "${ICONS_DIR}/ico/app.ico" "$dir/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
-            echo "Created: $dir/list.ico" | tee -a "${LOG_FILE}"
-            cp "${ICONS_DIR}/ico/app-del.ico" "$dir/del.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/del.ico. See ${LOG_FILE} for details."
-            echo "Created: $dir/del.ico" | tee -a "${LOG_FILE}"
-        fi
+        cp "${ICONS_DIR}/ico/app.ico" "$dir/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
+        echo "Created: $dir/list.ico" | tee -a "${LOG_FILE}"
+        cp "${ICONS_DIR}/ico/app-del.ico" "$dir/del.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/del.ico. See ${LOG_FILE} for details."
+        echo "Created: $dir/del.ico" | tee -a "${LOG_FILE}"
 
-        if [[ "$title_id" == "BBNAVIGATOR" ]]; then
-            cp "${ARTWORK_DIR}/PSBBN.png" "${GAMES_PATH}/ART/${elf}_COV.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create ${GAMES_PATH}/ART/${elf}_COV.png. See ${LOG_FILE} for details."
-        else
-            APP_ART
-        fi
+        APP_ART
+        system_cnf="${dir}/system.cnf"
+        create_system_cnf "/APPS/$(basename "$dir")/$elf" "$title_id"
 
-        bbnl_cfg="${ICONS_DIR}/bbnl/$title_id.cfg"
-        create_bbnl_cfg "/APPS/$(basename "$dir")/$elf" "$title_id"
+        [ ${#title} -gt 79 ] && title="${title:0:76}..."
 
-        cp "${ASSETS_DIR}/BBNL"/{boot.kelf,system.cnf} "$dir" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create boot.kelf, or system.cnf. See ${LOG_FILE} for details."
-        echo "Created: $dir/boot.kelf" | tee -a "${LOG_FILE}"
-        echo "Created: $dir/system.cnf" | tee -a "${LOG_FILE}"
-
+        cat >> "${ELF_LIST}" <<EOL
+$title,ata:/APPS/$(basename "$dir")/$elf,$(basename "$dir")
+EOL
     done < <(find "${ICONS_DIR}/APPS" -mindepth 1 -maxdepth 1 -type d | sort -r)
+    sort -t',' -k1,1 -f "${ELF_LIST}" -o "${ELF_LIST}"
 fi
 
 ################################### Assets for Games ###################################
@@ -1955,7 +2073,6 @@ if [ -f "$ALL_GAMES" ]; then
         else
             # Attempt to download artwork using wget
             echo -n "OPL Artwork not found locally for $game_id. Attempting to download from archive.org..." | tee -a "${LOG_FILE}"
-            echo | tee -a "${LOG_FILE}"
             wget --quiet --timeout=10 --tries=3 --output-document="$png_file_cover" \
             "https://archive.org/download/OPLM_ART_2024_09/OPLM_ART_2024_09.zip/PS2/${game_id}/${game_id}_COV.png"
             #wget --quiet --timeout=10 --tries=3 --output-document="$png_file_disc" \
@@ -1975,11 +2092,14 @@ if [ -f "$ALL_GAMES" ]; then
 
             if [[ -f "$png_file_cover" || -f "$png_file_disc" ]]; then
                 if [[ ${#missing_files[@]} -eq 0 ]]; then
+                    echo | tee -a "${LOG_FILE}"
                     echo "[✓] Successfully downloaded OPL artwork for $game_id" | tee -a "${LOG_FILE}"
                 else
+                    echo | tee -a "${LOG_FILE}"
                     echo "[✓] Successfully downloaded some OPL artwork for $game_id, but missing: ${missing_files[*]}" | tee -a "${LOG_FILE}"
                 fi
             else
+                echo | tee -a "${LOG_FILE}"
                 echo "Failed to download OPL artwork for $game_id" | tee -a "${LOG_FILE}"
             fi
         fi
@@ -1990,12 +2110,16 @@ else
     echo "No OPL artwork to download." | tee -a "${LOG_FILE}"
 fi
 
-GAME_COUNT=$(grep -c '^[^[:space:]]' "${ALL_GAMES}")
+if [ -f "$ALL_GAMES" ]; then
+    GAME_COUNT=$(grep -c '^[^[:space:]]' "${ALL_GAMES}")
+else
+    GAME_COUNT="0"
+fi
 
 pp_max=$(( pp_max - APP_COUNT ))
 
 if [ "$GAME_COUNT" -gt "$pp_max" ]; then
-    error_msg "Warning" "Insufficient space to create BBL partitions for remaining games." " " "The first $pp_max games will appear in the PSBBN Game Channel." "All PS2 games will appear in OPL/NHDDL."
+    error_msg "Warning" "Insufficient space to create BBL partitions for remaining games." " " "The first $pp_max games will appear in the PSBBN Game Collection." "All PS2 games will appear in OPL/NHDDL."
     # Overwrite master.list with the first $pp_max lines
     head -n "$pp_max" "$ALL_GAMES" > "${ALL_GAMES}.tmp"
     mv "${ALL_GAMES}.tmp" "$ALL_GAMES" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to updated master.list."
@@ -2007,77 +2131,79 @@ fi
 [ -f "$ALL_GAMES" ] && [ ! -s "$ALL_GAMES" ] && rm -f "$ALL_GAMES"
 
 if [ -f "$ALL_GAMES" ]; then
-    echo | tee -a "${LOG_FILE}"
-    echo "Downloading PSBBN artwork for games..."  | tee -a "${LOG_FILE}"
-
-    # First loop: Run the art downloader script for each game_id if artwork doesn't already exist
-    exec 3< "$ALL_GAMES"
-    while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
-        # Check if the artwork file already exists
-        png_file="${ARTWORK_DIR}/${game_id}.png"
-        if [[ -f "$png_file" ]]; then
-            echo "Artwork for $game_id already exists. Skipping download." | tee -a "${LOG_FILE}"
-        else
-            # Attempt to download artwork using wget
-            echo -n "Artwork not found locally. Attempting to download from the PSBBN art database..." | tee -a "${LOG_FILE}"
-            echo | tee -a "${LOG_FILE}"
-            wget --quiet --timeout=10 --tries=3 --output-document="$png_file" \
-            "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/art/${game_id}.png"
-            if [[ -s "$png_file" ]]; then
-                echo "[✓] Successfully downloaded artwork for $game_id" | tee -a "${LOG_FILE}"
-            else
-                # If wget fails, run the art downloader
-                [[ -f "$png_file" ]] && rm -f "$png_file"
-                echo "Trying IGN for $game_id" | tee -a "${LOG_FILE}"
-                "${HELPER_DIR}/art_downloader.py" "$game_id" 2>&1 | tee -a "${LOG_FILE}"
-            fi
-        fi
-    done
-    exec 3<&-
-
-    # Define input directory
-    input_dir="${ARTWORK_DIR}/tmp"
-
-    # Check if the directory contains any files
-    if compgen -G "${input_dir}/*" > /dev/null; then
+    if [ "$OS" = "PSBBN" ]; then
         echo | tee -a "${LOG_FILE}"
-        echo "Converting artwork..." | tee -a "${LOG_FILE}"
-        for file in "${input_dir}"/*; do
-            # Extract the base filename without the path or extension
-            base_name=$(basename "${file%.*}")
+        echo "Downloading PSBBN artwork for games..."  | tee -a "${LOG_FILE}"
 
-            # Define output filename with .png extension
-            output="${ARTWORK_DIR}/tmp/${base_name}.png"
-
-            # Get image dimensions using identify
-            dimensions=$(identify -format "%w %h" "$file")
-            width=$(echo "$dimensions" | cut -d' ' -f1)
-            height=$(echo "$dimensions" | cut -d' ' -f2)
-
-            # Check if width >= 256 and height >= width
-            if [[ $width -ge 256 && $height -ge $width ]]; then
-                # Determine whether the image is square
-                if [[ $width -eq $height ]]; then
-                    # Square: Resize without cropping
-                    echo "Resizing square image $file"
-                    convert "$file" -resize 256x256! -depth 8 -alpha off "$output"
-                else
-                    # Not square: Resize and crop
-                    echo "Resizing and cropping $file"
-                    convert "$file" -resize 256x256^ -crop 256x256+0+44 -depth 8 -alpha off "$output"
-                fi
-                rm -f "$file"
+        # First loop: Run the art downloader script for each game_id if artwork doesn't already exist
+        exec 3< "$ALL_GAMES"
+        while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+            # Check if the artwork file already exists
+            png_file="${ARTWORK_DIR}/${game_id}.png"
+            if [[ -f "$png_file" ]]; then
+                echo "Artwork for $game_id already exists. Skipping download." | tee -a "${LOG_FILE}"
             else
-                echo "Skipping $file: does not meet size requirements" | tee -a "${LOG_FILE}"
-                rm -f "$file"
+                # Attempt to download artwork using wget
+                echo -n "Artwork not found locally. Attempting to download from the PSBBN art database..." | tee -a "${LOG_FILE}"
+                echo | tee -a "${LOG_FILE}"
+                wget --quiet --timeout=10 --tries=3 --output-document="$png_file" \
+                "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/art/${game_id}.png"
+                if [[ -s "$png_file" ]]; then
+                    echo "[✓] Successfully downloaded artwork for $game_id" | tee -a "${LOG_FILE}"
+                else
+                    # If wget fails, run the art downloader
+                    [[ -f "$png_file" ]] && rm -f "$png_file"
+                    echo "Trying IGN for $game_id" | tee -a "${LOG_FILE}"
+                    "${HELPER_DIR}/art_downloader.py" "$game_id" 2>&1 | tee -a "${LOG_FILE}"
+                fi
             fi
         done
-    else
-        echo | tee -a "${LOG_FILE}"
-        echo "No artwork to convert in ${input_dir}" | tee -a "${LOG_FILE}"
-    fi
+        exec 3<&-
 
-    cp ${ARTWORK_DIR}/tmp/* ${ARTWORK_DIR} >> "${LOG_FILE}" 2>&1
+        # Define input directory
+        input_dir="${ARTWORK_DIR}/tmp"
+
+        # Check if the directory contains any files
+        if compgen -G "${input_dir}/*" > /dev/null; then
+            echo | tee -a "${LOG_FILE}"
+            echo "Converting artwork..." | tee -a "${LOG_FILE}"
+            for file in "${input_dir}"/*; do
+                # Extract the base filename without the path or extension
+                base_name=$(basename "${file%.*}")
+
+                # Define output filename with .png extension
+                output="${ARTWORK_DIR}/tmp/${base_name}.png"
+
+                # Get image dimensions using identify
+                dimensions=$(identify -format "%w %h" "$file")
+                width=$(echo "$dimensions" | cut -d' ' -f1)
+                height=$(echo "$dimensions" | cut -d' ' -f2)
+
+                # Check if width >= 256 and height >= width
+                if [[ $width -ge 256 && $height -ge $width ]]; then
+                    # Determine whether the image is square
+                    if [[ $width -eq $height ]]; then
+                        # Square: Resize without cropping
+                        echo "Resizing square image $file"
+                        convert "$file" -resize 256x256! -depth 8 -alpha off "$output"
+                    else
+                        # Not square: Resize and crop
+                        echo "Resizing and cropping $file"
+                        convert "$file" -resize 256x256^ -crop 256x256+0+44 -depth 8 -alpha off "$output"
+                    fi
+                    rm -f "$file"
+                else
+                    echo "Skipping $file: does not meet size requirements" | tee -a "${LOG_FILE}"
+                    rm -f "$file"
+                fi
+            done
+        else
+            echo | tee -a "${LOG_FILE}"
+            echo "No artwork to convert in ${input_dir}" | tee -a "${LOG_FILE}"
+        fi
+
+        cp ${ARTWORK_DIR}/tmp/* ${ARTWORK_DIR} >> "${LOG_FILE}" 2>&1
+    fi
 
     echo | tee -a "${LOG_FILE}"
     echo "Downloading HDD-OSD icons for games:"  | tee -a "${LOG_FILE}"
@@ -2235,18 +2361,15 @@ if [ -f "$ALL_GAMES" ]; then
     while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
         echo | tee -a "${LOG_FILE}"
         echo "Processing $title..." 
-        title_id=$(echo "$game_id" | sed -E 's/_(...)\./-\1/;s/\.//')
         # Create a sub-folder named after the game_id
         game_dir="$ICONS_DIR/$game_id"
         mkdir -p "$game_dir" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create $dir."
 
-        cp "${ASSETS_DIR}/BBNL"/{boot.kelf,system.cnf} "${game_dir}" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create boot.kelf, or system.cnf. See ${LOG_FILE} for details."
-        echo "Created: $game_dir/boot.kelf" | tee -a "${LOG_FILE}"
-        echo "Created: $game_dir/system.cnf" | tee -a "${LOG_FILE}"
-
-        # Generate the info.sys file
-        info_sys_filename="$game_dir/info.sys"
-        create_info_sys "$title" "$title_id" "$publisher"
+        if [ "$OS" = "PSBBN" ]; then
+            # Generate the info.sys file
+            info_sys_filename="$game_dir/info.sys"
+            create_info_sys "$title" "$game_id" "$publisher"
+        fi
 
         if [ ${#title} -gt 48 ]; then
             game_title_icon="${title:0:45}..."
@@ -2258,19 +2381,21 @@ if [ -f "$ALL_GAMES" ]; then
         icon_sys_filename="$game_dir/icon.sys"
         create_icon_sys "$game_title_icon" "$publisher"
 
-        # Copy the matching .png file and rename it to jkt_001.png
-        png_file="${TOOLKIT_PATH}/icons/art/${game_id}.png"
-        if [[ -s "$png_file" ]]; then
-            cp "$png_file" "${game_dir}/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/jkt_001.png. See ${LOG_FILE} for details."
-            echo "Created: $game_dir/jkt_001.png"  | tee -a "${LOG_FILE}"
-        else
-            echo "$game_id $title" >> "${MISSING_ART}"
-            if [[ "$disc_type" == "POPS" ]]; then
-                cp "${TOOLKIT_PATH}/icons/art/ps1.png" "${game_dir}/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/jkt_001.png. See ${LOG_FILE} for details."
-                echo "Created: $game_dir/jkt_001.png using default PS1 image." | tee -a "${LOG_FILE}"
+        if [ "$OS" = "PSBBN" ]; then
+            # Copy the matching .png file and rename it to jkt_001.png
+            png_file="${TOOLKIT_PATH}/icons/art/${game_id}.png"
+            if [[ -s "$png_file" ]]; then
+                cp "$png_file" "${game_dir}/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/jkt_001.png. See ${LOG_FILE} for details."
+                echo "Created: $game_dir/jkt_001.png"  | tee -a "${LOG_FILE}"
             else
-                cp "${TOOLKIT_PATH}/icons/art/ps2.png" "${game_dir}/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/jkt_001.png. See ${LOG_FILE} for details."
-                echo "Created: $game_dir/jkt_001.png using default PS2 image." | tee -a "${LOG_FILE}"
+                echo "$game_id $title" >> "${MISSING_ART}"
+                if [[ "$disc_type" == "POPS" ]]; then
+                    cp "${TOOLKIT_PATH}/icons/art/ps1.png" "${game_dir}/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/jkt_001.png. See ${LOG_FILE} for details."
+                    echo "Created: $game_dir/jkt_001.png using default PS1 image." | tee -a "${LOG_FILE}"
+                else
+                    cp "${TOOLKIT_PATH}/icons/art/ps2.png" "${game_dir}/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $game_dir/jkt_001.png. See ${LOG_FILE} for details."
+                    echo "Created: $game_dir/jkt_001.png using default PS2 image." | tee -a "${LOG_FILE}"
+                fi
             fi
         fi
 
@@ -2298,23 +2423,52 @@ if [ -f "$ALL_GAMES" ]; then
         fi
 
         PP_NAME
-        # Generate the BBNL cfg file
+        # Generate the system.cnf files
         # Determine the launcher value for this specific game
         if [[ "$disc_type" == "POPS" ]]; then
             launcher_value="POPS"
         else
             launcher_value="$LAUNCHER"
         fi
-        bbnl_label="${PARTITION_LABEL:3}"
-        bbnl_cfg="${ICONS_DIR}/bbnl/$bbnl_label.cfg"
-        cat > "$bbnl_cfg" <<EOL
-file_name=$file_name
-title_id=$game_id
-disc_type=$disc_type
-launcher=$launcher_value
-EOL
 
-    echo "Created: $bbnl_cfg"  | tee -a "${LOG_FILE}"
+        if [ "$launcher_value" = "OPL" ]; then
+            cat > "${game_dir}/system.cnf" <<EOL
+BOOT2 = PATINFO
+HDDUNITPOWER = NICHDD
+path = hdd0:__system:pfs:/launcher/OPNPS2LD.ELF
+titleid = $game_id
+nohistory = 1
+arg = $file_name
+arg = $game_id
+arg = $disc_type
+arg = bdm
+skip_argv0 = 0
+EOL
+        elif [ "$launcher_value" = "NEUTRINO" ]; then
+            cat > "${game_dir}/system.cnf" <<EOL
+BOOT2 = PATINFO
+HDDUNITPOWER = NICHDD
+path = hdd0:__system:pfs:/launcher/nhddl.elf
+titleid = $game_id
+arg = -mode=ata
+arg = -dvd=mass0:/$disc_type/$file_name
+arg = -noinit
+skip_argv0 = 0
+EOL
+        elif [ "$launcher_value" = "POPS" ]; then
+            elf_file="${file_name%.*}.ELF"
+            cat > "${game_dir}/system.cnf" <<EOL
+BOOT2 = PATINFO
+HDDUNITPOWER = NICHDD
+path = hdd0:__common:pfs:/POPS/POPSTARTER.ELF
+titleid = $game_id
+nohistory = 1
+arg = bbnl:$elf_file
+skip_argv0 = 1
+EOL
+        fi
+
+    echo "Created: system.cnf for $game_id"  | tee -a "${LOG_FILE}"
 
     done
     exec 3<&-
@@ -2322,17 +2476,6 @@ EOL
 else
     echo | tee -a "${LOG_FILE}"
     echo "No games to process." | tee -a "${LOG_FILE}"
-fi
-
-bbnl_cfg="${ICONS_DIR}/bbnl/LAUNCHER.cfg"
-
-echo | tee -a "${LOG_FILE}"
-if [ "$LAUNCHER" = "OPL" ]; then
-    cp "${ASSETS_DIR}/BBNL"/{boot.kelf,system.cnf} "${ASSETS_DIR}/OPL" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create boot.kelf, or system.cnf for OPL. See ${LOG_FILE} for details."
-    create_bbnl_cfg "/bbnl/OPNPS2LD.ELF" "LAUNCHER"
-elif [ "$LAUNCHER" = "NEUTRINO" ]; then
-    cp "${ASSETS_DIR}/BBNL"/{boot.kelf,system.cnf} "${ASSETS_DIR}/NHDDL" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create boot.kelf, or system.cnf for NHDDL. See ${LOG_FILE} for details."
-    create_bbnl_cfg "/bbnl/nhddl.elf" "LAUNCHER" "-mode=ata"
 fi
 
 # Copy OPL files
@@ -2376,11 +2519,6 @@ if ! $files_exist; then
 fi
 
 echo | tee -a "${LOG_FILE}"
-echo "Copying BBNL configs..." | tee -a "${LOG_FILE}"
-rm -f "${OPL}"/bbnl/*.cfg >> "${LOG_FILE}" 2>&1
-cp "${ICONS_DIR}"/bbnl/*.cfg "${OPL}/bbnl" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to copy BBNL config files. See ${LOG_FILE} for details."
-
-echo | tee -a "${LOG_FILE}"
 echo "All assets have been sucessfully created." | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
 
@@ -2388,19 +2526,137 @@ echo -n "Unmounting OPL partition..." | tee -a "${LOG_FILE}"
 UNMOUNT_OPL
 echo | tee -a "${LOG_FILE}"
 
+mount_pfs
+
+if [ "$OS" = "PSBBN" ]; then
+    mapper_probe
+    mount_cfs
+fi
+
 if [ -f "$PS1_LIST" ]; then
     CREATE_VMC
 fi
 
-################################### Create BBNL Partitions ###################################
+if [ "$OS" = "PSBBN" ]; then
+    echo | tee -a "${LOG_FILE}"
+    echo -n "Updating shortcuts in Navigator Menu..." | tee -a "${LOG_FILE}"
+    echo >> "${LOG_FILE}"
+
+    sudo cp "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0" "${SCRIPTS_DIR}/tmp" >> "${LOG_FILE}" 2>&1
+
+    TARGET="${SCRIPTS_DIR}/tmp/shortcut_0"
+    TMP_FILE=$(mktemp ${SCRIPTS_DIR}/tmp/shortcut_0.XXXXXX)
+
+    # If TARGET exists, remove lines containing PP.LAUNCHER and PP.LAUNCHELF
+    if [ -f "$TARGET" ]; then
+        sudo sed -i '/PP\.LAUNCHER$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+        sudo sed -i '/PP\.APP_WLE-ISR$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+        sudo sed -i '/PP\.HOSDMENU\.HIDDEN$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+    fi
+
+    # Count lines in TARGET (0 if doesn't exist)
+    if [ -f "$TARGET" ]; then
+        LINE_COUNT=$(sudo wc -l "$TARGET" | awk '{print $1}')
+    else
+        LINE_COUNT=0
+    fi
+
+    # If TARGET has less than 4 rows
+    if [ "$LINE_COUNT" -lt 4 ]; then
+        if [ "$LAUNCHER" = "OPL" ]; then
+            echo "Open%20PS2%20Loader file%3A%2Fopt0%2Fbn%2Fscript%2Fgame%2Fboot_game3.xml uri%3Dpfs%3A%2FPP.LAUNCHER" > "$TMP_FILE"
+        elif [ "$LAUNCHER" = "NEUTRINO" ]; then
+            echo "NHDDL file%3A%2Fopt0%2Fbn%2Fscript%2Fgame%2Fboot_game3.xml uri%3Dpfs%3A%2FPP.LAUNCHER" > "$TMP_FILE"
+        fi
+    fi
+
+    if [ $((LINE_COUNT + 1)) -lt 4 ] && [ "$LAUNCHELF_INSTALLED" = "yes" ]; then
+        echo "wLaunchELF_isr file%3A%2Fopt0%2Fbn%2Fscript%2Fgame%2Fboot_game3.xml uri%3Dpfs%3A%2FPP.APP_WLE-ISR" >> "$TMP_FILE"
+    fi
+
+    if [ $((LINE_COUNT + 2)) -lt 4 ]; then
+        echo "HOSDMenu file%3A%2Fopt0%2Fbn%2Fscript%2Fgame%2Fboot_game3.xml uri%3Dpfs%3A%2FPP.HOSDMENU.HIDDEN" >> "$TMP_FILE"
+    fi
+
+    # Append TMP_FILE to TARGET
+    sudo tee -a "$TARGET" < "$TMP_FILE" > /dev/null
+
+
+    # Replace TARGET with updated version
+    sudo cp -f "$TARGET" "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0" >> "${LOG_FILE}" 2>&1
+
+    echo | tee -a "${LOG_FILE}"
+fi
+
+echo | tee -a "${LOG_FILE}"
+echo -n "Updating HOSDMenu app list..." | tee -a "${LOG_FILE}"
+
+cat "${ELF_LIST}" > "${APPS_LIST}" 2>> "${LOG_FILE}"
+cat "${SAS_LIST}" >> "${APPS_LIST}" 2>> "${LOG_FILE}"
+
+cp "${STORAGE_DIR}/__sysconf/osdmenu/OSDMENU.CNF" "${OSDMENU_CNF}"
+sed -i '/^name_OSDSYS_ITEM/d; /^path/d; /^arg_OSDSYS_ITEM/d;' "$OSDMENU_CNF"
+
+if [ "$LAUNCHER" = "OPL" ]; then
+    {
+        echo "name_OSDSYS_ITEM_1 = Open PS2 Loader"
+        echo "path1_OSDSYS_ITEM_1 = hdd0:__system/launcher/OPNPS2LD.ELF"
+        echo "arg_OSDSYS_ITEM_1 = -titleid=OPNPS2LD"
+    } >> "$OSDMENU_CNF"
+elif [ "$LAUNCHER" = "NEUTRINO" ]; then
+    {
+        echo "name_OSDSYS_ITEM_1 = NHDDL"
+        echo "path1_OSDSYS_ITEM_1 = hdd0:__system/launcher/nhddl.elf"
+        echo "arg_OSDSYS_ITEM_1 = -mode=ata"
+        echo "arg_OSDSYS_ITEM_1 = -titleid=NHDDL"
+    } >> "$OSDMENU_CNF"
+fi
+
+if [ "$OS" = "PSBBN" ]; then
+{
+        echo "name_OSDSYS_ITEM_2 = BB Navigator"
+        echo "path1_OSDSYS_ITEM_2 = hdd0:__system/p2lboot/osdboot.elf"
+        echo "arg_OSDSYS_ITEM_2 = -titleid=SCPN-601.60"
+} >> "$OSDMENU_CNF"
+    item=3
+    max_items=198
+else
+    item=2
+    max_items=199
+fi
+
+# Read each line from the file in $APPS_LIST
+while IFS=',' read -r title elf title_id; do
+  # Skip empty lines
+  [ -z "$title" ] && continue
+
+  # Stop at 200 items
+  [ "$item" -gt "$max_items" ] && break
+
+  {
+    echo "name_OSDSYS_ITEM_${item} = ${title}"
+    echo "path1_OSDSYS_ITEM_${item} = ${elf}"
+    echo "arg_OSDSYS_${item} = -titleid=${title_id}"
+  } >> "$OSDMENU_CNF"
+
+  ((item++))
+done < "$APPS_LIST"
+
+cp -f "${OSDMENU_CNF}" "${STORAGE_DIR}/__sysconf/osdmenu/OSDMENU.CNF"
+
+echo | tee -a "${LOG_FILE}"
+
+unmount_apa
+
+################################### Create Launcher Partitions ###################################
 
 if find "${ICONS_DIR}/SAS" -mindepth 1 -maxdepth 1 -type d ! -name '.*' | grep -q .; then
-    echo "Creating BBNL Partitions for SAS Apps:" | tee -a "${LOG_FILE}"
+    echo "Creating Launcher Partitions for SAS Apps:" | tee -a "${LOG_FILE}"
 
     while IFS= read -r dir; do
 
         folder_name=$(basename "$dir")
-        pp_name="PP.$folder_name"
+        pp_name="PP.$(sed -E 's/[^A-Za-z0-9]+$//' <<<"$folder_name")"
 
         APA_SIZE_CHECK
 
@@ -2412,19 +2668,21 @@ if find "${ICONS_DIR}/SAS" -mindepth 1 -maxdepth 1 -type d ! -name '.*' | grep -
 
         COMMANDS="device ${DEVICE}\n"
         COMMANDS+="mkpart $pp_name 8M PFS\n"
-        COMMANDS+="mount $pp_name\n"
-        COMMANDS+="mkdir res\n"
-        COMMANDS+="cd res\n"
-        COMMANDS+="lcd '${ICONS_DIR}/SAS/$folder_name'\n"
-        COMMANDS+="put info.sys\n"
-        COMMANDS+="put jkt_001.png\n"
-        COMMANDS+="cd /\n"
-        COMMANDS+="umount\n"
+        if [ "$OS" = "PSBBN" ]; then
+            COMMANDS+="mount $pp_name\n"
+            COMMANDS+="mkdir res\n"
+            COMMANDS+="cd res\n"
+            COMMANDS+="lcd '${ICONS_DIR}/SAS/$folder_name'\n"
+            COMMANDS+="put info.sys\n"
+            COMMANDS+="put jkt_001.png\n"
+            COMMANDS+="cd /\n"
+            COMMANDS+="umount\n"
+        fi
         COMMANDS+="exit"
 
         PFS_COMMANDS
         cd "${ICONS_DIR}/SAS/$folder_name" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to ${ICONS_DIR}/SAS/$folder_name."
-        sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "$pp_name" >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed to modify header of $pp_name"
+        sudo "${HDL_DUMP}" modify_header "${DEVICE}" "$pp_name" >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed to modify header of $pp_name"
         echo "Created $pp_name" | tee -a "${LOG_FILE}"
 
     done < <(find "${ICONS_DIR}/SAS" -mindepth 1 -maxdepth 1 -type d | sort -r)
@@ -2432,7 +2690,7 @@ fi
 
 if find "${ICONS_DIR}/APPS" -mindepth 1 -maxdepth 1 -type d ! -name '.*' | grep -q .; then
     echo | tee -a "${LOG_FILE}"
-    echo "Creating BBNL Partitions for ELF files:" | tee -a "${LOG_FILE}"
+    echo "Creating Launcher Partitions for ELF files:" | tee -a "${LOG_FILE}"
 
     while IFS= read -r dir; do
 
@@ -2449,38 +2707,128 @@ if find "${ICONS_DIR}/APPS" -mindepth 1 -maxdepth 1 -type d ! -name '.*' | grep 
 
         COMMANDS="device ${DEVICE}\n"
         COMMANDS+="mkpart $pp_name 8M PFS\n"
-        COMMANDS+="mount $pp_name\n"
-        if [ "$pp_name" = "PP.DISC" ]; then
-            COMMANDS+="lcd '${ASSETS_DIR}/DISC'\n"
-            COMMANDS+="put PS1VModeNeg.elf\n"
-        fi
-        COMMANDS+="mkdir res\n"
-        COMMANDS+="cd res\n"
-        COMMANDS+="lcd '${ICONS_DIR}/APPS/$folder_name'\n"
-        COMMANDS+="put info.sys\n"
-        if [ "$pp_name" != "PP.BBNAVIGATOR" ]; then
+        if [ "$OS" = "PSBBN" ]; then
+            COMMANDS+="mount $pp_name\n"
+            COMMANDS+="mkdir res\n"
+            COMMANDS+="cd res\n"
+            COMMANDS+="lcd '${ICONS_DIR}/APPS/$folder_name'\n"
+            COMMANDS+="put info.sys\n"
             COMMANDS+="put jkt_001.png\n"
+            COMMANDS+="cd /\n"
+            COMMANDS+="umount\n"
         fi
-        COMMANDS+="cd /\n"
-        COMMANDS+="umount\n"
         COMMANDS+="exit"
 
         PFS_COMMANDS
 
-        if [ "$pp_name" = "PP.LAUNCHDISC" ]; then
-            cd "${ASSETS_DIR}/DISC" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to ${ASSETS_DIR}/DISC."
-            sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "$pp_name" >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed to modify header of $pp_name."
-        else
-            cd "${ICONS_DIR}/APPS/$folder_name" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to ${ICONS_DIR}/APPS/$folder_name."
-            sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "$pp_name" >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed to modify header of $pp_name."
-        fi
+        cd "${ICONS_DIR}/APPS/$folder_name" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to ${ICONS_DIR}/APPS/$folder_name."
+        sudo "${HDL_DUMP}" modify_header "${DEVICE}" "$pp_name" >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed to modify header of $pp_name."
         echo "Created $pp_name" | tee -a "${LOG_FILE}"
 
     done < <(find "${ICONS_DIR}/APPS" -mindepth 1 -maxdepth 1 -type d | sort -r)
 fi
 
-# Create PP.LAUNCHER
+if [ "$OS" = "PSBBN" ]; then
+    # Create PP.SCPN_601.60.PSBBN
+    echo | tee -a "${LOG_FILE}"
 
+    APA_SIZE_CHECK
+
+    # Check the value of available
+    if [ "$available" -lt 8 ]; then
+        error_msg "Warning" "Insufficient space for another partition."
+    else
+        mkdir -p "${ICONS_DIR}/PSBBN"
+        cp "${ICONS_DIR}/ico/psbbn.ico" "${ICONS_DIR}/PSBBN/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
+        cp "${ICONS_DIR}/ico/psbbn-del.ico" "${ICONS_DIR}/PSBBN/del.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/del.ico. See ${LOG_FILE} for details."
+
+        cat > "${ICONS_DIR}/PSBBN/system.cnf" <<EOL
+BOOT2 = PATINFO
+HDDUNITPOWER = NICHDD
+path = hdd0:__system:pfs:/p2lboot/osdboot.elf
+titleid = SCPN-60160
+EOL
+
+        info_sys_filename="${ICONS_DIR}/PSBBN/info.sys"
+        icon_sys_filename="${ICONS_DIR}/PSBBN/icon.sys"
+        title="BB Navigator"
+        title_id="SCPN-60160"
+        publisher="Sony Computer Entertainment"
+
+        create_info_sys "$title" "$title_id" "$publisher"
+        create_icon_sys "$title" "$publisher"
+    
+        COMMANDS="device ${DEVICE}\n"
+        COMMANDS+="mkpart PP.SCPN_601.60.PSBBN 8M PFS\n"
+        COMMANDS+="mount PP.SCPN_601.60.PSBBN\n"
+        COMMANDS+="mkdir res\n"
+        COMMANDS+="cd res\n"
+        COMMANDS+="lcd '${ICONS_DIR}/PSBBN'\n"
+        COMMANDS+="put info.sys\n"
+        COMMANDS+="cd /\n"
+        COMMANDS+="umount\n"
+        COMMANDS+="exit"
+
+        echo >> "${LOG_FILE}"
+        PFS_COMMANDS
+
+        cd "${ICONS_DIR}/PSBBN"
+
+        sudo "${HDL_DUMP}" modify_header "${DEVICE}" PP.SCPN_601.60.PSBBN >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed to modify header of PP.SCPN_601.60.PSBBN."
+        echo "Created PP.SCPN_601.60.PSBBN" | tee -a "${LOG_FILE}"
+    fi
+
+    # Create PP.HOSDMENU.HIDDEN
+    APA_SIZE_CHECK
+
+    # Check the value of available
+    if [ "$available" -lt 8 ]; then
+        error_msg "Warning" "Insufficient space for another partition."
+    else
+        mkdir -p "${ICONS_DIR}/HOSDMENU"
+        cp "${ICONS_DIR}/ico/app.ico" "${ICONS_DIR}/HOSDMENU/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
+
+        cat > "${ICONS_DIR}/HOSDMENU/system.cnf" <<EOL
+BOOT2 = PATINFO
+HDDUNITPOWER = NICHDD
+path = hdd0:__system:pfs:/osdmenu/hosdmenu.elf
+
+EOL
+
+        info_sys_filename="${ICONS_DIR}/HOSDMENU/info.sys"
+        icon_sys_filename="${ICONS_DIR}/HOSDMENU/icon.sys"
+        title="HOSDMenu"
+        title_id="OSDMenu"
+        publisher="github.com/pcm720"
+
+        create_info_sys "$title" "$title_id" "$publisher"
+        create_icon_sys "$title" " "
+    
+        COMMANDS="device ${DEVICE}\n"
+        COMMANDS+="mkpart PP.HOSDMENU.HIDDEN 8M PFS\n"
+        COMMANDS+="mount PP.HOSDMENU.HIDDEN\n"
+        COMMANDS+="mkdir res\n"
+        COMMANDS+="cd res\n"
+        COMMANDS+="lcd '${ICONS_DIR}/HOSDMENU'\n"
+        COMMANDS+="put info.sys\n"
+        COMMANDS+="lcd '${ARTWORK_DIR}'\n"
+        COMMANDS+="put HOSDMENU.png\n"
+        COMMANDS+="rename HOSDMENU.png jkt_001.png\n"
+        COMMANDS+="cd /\n"
+        COMMANDS+="umount\n"
+        COMMANDS+="exit"
+
+        echo >> "${LOG_FILE}"
+        PFS_COMMANDS
+
+        cd "${ICONS_DIR}/HOSDMENU"
+
+        sudo "${HDL_DUMP}" modify_header "${DEVICE}" PP.HOSDMENU.HIDDEN >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed to modify header of PP.HOSDMENU.HIDDEN"
+        echo "Created PP.HOSDMENU.HIDDEN" | tee -a "${LOG_FILE}"
+    fi
+fi
+
+# Create PP.LAUNCHER
 APA_SIZE_CHECK
 
 # Check the value of available
@@ -2488,36 +2836,74 @@ if [ "$available" -lt 8 ]; then
     error_msg "Warning" "Insufficient space for another partition."
 else
 
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="mkpart PP.LAUNCHER 8M PFS\n"
-    COMMANDS+="mount PP.LAUNCHER\n"
-    COMMANDS+="mkdir res\n"
-    COMMANDS+="cd res\n"
+    mkdir -p "${ICONS_DIR}/LAUNCHER"
+
+    info_sys_filename="${ICONS_DIR}/LAUNCHER/info.sys"
+    icon_sys_filename="${ICONS_DIR}/LAUNCHER/icon.sys"
 
     if [ "$LAUNCHER" = "OPL" ]; then
-        cd "${ASSETS_DIR}/OPL"
-        COMMANDS+="put info.sys\n"
-        COMMANDS+="lcd '${ARTWORK_DIR}'\n"
-        COMMANDS+="put OPENPS2LOAD.png\n"
-        COMMANDS+="rename OPENPS2LOAD.png jkt_001.png\n"
-        COMMANDS+="cd /\n"
+        cp "${ICONS_DIR}/ico/opl.ico" "${ICONS_DIR}/LAUNCHER/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
+        cp "${ICONS_DIR}/ico/opl-del.ico" "${ICONS_DIR}/LAUNCHER/del.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/del.ico. See ${LOG_FILE} for details."
+        title="Open PS2 Loader"
+        title_id="OPNPS2LD"
+        publisher="github.com/ps2homebrew"
+
+        cat > "${ICONS_DIR}/LAUNCHER/system.cnf" <<EOL
+BOOT2 = PATINFO
+HDDUNITPOWER = NICHDD
+path = hdd0:__system:pfs:/launcher/OPNPS2LD.ELF
+titleid = OPNPS2LD
+EOL
+
     elif [ "$LAUNCHER" = "NEUTRINO" ]; then
-        cd "${ASSETS_DIR}/NHDDL"
-        COMMANDS+="put info.sys\n"
-        COMMANDS+="lcd '${ARTWORK_DIR}'\n"
-        COMMANDS+="put NHDDL.png\n"
-        COMMANDS+="rename NHDDL.png jkt_001.png\n"
-        COMMANDS+="cd /\n"
+        cp "${ICONS_DIR}/ico/nhddl.ico" "${ICONS_DIR}/LAUNCHER/list.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/list.ico. See ${LOG_FILE} for details."
+        cp "${ICONS_DIR}/ico/nhddl-del.ico" "${ICONS_DIR}/LAUNCHER/del.ico" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/del.ico. See ${LOG_FILE} for details."
+        title="NHDDL"
+        title_id="NHDDL"
+        publisher="github.com/pcm720"
+
+        cat > "${ICONS_DIR}/LAUNCHER/system.cnf" <<EOL
+BOOT2 = PATINFO
+HDDUNITPOWER = NICHDD
+path = hdd0:__system:pfs:/launcher/nhddl.elf
+titleid = NHDDL
+arg = -mode=ata
+EOL
+
     fi
 
-    COMMANDS+="umount\n"
+    create_info_sys "$title" "$title_id" "$publisher"
+    create_icon_sys "$title" " "
+
+    COMMANDS="device ${DEVICE}\n"
+    COMMANDS+="mkpart PP.LAUNCHER 8M PFS\n"
+    if [ "$OS" = "PSBBN" ]; then
+        COMMANDS+="mount PP.LAUNCHER\n"
+        COMMANDS+="mkdir res\n"
+        COMMANDS+="cd res\n"
+        COMMANDS+="lcd '${ICONS_DIR}/LAUNCHER'\n"
+        COMMANDS+="put info.sys\n"
+        if [ "$LAUNCHER" = "OPL" ]; then
+            COMMANDS+="lcd '${ARTWORK_DIR}'\n"
+            COMMANDS+="put OPENPS2LOAD.png\n"
+            COMMANDS+="rename OPENPS2LOAD.png jkt_001.png\n"
+            COMMANDS+="cd /\n"
+        elif [ "$LAUNCHER" = "NEUTRINO" ]; then
+            COMMANDS+="lcd '${ARTWORK_DIR}'\n"
+            COMMANDS+="put NHDDL.png\n"
+            COMMANDS+="rename NHDDL.png jkt_001.png\n"
+            COMMANDS+="cd /\n"
+        fi
+        COMMANDS+="umount\n"
+    fi
     COMMANDS+="exit"
 
     echo >> "${LOG_FILE}"
     PFS_COMMANDS
 
-    sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" PP.LAUNCHER >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed to modify header of PP.LAUNCHER."
-    echo | tee -a "${LOG_FILE}"
+    cd "${ICONS_DIR}/LAUNCHER"
+
+    sudo "${HDL_DUMP}" modify_header "${DEVICE}" PP.LAUNCHER >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed to modify header of PP.LAUNCHER."
     echo "Created PP.LAUNCHER" | tee -a "${LOG_FILE}"
 fi
 
@@ -2527,7 +2913,7 @@ if [ -f "$ALL_GAMES" ]; then
     mapfile -t reversed_lines < <(tac "$ALL_GAMES")
 
     echo | tee -a "${LOG_FILE}"
-    echo "Creating BBNL Partitions for Games:" | tee -a "${LOG_FILE}"
+    echo "Creating Launcher Partitions for Games:" | tee -a "${LOG_FILE}"
     i=0
 
     # Reverse the lines of the file using tac and process each line
@@ -2546,32 +2932,34 @@ if [ -f "$ALL_GAMES" ]; then
 
         COMMANDS="device ${DEVICE}\n"
         COMMANDS+="mkpart ${PARTITION_LABEL} 8M PFS\n"
-        COMMANDS+="mount ${PARTITION_LABEL}\n"
-        COMMANDS+="cd /\n"
+        if [ "$OS" = "PSBBN" ]; then
+            COMMANDS+="mount ${PARTITION_LABEL}\n"
+            COMMANDS+="cd /\n"
 
-        # Navigate into the sub-directory named after the gameid
-        COMMANDS+="lcd '${ICONS_DIR}/${game_id}'\n"
-        COMMANDS+="mkdir res\n"
-        COMMANDS+="cd res\n"
-        COMMANDS+="put info.sys\n"
-        COMMANDS+="put jkt_001.png\n"
+            # Navigate into the sub-directory named after the gameid
+            COMMANDS+="lcd '${ICONS_DIR}/${game_id}'\n"
+            COMMANDS+="mkdir res\n"
+            COMMANDS+="cd res\n"
+            COMMANDS+="put info.sys\n"
+            COMMANDS+="put jkt_001.png\n"
 
-        if [[ "$disc_type" == "POPS" ]]; then
-            COMMANDS+="lcd '${ASSETS_DIR}/POPStarter'\n"
-            COMMANDS+="put bg.png\n"
-            COMMANDS+="lcd '${ASSETS_DIR}/POPStarter/eng'\n"
-            COMMANDS+="put 1.png\n"
-            COMMANDS+="put 2.png\n"
-            COMMANDS+="put man.xml\n"
+            if [[ "$disc_type" == "POPS" ]]; then
+                COMMANDS+="lcd '${ASSETS_DIR}/POPStarter'\n"
+                COMMANDS+="put bg.png\n"
+                COMMANDS+="lcd '${ASSETS_DIR}/POPStarter/eng'\n"
+                COMMANDS+="put 1.png\n"
+                COMMANDS+="put 2.png\n"
+                COMMANDS+="put man.xml\n"
+            fi
+
+            COMMANDS+="umount\n"
         fi
-
-        COMMANDS+="umount\n"
         COMMANDS+="exit\n"
 
         PFS_COMMANDS
 
         cd "${ICONS_DIR}/$game_id" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to ${ICONS_DIR}/$game_id."
-        sudo "${HELPER_DIR}/HDL Dump.elf" modify_header "${DEVICE}" "${PARTITION_LABEL}" >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed to modify header of ${PARTITION_LABEL}."
+        sudo "${HDL_DUMP}" modify_header "${DEVICE}" "${PARTITION_LABEL}" >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed to modify header of ${PARTITION_LABEL}."
         echo "Created $PARTITION_LABEL" | tee -a "${LOG_FILE}"
         echo >> "${LOG_FILE}"
 

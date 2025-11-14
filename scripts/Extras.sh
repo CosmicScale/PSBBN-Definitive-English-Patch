@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export LC_ALL=en_US.UTF-8
+export LC_ALL=C.UTF-8
 
 # Set paths
 TOOLKIT_PATH="$(pwd)"
@@ -11,6 +11,30 @@ OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/extras.log"
 
 path_arg="$1"
+
+arch="$(uname -m)"
+
+if [[ "$arch" = "x86_64" ]]; then
+    # x86-64
+    CUE2POPS="${HELPER_DIR}/cue2pops"
+    HDL_DUMP="${HELPER_DIR}/HDL Dump.elf"
+    MKFS_EXFAT="${HELPER_DIR}/mkfs.exfat"
+    PFS_FUSE="${HELPER_DIR}/PFS Fuse.elf"
+    PFS_SHELL="${HELPER_DIR}/PFS Shell.elf"
+    APA_FIXER="${HELPER_DIR}/PS2 APA Header Checksum Fixer.elf"
+    PSU_EXTRACT="${HELPER_DIR}/PSU Extractor.elf"
+    SQLITE="${HELPER_DIR}/sqlite"
+elif [[ "$arch" = "aarch64" ]]; then
+    # ARM64
+    CUE2POPS="${HELPER_DIR}/aarch64/cue2pops"
+    HDL_DUMP="${HELPER_DIR}/aarch64/HDL Dump.elf"
+    MKFS_EXFAT="${HELPER_DIR}/aarch64/mkfs.exfat"
+    PFS_FUSE="${HELPER_DIR}/aarch64/PFS Fuse.elf"
+    PFS_SHELL="${HELPER_DIR}/aarch64/PFS Shell.elf"
+    APA_FIXER="${HELPER_DIR}/aarch64/PS2 APA Header Checksum Fixer.elf"
+    PSU_EXTRACT="${HELPER_DIR}/aarch64/PSU Extractor.elf"
+    SQLITE="${HELPER_DIR}/aarch64/sqlite"
+fi
 
 error_msg() {
     error_1="$1"
@@ -31,35 +55,51 @@ error_msg() {
 clean_up() {
     failure=0
 
-    # Build list of partitions we care about
-    targets=("${LINUX_PARTITIONS[@]}" "${APA_PARTITIONS[@]}")
+    submounts=$(findmnt -nr -o TARGET | grep "^${STORAGE_DIR}/" | sort -r)
 
-    # Unmount if mounted
-    for PARTITION_NAME in "${targets[@]}"; do
-        MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
-        if mountpoint -q "$MOUNT_PATH"; then
-            if ! sudo umount "$MOUNT_PATH" 2>/dev/null; then
-                echo "[X] Error: Failed to unmount ${PARTITION_NAME}." >> "${LOG_FILE}"
-                failure=1
-            fi
+    if [ -n "$submounts" ]; then
+        echo "Found mounts under ${STORAGE_DIR}, attempting to unmount..." >> "$LOG_FILE"
+        while read -r mnt; do
+            [ -z "$mnt" ] && continue
+            echo "Unmounting $mnt..." >> "$LOG_FILE"
+            sudo umount "$mnt" >> "${LOG_FILE}" 2>&1 || failure=1
+        done <<< "$submounts"
+    fi
+
+    if [ -d "${STORAGE_DIR}" ]; then
+        submounts=$(findmnt -nr -o TARGET | grep "^${STORAGE_DIR}/" | sort -r)
+        if [ -z "$submounts" ]; then
+            echo "Deleting ${STORAGE_DIR}..." >> "$LOG_FILE"
+            sudo rm -rf "${STORAGE_DIR}" || { echo "[X] Error: Failed to delete ${STORAGE_DIR}" >> "$LOG_FILE"; failure=1; }
+            echo "Deleted ${STORAGE_DIR}." >> "$LOG_FILE"
+        else
+            echo "Some mounts remain under ${STORAGE_DIR}, not deleting." >> "$LOG_FILE"
+            failure=1
         fi
-    done
+    else
+        echo "Directory ${STORAGE_DIR} does not exist." >> "$LOG_FILE"
+    fi
 
-    # Force-remove any existing dmsetup maps for just our partitions
-    for PARTITION_NAME in "${targets[@]}"; do
-        map_name=$(sudo dmsetup ls | awk -v devcut="$(basename "$DEVICE")" -v part="$PARTITION_NAME" '$1 == devcut"-"part {print $1}')
-        if [ -n "$map_name" ]; then
-            if ! sudo dmsetup remove -f "$map_name" 2>/dev/null; then
-                echo "[X] Error: Failed to delete mapper ${map_name}." >> "${LOG_FILE}"
-                failure=1
-            fi
+    # Get the device basename
+    DEVICE_CUT=$(basename "$DEVICE")
+
+    # List all existing maps for this device
+    existing_maps=$(sudo dmsetup ls 2>/dev/null | awk -v dev="$DEVICE_CUT" '$1 ~ "^"dev"-" {print $1}')
+
+    # Force-remove each existing map
+    for map_name in $existing_maps; do
+        echo "Removing existing mapper $map_name..." >> "$LOG_FILE"
+        if ! sudo dmsetup remove -f "$map_name" 2>/dev/null; then
+            echo "Failed to delete mapper $map_name." >> "$LOG_FILE"
+            failure=1
         fi
     done
 
     # Abort if any failures occurred
     if [ "$failure" -ne 0 ]; then
+        echo | tee -a "${LOG_FILE}"
         error_msg "[X] Error: Cleanup error(s) occurred. Aborting."
-        retrun 1
+        return 1
     fi
 
 }
@@ -84,7 +124,7 @@ mapper_probe() {
     keep_partitions=( "${LINUX_PARTITIONS[@]}" "${APA_PARTITIONS[@]}" )
 
     # 3) Get HDL Dump --dm output, split semicolons into lines
-    dm_output=$(sudo "${HELPER_DIR}/HDL Dump.elf" toc "${DEVICE}" --dm | tr ';' '\n')
+    dm_output=$(sudo "${HDL_DUMP}" toc "${DEVICE}" --dm | tr ';' '\n')
 
     # 4) Create each kept partition individually
     while IFS= read -r line; do
@@ -104,16 +144,16 @@ mount_cfs() {
   for PARTITION_NAME in "${LINUX_PARTITIONS[@]}"; do
     MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
     if [ -e "${MAPPER}${PARTITION_NAME}" ]; then
-        [ -d "${MOUNT_PATH}" ] || sudo mkdir -p "${MOUNT_PATH}"
+        [ -d "${MOUNT_PATH}" ] || mkdir -p "${MOUNT_PATH}"
         if ! sudo mount "${MAPPER}${PARTITION_NAME}" "${MOUNT_PATH}" >>"${LOG_FILE}" 2>&1; then
             error_msg "[X] Error: Failed to mount ${PARTITION_NAME} partition."
             clean_up
-            retrun 1
+            return 1
         fi
     else
         error_msg "[X] Error: Partition ${PARTITION_NAME} not found on disk."
         clean_up
-        retrun 1
+        return 1
     fi
   done
 }
@@ -121,15 +161,15 @@ mount_cfs() {
 mount_pfs() {
     for PARTITION_NAME in "${APA_PARTITIONS[@]}"; do
         MOUNT_POINT="${STORAGE_DIR}/$PARTITION_NAME/"
-        sudo mkdir -p "$MOUNT_POINT"
-        if ! sudo "${HELPER_DIR}/PFS Fuse.elf" \
+        mkdir -p "$MOUNT_POINT"
+        if ! sudo "${PFS_FUSE}" \
             -o allow_other \
             --partition="$PARTITION_NAME" \
             "${DEVICE}" \
             "$MOUNT_POINT" >>"${LOG_FILE}" 2>&1; then
             error_msg "[X] Error: Failed to mount $PARTITION_NAME partition." "Check the device or filesystem and try again."
             clean_up
-            retrun 1
+            return 1
         fi
     done
 }
@@ -139,7 +179,9 @@ detect_drive() {
 
     if [[ -z "$DEVICE" ]]; then
         echo | tee -a "${LOG_FILE}"
-        echo "[X] Error: Unable to detect PS2 drive." | tee -a "${LOG_FILE}"
+        echo "[X] Error: Unable to detect the PS2 drive. Please ensure the drive is properly connected." | tee -a "${LOG_FILE}"
+        echo
+        echo "You must install PSBBN first before insalling extras."
         echo
         read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
         return 1
@@ -164,38 +206,13 @@ detect_drive() {
         fi
     done
 
-    if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc $DEVICE >> "${LOG_FILE}" 2>&1; then
+    if ! sudo "${HDL_DUMP}" toc $DEVICE >> "${LOG_FILE}" 2>&1; then
         echo
         echo "[X] Error: APA partition is broken on ${DEVICE}." | tee -a "${LOG_FILE}"
         read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
         return 1
     else
         echo "PS2 HDD detected as $DEVICE" >> "${LOG_FILE}"
-    fi
-}
-
-check_device_size() {
-    # Get the size of the device in bytes
-    SIZE_CHECK=$(lsblk -o NAME,SIZE -b | grep -w "$(basename "$DEVICE")" | awk '{print $2}')
-    
-    # Check if we successfully got a size
-    if [[ -z "$SIZE_CHECK" ]]; then
-        echo "[X] Error: Could not determine device size."
-        return 1
-    fi
-
-    # Convert size to GB (1 GB = 1,000,000,000 bytes)
-    size_gb=$(echo "$SIZE_CHECK / 1000000000" | bc)
-
-    if (( size_gb > 960 )); then
-        echo
-        echo "[!] Warning: Device is $size_gb GB. HDD-OSD may experience issues with drives larger than 960 GB." | tee -a "${LOG_FILE}"
-        echo
-        read -rp "Continue anyway? (y/n): " answer
-        case "$answer" in
-            [Yy]*) echo "Continuing...";;
-            *) echo "Aborting."; return 1;;
-        esac
     fi
 }
 
@@ -231,62 +248,6 @@ UNMOUNT_OPL() {
     fi
 }
 
-hdd_osd_files_present() {
-    local files=(
-        FNTOSD
-        HDD-OSD.elf
-        ICOIMAGE
-        JISUCS
-        OSDSYS_A.XLF
-        osdboot.elf
-        PSBBN.ELF
-        SKBIMAGE
-        SNDIMAGE
-        TEXIMAGE
-    )
-
-    for file in "${files[@]}"; do
-        if [[ ! -f "${ASSETS_DIR}/extras/$file" ]]; then
-            return 1  # false
-        fi
-    done
-
-    return 0  # true
-}
-
-download_files() {
-# Check for HDD-OSD files
-    rm -rf "${ASSETS_DIR}/HDD-OSD.zip" "${ASSETS_DIR}/HDD-OSD" 2>>"$LOG_FILE"
-    if hdd_osd_files_present; then
-        echo | tee -a "${LOG_FILE}"
-        echo "All required files are present. Skipping download" >> "${LOG_FILE}"
-    else
-        echo | tee -a "${LOG_FILE}"
-        echo "Required files are missing in ${ASSETS_DIR}/extras." | tee -a "${LOG_FILE}"
-        # Check if extras.zip exists
-        if [[ -f "${ASSETS_DIR}/extras.zip" && ! -f "${ASSETS_DIR}/extras.zip.st" ]]; then
-            echo | tee -a "${LOG_FILE}"
-            echo "extras.zip found in ${ASSETS_DIR}. Extracting..." | tee -a "${LOG_FILE}"
-            unzip -o "${ASSETS_DIR}/extras.zip" -d "${ASSETS_DIR}" >> "${LOG_FILE}" 2>&1
-        else
-            echo | tee -a "${LOG_FILE}"
-            echo "Downloading required files..." | tee -a "${LOG_FILE}"
-            axel -a https://archive.org/download/psbbn-definitive-english-patch-v2/extras.zip -o "${ASSETS_DIR}"
-            unzip -o "${ASSETS_DIR}/extras.zip" -d "${ASSETS_DIR}" >> "${LOG_FILE}" 2>&1
-        fi
-        # Check if HDD-OSD files exist after extraction
-        if hdd_osd_files_present; then
-            echo | tee -a "${LOG_FILE}"
-            echo "[✓] Files successfully extracted." | tee -a "${LOG_FILE}"
-        else
-            echo | tee -a "${LOG_FILE}"
-            echo "[X] Error: One or more files are missing after extraction." | tee -a "${LOG_FILE}"
-            read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
-            return 1
-        fi
-    fi
-}
-
 download_linux() {
 # Check for HDD-OSD files
     if [ -f "${ASSETS_DIR}/PS2Linux.tar.gz" ]; then
@@ -298,14 +259,34 @@ download_linux() {
         if axel -a https://archive.org/download/psbbn-definitive-patch-v3/PS2Linux.tar.gz -o "${ASSETS_DIR}"; then
             echo "[✓] Download completed successfully." | tee -a "${LOG_FILE}"
         else
-            error_msg "[X] Error: Download failed."
+            error_msg "[X] Error: Download failed." "Please check the status of archive.org. You may need to use a VPN depending on your location."
             return 1
         fi
     fi
 }
 
+CHECK_PARTITIONS() {
+    TOC_OUTPUT=$(sudo "${HDL_DUMP}" toc "${DEVICE}")
+    STATUS=$?
+
+    if [ $STATUS -ne 0 ]; then
+        error_msg "APA partition is broken on ${DEVICE}. Install failed."
+    fi
+
+    # List of required partitions
+    required=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.8 __linux.9 __contents __system __sysconf __.POPS __common)
+
+    # Check all required partitions
+    for part in "${required[@]}"; do
+        if ! echo "$TOC_OUTPUT" | grep -Fq "$part"; then
+            error_msg "[X] Error: This feature requires PSBBN." " " "Some partitions are missing on ${DEVICE}. See log for details."
+            exit 1
+        fi
+    done
+}
+
 PFS_COMMANDS() {
-PFS_COMMANDS=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1)
+PFS_COMMANDS=$(echo -e "$COMMANDS" | sudo "${PFS_SHELL}" >> "${LOG_FILE}" 2>&1)
 if echo "$PFS_COMMANDS" | grep -q "Exit code is"; then
     error_msg "PFS Shell returned an error. See ${LOG_FILE}"
     return 1
@@ -315,7 +296,7 @@ fi
 HDL_TOC() {
     rm -f "$hdl_output"
     hdl_output=$(mktemp)
-    if ! sudo "${HELPER_DIR}/HDL Dump.elf" toc "$DEVICE" 2>>"${LOG_FILE}" > "$hdl_output"; then
+    if ! sudo "${HDL_DUMP}" toc "$DEVICE" 2>>"${LOG_FILE}" > "$hdl_output"; then
         rm -f "$hdl_output"
         error_msg "[X] Error: Failed to extract list of partitions." "APA partition could be broken on ${DEVICE}"
         return 1
@@ -326,10 +307,9 @@ AVAILABLE_SPACE(){
     HDL_TOC || return 1
     # Extract the "used" value, remove "MB" and any commas
     used=$(cat "$hdl_output" | awk '/used:/ {print $6}' | sed 's/,//; s/MB//')
-    capacity=129960
 
-    # Calculate available space (capacity - used)
-    available=$((capacity - used - 6400 - 128))
+    # Calculate available space (APA_SIZE - used)
+    available=$((APA_SIZE - used - 6400 - 128))
     free_space=$((available / 1024))
     echo "Free Space: $free_space GB" >> "${LOG_FILE}"
 }
@@ -364,61 +344,7 @@ LINUX_SPLASH(){
 
 
 EOF
-}
-
-PS2BBL_SPLASH(){
-    clear
-    cat << "EOF"
-                             ______  _____  _____ ____________ _     
-                             | ___ \/  ___|/ __  \| ___ \ ___ \ |    
-                             | |_/ /\ `--. `' / /'| |_/ / |_/ / |    
-                             |  __/  `--. \  / /  | ___ \ ___ \ |    
-                             | |    /\__/ /./ /___| |_/ / |_/ / |____
-                             \_|    \____/ \_____/\____/\____/\_____/
-                                        
-                                        
-EOF
-}
-
-HDDOSD_SPLASH(){
-    clear
-    cat << "EOF"
-                            _   _____________        _____ ___________ 
-                           | | | |  _  \  _  \      |  _  /  ___|  _  \
-                           | |_| | | | | | | |______| | | \ `--.| | | |
-                           |  _  | | | | | | |______| | | |`--. \ | | |
-                           | | | | |/ /| |/ /       \ \_/ /\__/ / |/ / 
-                           \_| |_/___/ |___/         \___/\____/|___/  
-                                            
-
-EOF
-}                                            
-
-trap 'echo; exit 130' INT
-trap exit_script EXIT
-
-cd "${TOOLKIT_PATH}"
-
-echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
-if [ $? -ne 0 ]; then
-    sudo rm -f "${LOG_FILE}"
-    echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echo
-        echo "[X] Error: Cannot to create log file."
-        read -n 1 -s -r -p "Press any key to exit..." </dev/tty
-        echo
-        exit 1
-    fi
-fi
-
-date >> "${LOG_FILE}"
-echo >> "${LOG_FILE}"
-cat /etc/*-release >> "${LOG_FILE}" 2>&1
-
-if ! sudo rm -rf "${STORAGE_DIR}"; then
-    error_msg "Failed to remove $STORAGE_DIR folder."
-fi
+}                         
 
 # Function for Option 1 - Install PS2 Linux
 option_one() {
@@ -431,17 +357,18 @@ option_one() {
     MOUNT_OPL || return 1
     
     psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
+    APA_SIZE=$(awk -F' *= *' '$1=="APA_SIZE"{print $2}' "${OPL}/version.txt")
     
     UNMOUNT_OPL || return 1
 
-    version_check="3.00"
+    version_check="4.0.0"
 
     HDL_TOC || return 1
 
     if cat "${hdl_output}" | grep -q '\b__linux\.3\b'; then
         linux3="yes"
         if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
-            error_msg "Linux is already installed." "If you want to reinstall Linux, update to PSBBN version 3.00 or higher first."
+            error_msg "Linux is already installed." "If you want to reinstall Linux, update to PSBBN version 4.0.0 or higher first."
             return 0
         else
             while true; do
@@ -484,18 +411,28 @@ option_one() {
     LINUX_SPLASH
 
     if [ "$linux3" != "yes" ]; then
-        AVAILABLE_SPACE || return 1
-        if [ "$free_space" -lt 3 ]; then
-            error_msg "[X] Error: Insufficient disk space. At least 3 GB of free space is required to install Linux."
-            return 1
+        if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
+            error_msg "To install or reinstall PS2 Linux, update to PSBBN version 4.0.0 or higher."
+            return 0
         else
-            free_space=$((free_space -2))
+            if [ -z "$APA_SIZE" ]; then
+                error_msg "[X] Error: Unable to determine APA free space."
+                return 1
+            else
+                AVAILABLE_SPACE || return 1
+                if [ "$free_space" -lt 3 ]; then
+                    error_msg "[X] Error: Insufficient disk space. At least 3 GB of free space is required to install Linux."
+                    return 1
+                else
+                    free_space=$((free_space -2))
+                fi
+            fi
         fi
     fi
 
     download_linux || return 1
 
-    if [ "$linux3" = "yes" ]; then
+    if [ "$linux3" == "yes" ]; then
         HDL_TOC || return 1
         LINUX_SIZE=$(grep '__\linux.3' "$hdl_output" | awk '{print $4}' | grep -oE '[0-9]+')
         if [ "$LINUX_SIZE" -gt 2048 ]; then
@@ -508,13 +445,11 @@ option_one() {
     fi
 
     if ! cat "${hdl_output}" | grep -q '\b__linux\.10\b'; then
-        AVAILABLE_SPACE || return 1
         echo "Free Space available for home partition: $free_space GB" >> "${LOG_FILE}"
 
         while true; do
             echo | tee -a "${LOG_FILE}"
-            echo "Available: $free_space GB" | tee -a "${LOG_FILE}"
-            echo
+            echo "APA Space Available: $free_space GB" >> "${LOG_FILE}"
             echo "What size would you like the \"home\" partition to be?"
             echo "Minimum 1 GB, maximum $free_space GB"
             echo
@@ -559,7 +494,8 @@ option_one() {
     echo | tee -a "${LOG_FILE}"
     echo -n "Installing PS2 Linux..." | tee -a "${LOG_FILE}"
 
-    LINUX_PARTITIONS=("__linux.1" "__linux.3" )
+    LINUX_PARTITIONS=("__linux.3" )
+    APA_PARTITIONS=("__system" "__sysconf" )
 
     clean_up   && \
     mapper_probe || return 1
@@ -569,183 +505,55 @@ option_one() {
         return 1
     fi
 
-    mount_cfs || return 1
+    mount_cfs    && \
+    mount_pfs    || return 1
 
     if ! sudo tar zxpf "${ASSETS_DIR}/PS2Linux.tar.gz" -C "${STORAGE_DIR}/__linux.3" >>"${LOG_FILE}" 2>&1; then
         error_msg "Failed to extract files. Install Failed."
         return 1
     fi
 
-    FILE="${STORAGE_DIR}/__linux.1/etc/rc.d/rc.sysinit"
+    cp -f "${ASSETS_DIR}/kernel/ps2-linux-"{ntsc,vga} "${STORAGE_DIR}/__system/p2lboot/" 2>> "${LOG_FILE}" || { error_msg "Failed to copy kernel files."; return 1; }
 
-    LINE1='BUTTON=`cat /proc/ps2pad | awk '\''$1==0 { print $5; }'\''`'
-    LINE2='[ "$BUTTON" != "" -a "$BUTTON" != "FFFF" ] && /sbin/akload -r /boot/linux'
+    TMP_FILE=$(mktemp /tmp/OSDMBR.XXXXXX)
+    cp -f "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "$TMP_FILE" 2>> "${LOG_FILE}" || { error_msg "Failed to copy OSDMBR.CNF."; return 1; }
 
-    # Read last two lines once
-    LAST_LINES=$(tail -n 2 "$FILE")
+    # Remove any existing boot_circle lines
+    sed -i '/^boot_circle/d' "$TMP_FILE" 2>> "${LOG_FILE}"
 
-    # Append the lines if either is missing
-    if ! grep -Fxq "$LINE1" <<< "$LAST_LINES" || ! grep -Fxq "$LINE2" <<< "$LAST_LINES"; then
-        echo "$LINE1" | sudo tee -a "$FILE" >/dev/null
-        echo "$LINE2" | sudo tee -a "$FILE" >/dev/null
-    fi
+    # Append new PSBBN boot entries
+    {
+        echo 'boot_circle = $PSBBN'
+        echo 'boot_circle_arg1 = --kernel'
+        echo 'boot_circle_arg2 = pfs0:/p2lboot/ps2-linux-ntsc'
+        echo 'boot_circle_arg3 = -noflags'
+    } >> "$TMP_FILE"
+    cp -f $TMP_FILE "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" 2>> "${LOG_FILE}" || { error_msg "Failed to copy OSDMBR.CNF."; return 1; }
 
-    clean_up
+    clean_up || return 1
 
-    echo
-    echo
-    echo "[✓] PS2 Linux successfully installed!" | tee -a "${LOG_FILE}"
-    echo
-    echo "To launch PS2 Linux, power on your PS2 console and hold any button on the controller"
-    echo "when the "PlayStation 2" logo appears."
-    echo
-    echo "PS2 Linux requires a USB keyboard; a mouse is optional but recommended."
-    echo
-    echo "Default 'root' password: password"
-    echo "Default user password for 'ps2' account: password"
-    echo 
-    read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
+    LINUX_SPLASH
+    echo "=============================== [✓] PS2 Linux Successfully Installed ==============================" | tee -a "${LOG_FILE}"
+    cat << "EOF"
+
+    To launch PS2 Linux, power on your PS2 console and hold the CIRCLE button on the controller.
+
+    PS2 Linux requires a USB keyboard; a mouse is optional but recommended.
+
+    Default "root" password: password
+    Default password for "ps2" user account: password
+
+    To launch a graphical interface type: startx
+
+====================================================================================================
+
+EOF
+    read -n 1 -s -r -p "                               Press any key to return to the menu..." </dev/tty
 
 }
 
-# Function for Option 2 - Install HDD-OSD
+# Function for Option 2 - Reassign X and O Buttons
 option_two() {
-    echo "########################################################################################################" >> "${LOG_FILE}"
-    HDDOSD_SPLASH
-    echo "Installing HDD-OSD..." | tee -a "${LOG_FILE}"
-
-    detect_drive || return 1
-
-    # Now check size
-    check_device_size || return 1
-
-    download_files || return 1
-
-    # Copy HDD-OSD files to __system
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="mount __system\n"
-    COMMANDS+="lcd '${ASSETS_DIR}/extras'\n"
-    COMMANDS+="mkdir osd110u\n"
-    COMMANDS+="cd osd110u\n"
-    COMMANDS+="put FNTOSD\n"
-    COMMANDS+="put HDD-OSD.elf\n"
-    COMMANDS+="put ICOIMAGE\n"
-    COMMANDS+="put JISUCS\n"
-    COMMANDS+="put SKBIMAGE\n"
-    COMMANDS+="put SNDIMAGE\n"
-    COMMANDS+="put TEXIMAGE\n"
-    COMMANDS+="cd /\n"
-    COMMANDS+="umount\n"
-    COMMANDS+="exit"
-
-    # Pipe all commands to PFS Shell for mounting, copying, and unmounting
-    echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-
-    cp "${ASSETS_DIR}/extras/"{HDD-OSD.elf,PSBBN.ELF} "${TOOLKIT_PATH}/games/APPS" >> "${LOG_FILE}" 2>&1
-
-    echo | tee -a "${LOG_FILE}"
-    echo "[✓] HDD-OSD installed successfully." | tee -a "${LOG_FILE}"
-    echo
-    echo "Please run 'Install Games' from the main menu to add HDD-OSD to the PSBBN Game Channel and update"
-    echo "the icons for your game collection."
-    echo
-    read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
-}
-
-# Function for Option 3 - Install PlayStation 2 Basic Boot Loader (PS2BBL)
-option_three() {
-    echo "########################################################################################################" >> "${LOG_FILE}"
-    PS2BBL_SPLASH
-    echo "Installing PS2 Basic Boot Loader..." | tee -a "${LOG_FILE}"
-
-    download_files || return 1
-    detect_drive || return 1
-
-    # Build the commands for PFS Shell
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="mount __sysconf\n"
-    COMMANDS+="cd PS2BBL\n"
-    COMMANDS+="ls\n"
-    COMMANDS+="exit"
-
-    # Get the PS1 file list directly from PFS Shell output, filtered and sorted
-    bbl_config=$(echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" 2>/dev/null)
-
-    # Copy PS2BBL files to __system and __sysconf
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="mount __system\n"
-    COMMANDS+="lcd '${ASSETS_DIR}/extras'\n"
-    COMMANDS+="cd p2lboot\n"
-    COMMANDS+="rm osdboot.elf\n"
-    COMMANDS+="rm PSBBN.ELF\n"
-    COMMANDS+="put PSBBN.ELF\n"
-    COMMANDS+="lcd '${ASSETS_DIR}/PS2BBL'\n"
-    COMMANDS+="put osdboot.elf\n"
-    COMMANDS+="cd /\n"
-    COMMANDS+="umount\n"
-
-    if [[ ! "$bbl_config" == *"CONFIG.INI"* ]]; then
-        COMMANDS+="mount __sysconf\n"
-        COMMANDS+="mkdir PS2BBL\n"
-        COMMANDS+="cd PS2BBL\n"
-        COMMANDS+="put CONFIG.INI\n"
-        COMMANDS+="cd /\n"
-        COMMANDS+="umount\n"
-    fi
-    COMMANDS+="exit"
-
-    # Pipe all commands to PFS Shell for mounting, copying, and unmounting
-    echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-
-    echo | tee -a "${LOG_FILE}"
-    echo "[✓] PS2BBL installed successfully." | tee -a "${LOG_FILE}"
-    echo
-    echo "When powering on your PS2, you can now hold X to boot into HDD-OSD (if installed)."
-    echo
-    echo "PS2BBL can be configured by editing hdd0:/__sysconf/PS2BBL/CONFIG.INI"
-    echo "More details can be found at: https://israpps.github.io/PlayStation2-Basic-BootLoader/"
-    echo
-    read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
-
-}
-
-# Function for Option 4 - Uninstall PlayStation 2 Basic Boot Loader (PS2BBL)
-option_four() {
-    echo "########################################################################################################" >> "${LOG_FILE}"
-    PS2BBL_SPLASH
-    echo "Uninstall PS2 Basic Boot Loader..." | tee -a "${LOG_FILE}"
-
-    download_files || return
-    detect_drive || return
-
-    # Copy PS2BBL files to __system and __sysconf
-    COMMANDS="device ${DEVICE}\n"
-    COMMANDS+="mount __system\n"
-    COMMANDS+="cd p2lboot\n"
-    COMMANDS+="rm osdboot.elf\n"
-    COMMANDS+="lcd '${ASSETS_DIR}/extras'\n"
-    COMMANDS+="put osdboot.elf\n"
-    COMMANDS+="cd /\n"
-    COMMANDS+="umount\n"
-    COMMANDS+="mount __sysconf\n"
-    COMMANDS+="cd PS2BBL\n"
-    COMMANDS+="rm CONFIG.INI\n"
-    COMMANDS+="cd /\n"
-    COMMANDS+="rmdir PS2BBL\n"
-    COMMANDS+="umount\n"
-    COMMANDS+="exit"
-
-    # Pipe all commands to PFS Shell for mounting, copying, and unmounting
-    echo -e "$COMMANDS" | sudo "${HELPER_DIR}/PFS Shell.elf" >> "${LOG_FILE}" 2>&1
-
-    echo | tee -a "${LOG_FILE}"
-    echo "[✓] PS2BBL successfully uninstalled." | tee -a "${LOG_FILE}"
-    echo
-    read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
-}
-
-# Function for Option 5 - Reassign X and O Buttons
-option_five() {
     echo "########################################################################################################" >> "${LOG_FILE}"
     echo "Reassign Buttons:" >> "${LOG_FILE}"
     clear
@@ -801,8 +609,9 @@ EOF
                     && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1
                 then
                     SWAP_SPLASH
-                    echo "[✓] Buttons swapped successfully." >> "${LOG_FILE}"
-                    read -n 1 -s -r -p "                     [✓] Buttons swapped! Press any key to return to the menu..." </dev/tty
+                    echo "================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
+                    echo
+                    read -n 1 -s -r -p "                                Press any key to return to the menu..." </dev/tty
                 else
                     SWAP_SPLASH
                     error_msg "[X] Error: Failed to swap buttons. See log for details."
@@ -819,8 +628,9 @@ EOF
                     && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1
                 then
                     SWAP_SPLASH
-                    echo "[✓] Buttons swapped successfully." >> "${LOG_FILE}"
-                    read -n 1 -s -r -p "                     [✓] Buttons swapped! Press any key to return to the menu..." </dev/tty
+                    echo "================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
+                    echo
+                    read -n 1 -s -r -p "                                Press any key to return to the menu..." </dev/tty
                 else
                     SWAP_SPLASH
                     error_msg "[X] Error: Failed to swap buttons. See log for details."
@@ -838,16 +648,14 @@ EOF
         esac
     done
 
-    clean_up
+    clean_up || return 1
     echo clean up afterwards: >> "${LOG_FILE}"
     ls -l /dev/mapper >> "${LOG_FILE}"
     df >> "${LOG_FILE}"
 }
 
-
-# Function to display the menu
-display_menu() {
-    clear
+EXTRAS_SPLASH() {
+clear
     cat << "EOF"
                                      _____     _                 
                                     |  ___|   | |                
@@ -855,24 +663,59 @@ display_menu() {
                                     |  __\ \/ / __| '__/ _` / __|
                                     | |___>  <| |_| | | (_| \__ \
                                     \____/_/\_\\__|_|  \__,_|___/
-                        
 
-                         1) Install PS2 Linux
-                         2) Install HDD-OSD (Browser 2.0)
-                         3) Install PlayStation 2 Basic Boot Loader (PS2BBL)
-                         4) Uninstall PlayStation 2 Basic Boot Loader (PS2BBL)
-                         5) Reassign Cross and Circle Buttons
-
-                         b) Back to Main Menu
 
 EOF
 }
+
+# Function to display the menu
+display_menu() {
+    EXTRAS_SPLASH
+    cat << "EOF"
+                                1) Install PS2 Linux
+                                2) Reassign Cross and Circle Buttons
+
+                                b) Back to Main Menu
+
+EOF
+}
+
+clear
+trap 'echo; exit 130' INT
+trap exit_script EXIT
+
+cd "${TOOLKIT_PATH}"
+
+echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+    sudo rm -f "${LOG_FILE}"
+    echo "########################################################################################################" | tee -a "${LOG_FILE}" >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo
+        echo "[X] Error: Cannot to create log file."
+        read -n 1 -s -r -p "Press any key to exit..." </dev/tty
+        echo
+        exit 1
+    fi
+fi
+
+date >> "${LOG_FILE}"
+echo >> "${LOG_FILE}"
+cat /etc/*-release >> "${LOG_FILE}" 2>&1
+
+EXTRAS_SPLASH
+detect_drive || exit 1
+CHECK_PARTITIONS
+
+if ! sudo rm -rf "${STORAGE_DIR}"; then
+    error_msg "Failed to remove $STORAGE_DIR folder."
+fi
 
 # Main loop
 
 while true; do
     display_menu
-    read -p "                         Select an option: " choice
+    read -p "                                Select an option: " choice
 
     case $choice in
         1)
@@ -881,21 +724,12 @@ while true; do
         2)
             option_two
             ;;
-        3)
-            option_three
-            ;;
-        4)
-            option_four
-            ;;
-        5)
-            option_five
-            ;;
         b|B)
             break
             ;;
         *)
             echo
-            echo "                         Invalid option, please try again."
+            echo -n "                                Invalid option, please try again."
             sleep 2
             ;;
     esac

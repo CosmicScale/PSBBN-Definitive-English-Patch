@@ -51,6 +51,7 @@
             ffmpeg
             parted
             fuse2
+            bchunk
             pkg-config
             patchelf
 

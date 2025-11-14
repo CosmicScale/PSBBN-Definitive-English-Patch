@@ -34,7 +34,7 @@ $consoleHeight = 45
 $pathFilename = "path.cfg"
 
 # the minimum disk size allowed to be picked, in gigabytes
-$minimumDiskSize = 200
+$minimumDiskSize = 32
 
 # --- DO NOT MODIFY THE VARIABLES BELOW ---
 
@@ -287,7 +287,7 @@ function handleDiskSelection {
     | Where-Object -FilterScript {-Not (isTooSmall($_))} `
     | Foreach-Object {$_.Number}
 
-  Write-Host "Select a disk to use by typing its number or press `"r`" to refresh the list.`n"
+  Write-Host "Select a disk to use with PSBBN by typing its number, or press "r" to refresh the list.`n"
   $promptMessage = " "
   $validInput = $false
   do {
@@ -431,7 +431,8 @@ function getTargetFolder {
     }
   }
 
-  Write-Host "`nNext you will be asked to pick a folder where to put all your games, movies, photos, and music." -ForegroundColor Yellow
+  Write-Host "`nNext, you'll be prompted to select or create a folder on your PC (for example, C:\PSBBN)." -ForegroundColor Yellow
+  Write-Host "`nThis folder is for all the games and music files you plan to install." -ForegroundColor Yellow
 
   pause
 

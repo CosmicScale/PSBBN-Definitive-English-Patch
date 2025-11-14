@@ -285,8 +285,8 @@ def process_files(folder, extensions):
         print(f"Game ID '{string}' -> Game='{game_name}', Publisher='{publisher}'")
 
         # Add to game list entries
-        folder_image = f"{folder.replace('/', '', 1)}|{original_image}"
-        game_list_entries.append(f"{game_name}|{string}|{publisher}|{folder_image}")
+        folder_image = re.sub(r'^/(?:__\.)?', '', folder)
+        game_list_entries.append(f"{game_name}|{string}|{publisher}|{folder_image}|{original_image}")
 
         count += 1
         print(math.floor((count * 100) / total), '% complete')
@@ -312,7 +312,7 @@ def main(arg1, arg2):
             folders_to_scan = [('/DVD', ['.iso', '.zso']), ('/CD', ['.iso', '.zso'])]
         elif games_list_path.endswith("ps1.list"):
             gameid_file_path = "./scripts/helper/TitlesDB_PS1_English.csv"
-            folders_to_scan = [('/POPS', ['.vcd', '.VCD'])]
+            folders_to_scan = [('/__.POPS', ['.vcd', '.VCD'])]
         else:
             print("Error: Output list must end with either 'ps2.list' or 'ps1.list'.")
             sys.exit(1)

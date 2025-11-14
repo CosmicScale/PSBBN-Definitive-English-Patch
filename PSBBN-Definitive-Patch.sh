@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export LC_ALL=en_US.UTF-8
+export LC_ALL=C.UTF-8
 
 # Check if the shell is bash
 if [ -z "$BASH_VERSION" ]; then
@@ -10,8 +10,33 @@ fi
 # Set paths
 export PATH="$PATH:/sbin:/usr/sbin"
 TOOLKIT_PATH="$(pwd)"
-HELPER_DIR="${TOOLKIT_PATH}/scripts/helper"
+SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
+HELPER_DIR="${SCRIPTS_DIR}/helper"
+STORAGE_DIR="${SCRIPTS_DIR}/storage"
 LOG_FILE="${TOOLKIT_PATH}/logs/setup.log"
+arch="$(uname -m)"
+
+if [[ "$arch" = "x86_64" ]]; then
+    # x86-64
+    CUE2POPS="${HELPER_DIR}/cue2pops"
+    HDL_DUMP="${HELPER_DIR}/HDL Dump.elf"
+    MKFS_EXFAT="${HELPER_DIR}/mkfs.exfat"
+    PFS_FUSE="${HELPER_DIR}/PFS Fuse.elf"
+    PFS_SHELL="${HELPER_DIR}/PFS Shell.elf"
+    APA_FIXER="${HELPER_DIR}/PS2 APA Header Checksum Fixer.elf"
+    PSU_EXTRACT="${HELPER_DIR}/PSU Extractor.elf"
+    SQLITE="${HELPER_DIR}/sqlite"
+elif [[ "$arch" = "aarch64" ]]; then
+    # ARM64
+    CUE2POPS="${HELPER_DIR}/aarch64/cue2pops"
+    HDL_DUMP="${HELPER_DIR}/aarch64/HDL Dump.elf"
+    MKFS_EXFAT="${HELPER_DIR}/aarch64/mkfs.exfat"
+    PFS_FUSE="${HELPER_DIR}/aarch64/PFS Fuse.elf"
+    PFS_SHELL="${HELPER_DIR}/aarch64/PFS Shell.elf"
+    APA_FIXER="${HELPER_DIR}/aarch64/PS2 APA Header Checksum Fixer.elf"
+    PSU_EXTRACT="${HELPER_DIR}/aarch64/PSU Extractor.elf"
+    SQLITE="${HELPER_DIR}/aarch64/sqlite"
+fi
 
 # Initialize variable
 wsl=false
@@ -93,35 +118,43 @@ check_required_files() {
 
     # List of required files
     local required_files=(
-        "./scripts/Extras.sh"
-        "./scripts/Game-Installer.sh"
-        "./scripts/PSBBN-Installer.sh"
-        "./scripts/Setup.sh"
-        "./scripts/helper/AppDB.csv"
-        "./scripts/helper/ArtDB.csv"
-        "./scripts/helper/art_downloader.py"
-        "./scripts/helper/HDL Dump.elf"
-        "./scripts/helper/icon_sys_to_txt.py"
-        "./scripts/helper/list-builder.py"
-        "./scripts/helper/list-sorter.py"
-        "./scripts/helper/mkfs.exfat"
-        "./scripts/helper/PFS Fuse.elf"
-        "./scripts/helper/PFS Shell.elf"
-        "./scripts/helper/PS2 APA Header Checksum Fixer.elf"
-        "./scripts/helper/ps2iconmaker.sh"
-        "./scripts/helper/PSU Extractor.elf"
-        "./scripts/helper/TitlesDB_PS1_English.csv"
-        "./scripts/helper/TitlesDB_PS2_English.csv"
-        "./scripts/helper/txt_to_icon_sys.py"
-        "./scripts/helper/vmc_groups.list"
-        "./scripts/helper/ziso.py"
+        "${SCRIPTS_DIR}/Setup.sh"
+        "${SCRIPTS_DIR}/PSBBN-Installer.sh"
+        "${SCRIPTS_DIR}/HOSDMenu-Installer.sh"
+        "${SCRIPTS_DIR}/Game-Installer.sh"
+        "${SCRIPTS_DIR}/Extras.sh"
+        "${SCRIPTS_DIR}/Game-Installer.sh"
+        "${SCRIPTS_DIR}/Media-Installer.sh"
+        "${HELPER_DIR}/art_downloader.py"
+        "${HELPER_DIR}/binmerge.py"
+        "${HELPER_DIR}/icon_sys_to_txt.py"
+        "${HELPER_DIR}/list-builder.py"
+        "${HELPER_DIR}/list-sorter.py"
+        "${HELPER_DIR}/music-installer.py"
+        "${HELPER_DIR}/ps2iconmaker.sh"
+        "${HELPER_DIR}/txt_to_icon_sys.py"
+        "${HELPER_DIR}/ziso.py"
+        "${HELPER_DIR}/AppDB.csv"
+        "${HELPER_DIR}/ArtDB.csv"
+        "${HELPER_DIR}/TitlesDB_PS1_English.csv"
+        "${HELPER_DIR}/TitlesDB_PS2_English.csv"
+        "${HELPER_DIR}/txt_to_icon_sys.py"
+        "${HELPER_DIR}/vmc_groups.list"
+        "${CUE2POPS}"
+        "${HDL_DUMP}"
+        "${MKFS_EXFAT}"
+        "${PFS_FUSE}"
+        "${PFS_SHELL}"
+        "${APA_FIXER}"
+        "${PSU_EXTRACT}"
+        "${SQLITE}"
     )
 
     # List of required non-empty directories
     local required_dirs=(
-        "./scripts/assets"
-        "./icons/art"
-        "./icons/ico"
+        "${SCRIPTS_DIR}/assets"
+        "${TOOLKIT_PATH}/icons/art"
+        "${TOOLKIT_PATH}/icons/ico"
     )
 
     # Check each file
@@ -187,6 +220,7 @@ check_dep(){
     check_cmd ldconfig
     check_cmd sfdisk
     check_cmd partprobe
+    check_cmd bchunk
 
     echo >> "$LOG_FILE"
     echo "--- exFAT support ---" >> "$LOG_FILE"
@@ -231,39 +265,27 @@ check_dep(){
 }
 
 option_one() {
-    if [ "$wsl" = "true" ]; then
-        "${TOOLKIT_PATH}/scripts/PSBBN-Installer.sh" -install $serialnumber "$path_arg"
-    else
-        "${TOOLKIT_PATH}/scripts/PSBBN-Installer.sh" -install
-    fi
+    "${SCRIPTS_DIR}/PSBBN-Installer.sh" -install $serialnumber "$path_arg"
 }
 
 option_two() {
-    "${TOOLKIT_PATH}/scripts/PSBBN-Installer.sh" -update
+    "${SCRIPTS_DIR}/PSBBN-Installer.sh" -update
 }
 
 option_three() {
-    if [ "$wsl" = "true" ]; then
-        "${TOOLKIT_PATH}/scripts/Game-Installer.sh" "$path_arg"
-    else
-        "${TOOLKIT_PATH}/scripts/Game-Installer.sh"
-    fi
+    "${SCRIPTS_DIR}/HOSDMenu-Installer.sh" $serialnumber "$path_arg"
 }
 
 option_four() {
-    if [ "$wsl" = "true" ]; then
-        "${TOOLKIT_PATH}/scripts/Media-Installer.sh" "$path_arg"
-    else
-        "${TOOLKIT_PATH}/scripts/Media-Installer.sh"
-    fi
+    "${SCRIPTS_DIR}/Game-Installer.sh" "$path_arg"
 }
 
 option_five() {
-    if [ "$wsl" = "true" ]; then
-        "${TOOLKIT_PATH}/scripts/Extras.sh" "$path_arg"
-    else
-        "${TOOLKIT_PATH}/scripts/Extras.sh"
-    fi
+    "${SCRIPTS_DIR}/Media-Installer.sh" "$path_arg"
+}
+
+option_six() {
+    "${SCRIPTS_DIR}/Extras.sh" "$path_arg"
 }
 
 SPLASH() {
@@ -279,6 +301,7 @@ ______  _________________ _   _  ______      __ _       _ _   _            _____
                                        Created by CosmicScale
 
 
+
 EOF
 }
 
@@ -286,13 +309,14 @@ EOF
 display_menu() {
     SPLASH
     cat << "EOF"
-                                     1) Install PSBBN
-                                     2) Update PSBBN Software
-                                     3) Install Games and Apps
-                                     4) Install Media
-                                     5) Optional Extras
+               1) Install PSBBN & HOSDMenu (Official Sony Network Adapter required)
+               2) Update PSBBN Software
+               3) Install HOSDMenu only (3rd-party HDD adapters supported)
+               4) Install Games and Apps
+               5) Install Media
+               6) Optional Extras
                                      
-                                     q) Quit
+               q) Quit
 
 EOF
 }
@@ -331,8 +355,8 @@ echo "Disk Serial: $serialnumber" >> "${LOG_FILE}"
 echo "Path: $path_arg" >> "${LOG_FILE}"
 echo >> "${LOG_FILE}"
 
-if [[ "$(uname -m)" != "x86_64" ]]; then
-    error_msg "Unsupported CPU architecture: $(uname -m). This script requires x86-64."
+if [[ "$arch" != "x86_64" && "$arch" != "aarch64" ]]; then
+    error_msg "Unsupported CPU architecture: $(uname -m). This script requires x86-64 or ARM64."
     exit 1
 fi
 
@@ -370,7 +394,7 @@ fi
 
 while true; do
     display_menu
-    read -p "                                     Select an option: " choice
+    read -p "               Select an option: " choice
 
     case $choice in
         1)
@@ -392,12 +416,12 @@ while true; do
             option_six
             ;;
         q|Q)
-            echo
+            clear
             break
             ;;
         *)
             echo
-            echo -n "                                     Invalid option, please try again."
+            echo -n "               Invalid option, please try again."
             sleep 2
             ;;
     esac
