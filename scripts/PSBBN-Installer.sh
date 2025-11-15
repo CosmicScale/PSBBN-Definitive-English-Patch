@@ -60,7 +60,7 @@ if [ "$MODE" = "install" ]; then
     LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.6" "__linux.7" "__linux.8" "__linux.9" )
     PFS_PARTITIONS=("__contents" "__system" "__sysconf" "__common" )
 else
-    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.9" )
+    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.7" "__linux.9" )
     PFS_PARTITIONS=("__system" "__sysconf" )
 fi
 
@@ -211,8 +211,12 @@ mount_cfs() {
             fi
 
             [ -d "${MOUNT_PATH}" ] || mkdir -p "${MOUNT_PATH}"
-                if ! sudo mount "${MAPPER}${PARTITION_NAME}" "${MOUNT_PATH}" >>"${LOG_FILE}" 2>&1; then
-                    error_msg "Failed to mount ${PARTITION_NAME} partition."
+                if [[ "$PARTITION_NAME" = "__linux.7" ]] && [ "$MODE" = "update" ]; then
+                    echo echo "Skipping mount for __linux.7" >>"${LOG_FILE}"
+                else
+                    if ! sudo mount "${MAPPER}${PARTITION_NAME}" "${MOUNT_PATH}" >>"${LOG_FILE}" 2>&1; then
+                        error_msg "Failed to mount ${PARTITION_NAME} partition."
+                    fi
                 fi
         else
             error_msg "Partition ${PARTITION_NAME} not found on disk."
@@ -993,6 +997,10 @@ if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
         rm -rf "${STORAGE_DIR}/__system/osd110u" 2>> "${LOG_FILE}"
         rm -f "${STORAGE_DIR}/__system/p2lboot/PSBBN.ELF" 2>> "${LOG_FILE}"
         rm -rf "${STORAGE_DIR}/__sysconf/PS2BBL" 2>> "${LOG_FILE}"
+
+        if ! sudo mount "${MAPPER}__linux.7" "${STORAGE_DIR}/__linux.7" >>"${LOG_FILE}" 2>&1; then
+            error_msg "Failed to mount __linux.7 partition."
+        fi
         
         mkdir -p "${SCRIPTS_DIR}/tmp"
         sudo cp "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0" "${SCRIPTS_DIR}/tmp" >> "${LOG_FILE}" 2>&1
