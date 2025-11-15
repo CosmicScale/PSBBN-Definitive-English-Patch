@@ -40,7 +40,7 @@ $minimumDiskSize = 200
 
 # in case $gitBranch no longer exists on the remote, use this as fallback
 # DO NOT change this unless the repo has deleted the main branch or is using another branch as release
-$fallbackGitBranch = "main"
+$fallbackGitBranch = "release-v3.00"
 
 # the escape character used to color text
 $e = [char] 27
