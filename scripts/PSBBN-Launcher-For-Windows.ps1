@@ -34,7 +34,7 @@ $consoleHeight = 45
 $pathFilename = "path.cfg"
 
 # the minimum disk size allowed to be picked, in gigabytes
-$minimumDiskSize = 32
+$minimumDiskSize = 31
 
 # --- DO NOT MODIFY THE VARIABLES BELOW ---
 

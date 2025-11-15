@@ -456,7 +456,7 @@ if [ "$MODE" = "install" ]; then
     # Convert size to GB (1 GB = 1,000,000,000 bytes)
     size_gb=$(echo "$SIZE_CHECK / 1000000000" | bc)
         
-    if (( size_gb < 32 )); then
+    if (( size_gb < 31 )); then
         error_msg "Device is $size_gb GB. Required minimum is 32 GB."
     else
         echo "Device Name: $DEVICE" >> "${LOG_FILE}"
