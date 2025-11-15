@@ -92,7 +92,7 @@ Patches **HDD-OSD** and introduces several improvements:
 - Create a custom-size **[POPS](#popstarter-and-virtual-memory-cards)** partition (up to 118 GB), automatically assigning remaining space to the **[OPL](#open-ps2-loader-opl)** partition (up to 2 TB)
 
 **[Game Installer:](#game-and-app-installer)**
-- **[Game Installer](#game-and-app-installer)** now requires **PSBBN Definitive Patch v4.0.0** and above or **[HOSDMenu](#install-hosdmenu-only)-only
+- **[Game Installer](#game-and-app-installer)** now requires **PSBBN Definitive Patch v4.0.0** and above or **[HOSDMenu-only](#install-hosdmenu-only)**
 - Adds support for **[HOSDMenu](#hosdmenu)**-only setups
 - Updates **[OSDMenu MBR](#osdmenu-mbr)** and **[HOSDMenu](#hosdmenu)** if newer versions are available
 - Updates the **Navigator Menu** with shortcuts to your selected game launcher (**[OPL](#open-ps2-loader-opl)** or **[NHDDL](#neutrino-and-nhddl)**), **[HOSDMenu](#hosdmenu)** and **[wLaunchELF_ISR](#wlaunchelf_isr)**
@@ -860,13 +860,13 @@ When you connect the drive to your PS2 console and power it on, **PSBBN** or [HO
 
 ### Fat PS2 console models SCPH-3000x-500xx:
 If your console boots to the regular OSD or freezes, it means that your drive has not been recognised or you are experiencing a hardware issue. You should check the following:
-1. If using **PSBBN**, make sure you are using an official Sony Network Adapter; 3rd-party adapters are not supported
-2. Ensure the network adapter and drive are securely connected to the console
-3. Check that the connectors on the console and network adapter are clean and free of dust/debris
+1. If using **PSBBN**, make sure you are using an **official Sony Network Adapter**; 3rd-party adapters are not supported
+2. Ensure the network/HDD adapter and drive are securely connected to the console
+3. Check that the connectors on the console and network/HDD adapter are clean and free of dust/debris
 4. If using a SATA mod, make sure it has been installed correctly
 5. Try using a different HDD/SSD
 6. Try using a different IDE converter/SATA mod
-7. Try a different official Sony Network Adapter
+7. Try using a different official Sony Network Adapter or 3rd-party HDD adapter
 8. Try a different PS2 console
 
 ### Early (SCPH-10000–18000) and Slim (SCPH-700xx) Consoles
