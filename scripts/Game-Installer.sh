@@ -738,9 +738,18 @@ install_pops() {
         fi
     fi
 
-    if [ -f "${STORAGE_DIR}/__common/POPS/IGR_BG.TM2" ] || [ -f "${STORAGE_DIR}/__common/POPS/IGR_YES.TM2" ] || [ -f "${STORAGE_DIR}/__common/POPS/IGR_NO.TM2" ] || [ -f "${STORAGE_DIR}/__common/POPS/POPSTARTER.ELF" ]; then
-        cp -f "${ASSETS_DIR}/POPStarter/eng/"{IGR_BG.TM2,IGR_YES.TM2,IGR_NO.TM2} "${STORAGE_DIR}/__common/POPS"
-        cp -f "${ASSETS_DIR}/POPStarter/POPSTARTER.ELF" "${STORAGE_DIR}/__common/POPS" || error_msg "Error" "Failed to copy POPSTARTER.ELF."
+    if [ ! -f "${STORAGE_DIR}/__common/POPS/IGR_BG.TM2" ] || [ ! -f "${STORAGE_DIR}/__common/POPS/IGR_YES.TM2" ] || [ ! -f "${STORAGE_DIR}/__common/POPS/IGR_NO.TM2" ]; then
+        echo "Copying POPS IRG files..." | tee -a "${LOG_FILE}"
+        cp -f "${ASSETS_DIR}/POPStarter/eng/"{IGR_BG.TM2,IGR_YES.TM2,IGR_NO.TM2} "${STORAGE_DIR}/__common/POPS"  >> "${LOG_FILE}" 2>&1
+    else
+        echo "POPS IGR files already exist." | tee -a "${LOG_FILE}"
+    fi
+
+    if [ ! -f "${STORAGE_DIR}/__system/launcher/POPSTARTER.ELF" ]; then
+        echo "Copying POPSTARTER.ELF..." | tee -a "${LOG_FILE}"
+        cp -f "${ASSETS_DIR}/POPStarter/POPSTARTER.ELF" "${STORAGE_DIR}/__system/launcher/POPSTARTER.ELF" || error_msg "Error" "Failed to copy POPSTARTER.ELF."
+    else
+        echo "POPStarter is already installed." | tee -a "${LOG_FILE}"
     fi
 }
 
@@ -2462,7 +2471,7 @@ EOL
             cat > "${game_dir}/system.cnf" <<EOL
 BOOT2 = PATINFO
 HDDUNITPOWER = NICHDD
-path = hdd0:__common:pfs:/POPS/POPSTARTER.ELF
+path = hdd0:__system:pfs:/launcher/POPSTARTER.ELF
 titleid = $game_id
 nohistory = 1
 arg = bbnl:$elf_file
