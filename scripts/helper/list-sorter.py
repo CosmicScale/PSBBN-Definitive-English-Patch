@@ -132,7 +132,13 @@ def sort_games_list(games_list_path):
             "wipeout xl": "wipeout 2",
             "wipeout 2097": "wipeout 2",
             "wip3out": "wipeout 3",
-            "tekken tag tournament": "tekken"
+            "tekken tag tournament": "tekken",
+            "wrc: world rally championship": "wrc 1",
+            "wrc ii extreme": "wrc 2",
+            "wrc 3: the official game of the fia world rally championship": "wrc 3",
+            "wrc 4: the official game of the fia world rally championship": "wrc 4",
+            "wrc: rally evolved": "wrc 5",
+            "wrc avec sébastien loeb édition 2005": "wrc 5"
 
         }
 
