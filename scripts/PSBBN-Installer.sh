@@ -623,7 +623,7 @@ else
     INSTALL_SPLASH
 fi
 echo "================================== PSBBN Definitive Patch v$LATEST_VERSION ==================================="
-if [ "$LATEST_VERSION" = "4.0.0" ]; then
+if [ "$LATEST_VERSION" = "4.0.0" ] || [ "$LATEST_VERSION" = "4.0.1" ]; then
     echo
     echo "       PSBBN Installer:"
     echo "       - The PSBBN Installer and Updater now install HOSDMenu alongside PSBBN"
@@ -1133,12 +1133,13 @@ else
         echo
     fi
 
-    if [ "$MODE" = "update" ] && [ "$LATEST_VERSION" = "4.0.0" ]; then
+    if [ "$MODE" = "update" ] && [ "$(printf '%s\n' 4.0.0 "$LATEST_VERSION" | sort -V | head -n1)" = "4.0.0" ] && version_le "${psbbn_version:-0}" "3.99"; then
         echo "  It's recommended to rerun the Game Installer and choose \"Add Additional Games and Apps\" to"
         echo "  improve game startup times and add apps to the System Menu in HOSDMenu."
         echo
     fi
     echo "  If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
+    echo
     echo "===================================================================================================="
 fi
 echo
