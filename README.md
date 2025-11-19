@@ -426,7 +426,7 @@ New in Definitive Patch v2.11:
 </details>  
 
 # User Guide
-## Requirments
+## Requirements
 The **PSBBN Definitive Patch** script is essential for unlocking all the new features exclusive to version 2.0 and above. The script requires a PC with an x86-64 or ARM64 processor.
 
 It is **recommended** to use a **fat PS2 console with an expansion bay** (**SCPH-3000x to SCPH-500xx**) and an **official Sony Network Adapter**.
