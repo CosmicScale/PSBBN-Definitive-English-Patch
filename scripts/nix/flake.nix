@@ -52,6 +52,7 @@
             parted
             fuse2
             bchunk
+            e2fsprogs
             pkg-config
             patchelf
 
