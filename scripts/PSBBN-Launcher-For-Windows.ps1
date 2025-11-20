@@ -151,7 +151,10 @@ function main {
   }
 
   # check if the git branch exists on the remote, and if not, use the fallback
-  if (-Not (wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- git branch -r --list origin/$gitBranch)) {
+  if (-Not ( `
+    wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- `
+    git fetch `&`& git branch -r --list origin/$gitBranch `
+  )) {
     $gitBranch = $fallbackGitBranch
   }
 
@@ -287,7 +290,7 @@ function handleDiskSelection {
     | Where-Object -FilterScript {-Not (isTooSmall($_))} `
     | Foreach-Object {$_.Number}
 
-  Write-Host "Select a disk to use with PSBBN by typing its number, or press "r" to refresh the list.`n"
+  Write-Host "Select a disk to use with PSBBN by typing its number, or press `"r`" to refresh the list.`n"
   $promptMessage = " "
   $validInput = $false
   do {
