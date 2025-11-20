@@ -6,6 +6,7 @@ OPL12O|Open PS2 Loader
 OPL093|Open PS2 Loader
 REBOOT|Reboot System
 POWEROFF|Shutdown System
+OFF|Shutdown System
 SYSTEMSHUTDOWN|Shutdown System
 APPPOWEROFF|Shutdown System
 OSDXMB|OSD-XMB
@@ -40,6 +41,7 @@ PS2HDDTESTER|HDD Tester
 3DPINBALLPS2|3D Pinball
 APOLLO|Apollo Save Tool
 PGEN151|PGEN
+PGENCJABCDPATCH48BIT|PGEN
 NHDDLSTANDA|NHDDL
 VTSPS2HBDL|HomeBrew DownLoader
 PSXLAUNCHER|PSX Launcher
@@ -86,3 +88,4 @@ OSWANPS2|Wonderstation
 ESRGUI|ESR GUI
 MFU|PS2 Memory Card Formatter
 TURBOGRAFX16|TurboGrafx-16
+KHSKIP|Kingdom Hearts (Skip Mod)
