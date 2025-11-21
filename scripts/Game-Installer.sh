@@ -1563,9 +1563,8 @@ if [ "$INSTALL_TYPE" = "copy" ]; then
 fi
 
 # Check conditions for sync or copy
-if { [ "$INSTALL_TYPE" = "sync" ] && find "${GAMES_PATH}/POPS" -maxdepth 1 -type f -iname "*.vcd" -print -quit 2>/dev/null | grep -q .; } \
-   || { [ "$INSTALL_TYPE" = "copy" ] && { find "${GAMES_PATH}/POPS" -maxdepth 1 -type f -iname "*.vcd" -print -quit 2>/dev/null | grep -q . || [ "$ps1_games_found" = true ]; }; }; then
-    
+if { [ "$INSTALL_TYPE" = "sync" ] && find "${GAMES_PATH}/POPS" -maxdepth 1 -type f \( -iname "*.vcd" -o -iname "*.bin" \) -print -quit 2>/dev/null; } \
+   || { [ "$INSTALL_TYPE" = "copy" ] && { find "${GAMES_PATH}/POPS" -maxdepth 1 -type f \( -iname "*.vcd" -o -iname "*.bin" \) -print -quit 2>/dev/null || [ "$ps1_games_found" = true ]; }; }; then
     COMMANDS="device ${DEVICE}\n"
     COMMANDS+="mount __common\n"
     COMMANDS+="cd POPS\n"
