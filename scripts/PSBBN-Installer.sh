@@ -1115,6 +1115,14 @@ else
     fi
 fi
 
+# Add disk icon
+cp -f "${ASSETS_DIR}/autorun.ico" "${OPL}"
+cat << EOF > "${OPL}/autorun.inf"
+[AutoRun]
+icon=autorun.ico
+label=OPL
+EOF
+
 UNMOUNT_OPL
 
 echo >> "${LOG_FILE}"
