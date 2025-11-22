@@ -956,10 +956,8 @@ if [ ! -f "${STORAGE_DIR}/__sysconf/osdmenu/OSDMENU.CNF" ]; then
     echo "OSDMENU.CNF not found — creating default version." >> "${LOG_FILE}"
     cat > "${STORAGE_DIR}/__sysconf/osdmenu/OSDMENU.CNF" <<'EOL' || error_msg "Error" "Failed to write OSDMBR.CNF."
 boot_auto = $HOSDSYS
-hacked_OSDSYS = 1
 OSDSYS_video_mode = AUTO
 OSDSYS_Inner_Browser = 0
-OSDSYS_Browser_Launcher = 1
 OSDSYS_selected_color = 0x10,0x80,0xE0,0x80
 OSDSYS_unselected_color = 0x33,0x33,0x33,0x80
 OSDSYS_scroll_menu = 1
@@ -976,8 +974,6 @@ OSDSYS_right_cursor =
 OSDSYS_menu_top_delimiter =
 OSDSYS_menu_bottom_delimiter =
 OSDSYS_num_displayed_items = 5
-OSDSYS_Skip_MC = 1
-OSDSYS_Skip_HDD = 1
 OSDSYS_Skip_Disc = 0
 OSDSYS_Skip_Logo = 1
 cdrom_skip_ps2logo = 1
