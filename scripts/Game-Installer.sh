@@ -1357,7 +1357,7 @@ if [ -f "./scripts/venv/bin/activate" ]; then
 elif [ -n "$IN_NIX_SHELL" ]; then
     echo "Running in Nix environment - The Python dependencies are managed by the flake." >> "${LOG_FILE}"
 else
-    error_msg "Error" "The Python virtual environment does not exist. Run scripts/Setup.sh and try again."
+    error_msg "Error" "The Python virtual environment does not exist. Run PSBBN-Definitive-Patch.sh instead."
 fi
 
 if [[ -n "$path_arg" ]]; then
