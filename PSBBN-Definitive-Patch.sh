@@ -6,7 +6,7 @@ if [ -z "$BASH_VERSION" ]; then
     exit 1
 fi
 
-export LC_ALL=C.UTF-8
+export LC_MESSAGES=C
 export LAUNCHED_BY_MAIN=1
 
 # Set paths
