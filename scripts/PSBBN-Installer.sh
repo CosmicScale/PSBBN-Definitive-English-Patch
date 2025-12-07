@@ -50,8 +50,8 @@ case "$1" in
     ;;
 esac
 
-version_le() { # returns 0 (true) if $1 <= $2
-    [ "$1" = "$2" ] && return 0
+version_le() { # returns 0 (true) if $1 < $2
+    [ "$1" = "$2" ] && return 1
     smallest=$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1)
     [ "$smallest" = "$1" ]
 }
@@ -500,16 +500,18 @@ else
     MOUNT_OPL
 
     psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
-    LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
-    if [ -z "$LANG" ]; then
-        LANG="eng"
-    fi
 
     # Compare using sort -V
     if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
         UNMOUNT_OPL
         error_msg "The installed PSBBN Definitive Patch is older than version $version_check and cannot be updated" "directly. Please select 'Install PSBBN' from the main menu to perform a full installation."
     fi
+
+    LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
+    if [ -z "$LANG" ]; then
+        LANG="eng"
+    fi
+
     UNMOUNT_OPL
 fi
 
@@ -994,22 +996,24 @@ if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
         rm -f "${STORAGE_DIR}/__system/p2lboot/PSBBN.ELF" 2>> "${LOG_FILE}"
         rm -rf "${STORAGE_DIR}/__sysconf/PS2BBL" 2>> "${LOG_FILE}"
 
-        if ! sudo mount "${MAPPER}__linux.7" "${STORAGE_DIR}/__linux.7" >>"${LOG_FILE}" 2>&1; then
-            error_msg "Failed to mount __linux.7 partition."
-        fi
+        if [ "$MODE" = "update" ] && [ "${psbbn_version:-0}" = "3.00" ]; then
+            if ! sudo mount "${MAPPER}__linux.7" "${STORAGE_DIR}/__linux.7" >>"${LOG_FILE}" 2>&1; then
+                error_msg "Failed to mount __linux.7 partition."
+            fi
         
-        mkdir -p "${SCRIPTS_DIR}/tmp"
-        sudo cp "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0" "${SCRIPTS_DIR}/tmp" >> "${LOG_FILE}" 2>&1
-        TARGET="${SCRIPTS_DIR}/tmp/shortcut_0"
+            mkdir -p "${SCRIPTS_DIR}/tmp"
+            sudo cp "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0" "${SCRIPTS_DIR}/tmp" >> "${LOG_FILE}" 2>&1
+            TARGET="${SCRIPTS_DIR}/tmp/shortcut_0"
 
-        # If TARGET exists, remove lines ending with PP.LAUNCHELF, PP.HOSDMENU and PP.LAUNCHDISC
-        if [ -f "$TARGET" ]; then
-            sudo sed -i '/PP\.LAUNCHELF$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
-            sudo sed -i '/PP\.HOSDMENU\.HIDDEN$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
-            sudo sed -i '/PP\.LAUNCHDISC$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+            # If TARGET exists, remove lines ending with PP.LAUNCHELF, PP.HOSDMENU and PP.LAUNCHDISC
+            if [ -f "$TARGET" ]; then
+                sudo sed -i '/PP\.LAUNCHELF$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+                sudo sed -i '/PP\.HOSDMENU\.HIDDEN$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+                sudo sed -i '/PP\.LAUNCHDISC$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+            fi
+
+            sudo cp -f "${TARGET}" "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0"  >> "${LOG_FILE}" 2>&1
         fi
-
-        sudo cp -f "${TARGET}" "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0"  >> "${LOG_FILE}" 2>&1
 fi
 
 UNMOUNT_ALL
@@ -1132,12 +1136,13 @@ if [ "$MODE" = "install" ]; then
 else
     echo "================================== [✓] PSBBN Successfully Updated =================================" | tee -a "${LOG_FILE}"
     echo
-    if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "2.11"; then
+    if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "3.00"; then
         echo "  Now connect the drive to your PS2 console and boot into PSBBN to complete the installation."
+        echo "  This must be done before running the Game Installer."
         echo
     fi
 
-    if [ "$MODE" = "update" ] && [ "$(printf '%s\n' 4.0.0 "$LATEST_VERSION" | sort -V | head -n1)" = "4.0.0" ] && version_le "${psbbn_version:-0}" "3.99"; then
+    if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
         echo "  It's recommended to rerun the Game Installer and choose \"Add Additional Games and Apps\" to"
         echo "  improve game startup times and add apps to the System Menu in HOSDMenu."
         echo
