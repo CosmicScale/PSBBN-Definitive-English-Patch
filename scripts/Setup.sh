@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-export LC_ALL=C.UTF-8
+
+if [[ "$LAUNCHED_BY_MAIN" != "1" ]]; then
+    echo "This script should not be run directly. Please run: PSBBN-Definitive-Patch.sh"
+    exit 1
+fi
 
 trap 'echo; exit 130' INT
 

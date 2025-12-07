@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-export LC_ALL=C.UTF-8
+
+if [[ "$LAUNCHED_BY_MAIN" != "1" ]]; then
+    echo "This script should not be run directly. Please run: PSBBN-Definitive-Patch.sh"
+    exit 1
+fi
 
 version_check="4.0.0"
 
@@ -1357,7 +1361,7 @@ if [ -f "./scripts/venv/bin/activate" ]; then
 elif [ -n "$IN_NIX_SHELL" ]; then
     echo "Running in Nix environment - The Python dependencies are managed by the flake." >> "${LOG_FILE}"
 else
-    error_msg "Error" "The Python virtual environment does not exist. Run 01-Setup.sh and try again."
+    error_msg "Error" "The Python virtual environment does not exist."
 fi
 
 if [[ -n "$path_arg" ]]; then

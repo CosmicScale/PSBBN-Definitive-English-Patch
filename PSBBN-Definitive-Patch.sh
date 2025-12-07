@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-export LC_ALL=C.UTF-8
 
 # Check if the shell is bash
 if [ -z "$BASH_VERSION" ]; then
     echo "Error: This script must be run using Bash. Try running it with: bash $0"
     exit 1
 fi
+
+export LC_ALL=C.UTF-8
+export LAUNCHED_BY_MAIN=1
 
 # Set paths
 export PATH="$PATH:/sbin:/usr/sbin"
