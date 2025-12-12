@@ -13,7 +13,8 @@ OUTPUT_DIR = './icons/art/tmp'
 IGNORED_IMAGES = [
     "https://assets-prd.ignimgs.com/2025/04/03/switch2-doodle-1743697401557.png",
     "https://assets-prd.ignimgs.com/avatars/4ec71177e4b0ca04b5aab1c8/Nix_-_IGN_-_202x-1691124964030.png",
-    "https://media.ign.com/boards/images/icons2/supers_ghostrider.gif"
+    "https://media.ign.com/boards/images/icons2/supers_ghostrider.gif",
+    "https://assets-prd.ignimgs.com/avatars/54580a4b06017ecee2c408bc/20210304_001650-1657323628824.jpg"
 ]
 
 SEARCH_DOMAINS = [
