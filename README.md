@@ -421,7 +421,7 @@ It is also compatible with the **PS2 Slim SCPH-700xx** model with an **[IDE Resu
 
 You will also need an HDD/SSD for your PS2 that is at least 32 GB, ideally between 256 GB and 2 TB. A SATA SSD is also highly recommended. The improved random access speed over a HDD really makes a big difference to the responsiveness of the PSBBN interface. To perform the installation, connect the HDD/SSD to your PC either directly via SATA or through a USB adapter.
 
-### Installing on Linux
+## Installing on Linux
 64-bit Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based[*](#troubleshooting) distributions using `dnf` are supported. Nix-based systems are also supported via flakes. Recommended distributions are Linux Mint, and for Raspberry Pi, Raspberry Pi OS.
 
 **The PSBBN Definitive Patch is a rolling release. To get automatic updates and the latest bug fixes, you must install the scripts using `git clone`++++.**
@@ -441,7 +441,7 @@ You can then change to the `PSBBN-Definitive-English-Patch` directory and run `P
 cd PSBBN-Definitive-English-Patch
 ./PSBBN-Definitive-Patch.sh
 ```
-### Installing on Windows
+## Installing on Windows
 The recommended way to install the **PSBBN Definitive Patch** on Windows is by using the **PSBBN Launcher for Windows**. The **PSBBN Launcher for Windows** is compatible with Windows 10 and 11 Home editions; other editions may not be compatible. For a trouble-free experience, make sure Windows is fully up to date.
 
 **Video Tutorial:**
