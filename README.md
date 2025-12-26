@@ -1,6 +1,6 @@
-# PSBBN Definitive English Patch
+# PSBBN Definitive Patch
 
-This is the Definitive English Patch for Sony's "PlayStation Broadband Navigator" software (also known as BB Navigator or PSBBN) for the "PlayStation 2" (PS2) video game console.
+This is the Definitive Patch for Sony's "PlayStation Broadband Navigator" software (also known as BB Navigator or PSBBN) for the "PlayStation 2" (PS2) video game console.
 
 PSBBN is official Sony software for the PlayStation 2, released exclusively in Japan. Introduced in 2002 as a replacement for the PS2’s OSD, it required both a hard drive and a network adapter to function. It added many new features:
 - Launching games from the hard drive
@@ -52,9 +52,9 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 # Changelog
 
-## November 14, 2025 - PSBBN Definitive Patch v4.0 - OSDMenu, 3rd Party HDD adapters and more!
+**November 14, 2025 - PSBBN Definitive Patch v4.0 - OSDMenu, 3rd Party HDD adapters and more!**
 
-<b>Release Notes:</b>
+**Release Notes:**
 
 [![PSBBN Definitive Patch v4.0 - OSDMenu, 3rd Party HDD adapters and more!](https://github.com/user-attachments/assets/1a3f2d69-6bec-4fe4-aa27-c367f5d98f98)](https://www.youtube.com/watch?v=fT368C90Trc)
 
@@ -150,11 +150,9 @@ Patches **HDD-OSD** and introduces several improvements:
 - Bug fixes
 - Added software licences
 
-## September 09, 2025 - PSBBN Launcher for Windows: Easy Install & Setup
-
 <details>
-<summary><b>Release Notes:</b></summary>
-
+<summary><b>September 09, 2025 - PSBBN Launcher for Windows: Easy Install & Setup</b></summary>
+  
 [![PSBBN Launcher for Windows: Easy Install & Setup](https://github.com/user-attachments/assets/981e4abc-10b0-49d2-8d52-3e19ea80650b)](https://www.youtube.com/watch?v=O5ZvJoW4oNw)
 
 **[NEW! PSBBN Launcher For Windows](#installing-on-windows)** - The New way to install the **PSBBN Definitive Patch** on Windows 10 and 11.  
@@ -162,10 +160,8 @@ Special thanks to Yornn for all his work on this feature.
 
 </details>
 
-## August 28, 2025 - PSBBN Definitive Patch v3.00 - Music Installer, Menu System, Faster Installs & More!
-
 <details>
-<summary><b>Release Notes:</b></summary>
+<summary><b>August 28, 2025 - PSBBN Definitive Patch v3.00 - Music Installer, Menu System, Faster Installs & More!</b></summary>
   
 [![PSBBN Definitive English Patch 3.0](https://github.com/user-attachments/assets/3b82d809-28d5-4675-87c2-c7f1abf96ae6)](https://www.youtube.com/watch?v=lUMKZck6G08) 
   
@@ -200,10 +196,8 @@ Special thanks to Yornn for all his work on this feature.
 
 </details>
 
-## July 17, 2025 - Definitive Patch v2.11 - Boot Security Patched! Button Swap, VMC Groups & More!
-
 <details>
-<summary><b>Release Notes:</b></summary>
+<summary><b>July 17, 2025 - Definitive Patch v2.11 - Boot Security Patched! Button Swap, VMC Groups & More!</b></summary>
   
 [![PSBBN Definitive Patch v2.11](https://github.com/user-attachments/assets/49511803-429b-4cd8-8546-40334be3f244)](https://www.youtube.com/watch?v=kgXe8rlqsr0)
 
@@ -245,10 +239,8 @@ New in Definitive Patch v2.11:
 
 </details>
 
-## June 05, 2025 - PSBBN Definitive Patch v2.10 – Big Game Installer Changes & More!
-
 <details>
-<summary><b>Release Notes:</b></summary>
+<summary><b>June 05, 2025 - PSBBN Definitive Patch v2.10 – Big Game Installer Changes & More!</b></summary>
 
 [![PSBBN Definitive Patch v2.10](https://github.com/user-attachments/assets/ff4e6e5b-8556-4fe2-88b2-99e7eb09121c)](https://www.youtube.com/watch?v=XTacIPOGAwE)
 
@@ -317,10 +309,8 @@ New in Definitive Patch v2.11:
 
 </details>
 
-## May 01, 2025 - SAS, HDD-OSD, PS2BBL & More!
-
 <details>
-<summary><b>Release Notes:</b></summary>
+<summary><b>May 01, 2025 - SAS, HDD-OSD, PS2BBL & More!</b></summary>
 
 [![SAS, HDD-OSD, PS2BBL & More!](https://github.com/user-attachments/assets/be5b32d2-665c-4505-aefe-3c9ab864f72a)](https://www.youtube.com/watch?v=vpbHlS8nY58)
 
@@ -332,10 +322,8 @@ New in Definitive Patch v2.11:
 
 </details>
 
-## Mar 28, 2025 - Homebrew Launcher & More!
-
 <details>
-<summary><b>Release Notes:</b></summary>
+<summary><b>Mar 28, 2025 - Homebrew Launcher & More!</b></summary>
 
 [![Homebrew Launcher & More!](https://github.com/user-attachments/assets/57e7842c-f5b5-46b0-950e-246eebfb0e4a)](https://www.youtube.com/watch?v=q9LvE_OPIPo)
 
@@ -355,10 +343,8 @@ New in Definitive Patch v2.11:
 
 </details>
 
-## Feb 19, 2025 - BBN Launcher, Neutrino & NHDDL
-
 <details>
-<summary><b>Release Notes:</b></summary>
+<summary><b>Feb 19, 2025 - BBN Launcher, Neutrino & NHDDL</b></summary>
 
 [![BBN Launcher, Neutrino & NHDDL](https://github.com/user-attachments/assets/8007d102-3019-4037-8c52-24d1454777da)](https://www.youtube.com/watch?v=0vpSiAa6ITc)
 
@@ -368,10 +354,8 @@ New in Definitive Patch v2.11:
 
 </details>
 
-## Jan 22, 2025 - Game ID, PSBBN Art Database, Updated Tutorial & More!
-
 <details>
-<summary><b>Release Notes:</b></summary>
+<summary><b>Jan 22, 2025 - Game ID, PSBBN Art Database, Updated Tutorial & More!</b></summary>
 
 [![Game ID, PSBBN Art Database, Updated Tutorial & More!](https://github.com/user-attachments/assets/1bae03fe-b3eb-447e-99da-8f184279a848)](https://www.youtube.com/watch?v=sHz0yKYybhk)
 
@@ -397,10 +381,8 @@ New in Definitive Patch v2.11:
 
 </details>
 
-## Dec 11, 2024 - PSBBN Definitive English Patch 2.0
-
 <details>
-<summary><b>Release Notes:</b></summary>
+<summary><b>Dec 11, 2024 - PSBBN Definitive English Patch 2.0</b></summary>
 
 [![PSBBN Definitive English Patch 2.0](https://github.com/user-attachments/assets/608c9430-25d8-4918-8111-023eac16ab62)](https://www.youtube.com/watch?v=ooH0FjltsyE)
 
@@ -442,7 +424,7 @@ You will also need an HDD/SSD for your PS2 that is at least 32 GB, ideally betwe
 ### Installing on Linux
 64-bit Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based[*](#troubleshooting) distributions using `dnf` are supported. Nix-based systems are also supported via flakes. Recommended distributions are Linux Mint, and for Raspberry Pi, Raspberry Pi OS.
 
-**It is highly recommended to install the scripts using `git clone` to enable automatic updates.**
+**The PSBBN Definitive Patch is a rolling release. To get automatic updates and the latest bug fixes, you must install the scripts using `git clone`++++.**
 
 Install git, for Debian-based distributions run:
 ```
@@ -460,7 +442,7 @@ cd PSBBN-Definitive-English-Patch
 ./PSBBN-Definitive-Patch.sh
 ```
 ### Installing on Windows
-The recommended way to install the **PSBBN Definitive Patch** on Windows 10 or 11 by using the **PSBBN Launcher For Windows**. For a trouble-free experience, make sure Windows is fully up to date.
+The recommended way to install the **PSBBN Definitive Patch** on Windows is by using the **PSBBN Launcher for Windows**. The **PSBBN Launcher for Windows** is compatible with Windows 10 and 11 Home editions; other editions may not be compatible. For a trouble-free experience, make sure Windows is fully up to date.
 
 **Video Tutorial:**
 
@@ -715,162 +697,10 @@ A fork of [wLaunchELF](https://github.com/ps2homebrew/wLaunchELF) written by [Ma
 
 **Warning: Manually creating new APA partitions on your PS2 drive and exceeding the allocated space for APA will corrupt the drive.**
 
-# Legacy versions of the PSBBN Definitive English Patch
+## Early (SCPH-10000–18000) and Slim (SCPH-700xx) Consoles
+The **PSBBN Definitive Patch** can be installed on PS2 Slim **SCPH-700xx** models with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar hardware mod. Installing to a SD card is not supported, A SATA drive must be used.
 
-<details>
-<summary>Click to expand</summary>
-
-# Patch Features
-- A full English translation of the stock Japanese BB Navigator version 0.32
-- All binaries, XML files, textures, and pictures have been translated*
-- Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#slim-ps2-console-model-scph-700xx) or similar hardware mod, regardless of region
-- DNAS authorization checks bypassed to enable access the online channels
-- Online game channels from Sony, Hudson, EA, Konami, Capcom, Namco, and KOEI have been translated into English. Hosted courtesy of vitas155 at [psbbn.ru](https://psbbn.ru/)
-- "Audio Player" feature re-added to the Music Channel from an earlier release of PSBBN, allowing compatibility with NetMD MiniDisc Recorders
-- Associated manual pages and troubleshooting regarding the "Audio Player" feature translated and re-added to the user guide
-- Japanese QWERTY on-screen keyboard replaced with US English on-screen keyboard**
-- Storage capacity limited to 128 GB
-- Legacy versions of the **PSBBN Definitive Patch** are **not** compatible with the [PSBBN installer](#install-psbbn-and-hosdmenu), [PSBBN Software Updater](#update-psbbn-software), [Game Installer](#game-and-app-installer), [Media Installer](#media-installer), or [Extras](#extras)
-
-## Version History
-
-**v1.2 - 4th September 2024**
-- Fixed a bug on the Photo Channel that could potentially prevent the Digital Camera feature from being launched.
-- Fixed formatting issues with a number of error messages where text was too long to fit on the screen.
-- Various small adjustments and corrections to the translation throughout.
-
-**v1.1.1 - 8th March 2024**
-**NEW**  
-- X11 has been set to run in English. The restore, move, resize, minimize, and close buttons now show in English while using the NetFront web browser. When saving files, time stamps now also display in English formatting.
-
-**v1.1 - 5th March 2024**
-**NEW**  
-- The NetFront web browser is now in English. The browser can be accessed by going through the "Confirm/Change" network setting dialogs, then selecting "Change router settings".
-- Atok user manual has been translated.
-
-**BUG FIXES**  
-- **General**: When a game disc was inserted while on the Top Menu, it would cause the console to freeze.  
-- **Music Channel**: The number of times a track had been checked-out to a MiniDisc recorder was not displayed correctly.  
-- A number of typos have been fixed.
-
-**v1.0 - 21st September 2023**
-- Initial release.
-
-## Installation Instructions
-There are two ways to install this English patch:
-
-1. [PS2 HDD RAW Image Install](#ps2-hdd-raw-image-install): Use this method if you have access to a PC and a way to connect your PS2 HDD/SSD to your PC. This is the most straightforward option. All data on the HDD will be lost.
-
-2. [Patch an existing PSBBN install](#patch-an-existing-psbbn-install): Use this method if you already have an existing PSBBN install on your PlayStation 2 console. Also, follow these instructions to install future patch updates. No data will be lost.
-
-### PS2 HDD RAW Image Install
-**What You Will Need:**
-- Any fat model PS2 console*
-- An official Sony Network Adapter
-- A compatible HDD or SSD (IDE or SATA with an adapter). The drive must be 120 GB or larger
-- A way to connect the PS2 HDD to a PC
-- 120 GB of free space on your PC to extract the files
-- Disk imaging software
-
-**Installation Procedure:**
-1. Download [PSBBN_English_Patched_v1.x.x_Image.7z](https://archive.org/download/playstation-broadband-navigator-psbbn-definitive-english-patch-v1.0/PSBBN_English_Patched_v1.2_Image.7z) and uncompress it.
-`PSBBN_English_Patched_v1.x.x_HDD_RAW.img` is a raw PS2 disk image of the Japanese PlayStation BB Navigator Version 0.32 with the PlayStation Broadband Navigator (PSBBN) Definitive English Patch pre-installed.
-2. To write this image to your PS2 HDD, you need disk imaging software. For Windows, I recommend using HDD Raw Copy ver. 1.10 portable. You can download it [here](https://hddguru.com/software/HDD-Raw-Copy-Tool/).
-
-### Patch an existing PSBBN install
-
-**What You Will Need:**
-- Any fat model PS2 console*
-- An official Sony Network Adapter
-- A compatible HDD or SSD (IDE or SATA with an adapter)
-- An existing install of PSBBN software 0.32 on your PS2 console
-- A FreeMcBoot Memory Card
-- A USB flash drive formatted as FAT32
-- A USB keyboard
-
-**Installing the English Patch:**
-1. Install the PSBBN software on your PS2 console if you haven't done so already. Either via a disk image or manually, see the section [Installing the Japanese PSBBN software](#installing-the-japanese-psbbn-software) below for details on a manual install.
-2. Download [PSBBN_English_Patch_Installer_v1.x.x.zip](https://archive.org/download/playstation-broadband-navigator-psbbn-definitive-english-patch-v1.0/PSBBN_English_Patch_Installer_v1.2.zip) and unzip it on your PC.
-3. Copy the files `kloader3.0.elf`, `config.txt`, `xrvmlinux`, `xrinitfs_install.gz`, and `PSBBN_English.tar.gz` to the root of a FAT32 formatted USB flash drive.
-4. Connect the USB flash drive and a USB keyboard to the USB ports on the front of your PS2 console.
-5. Turn the PS2 console on with your FreeMcBoot Memory Card inserted and load wLaunchELF.
-6. Load `kloader3.0.elf` from the USB flash drive.
-7. Eventually, you will be presented with a login prompt:  
-     Type `root` and press enter.  
-     Type `install` and press enter.
-8. When you see the text `INIT: no more processes left in this runlevel`, hold the standby button down until the console powers off.
-
-Remove your FreeMcBoot Memory Card. Power the console on and enjoy PSBBN in full English!
-
-## Installing the Japanese PSBBN software
-
-There are a number of ways this can be achieved. On a Japanese PlayStation 2 console with an **official PSBBN installation disc**, or with **Sony Utility Discs Compilation 3**.
-
-To install via **Sony Utility Discs Compilation 3** you will need a way to boot backup discs on your console, be that a mod chip or a swap disc. If you are lucky enough to have a **SCPH-500xx** series console you can use the **MechaPwn** softmod.
-
-Installing with Sony Utility Discs Compilation 3:
-
-**Preparations:**
-1. Download the **Sony Utility Discs Compilation 3** ISO from the Internet Archive [here](https://archive.org/details/sony-utility-disc-compilation-v3).
-2. **SCPH-500xx consoles only**: Patch the ISO with the [Master Disc Patcher](https://www.psx-place.com/threads/playstation-2-master-disc-patcher-for-mechapwn.36547/).
-3. Burn this ISO to a writable DVD. I recommend using [ImgBurn](https://www.imgburn.com).
-4. **SCPH-500xx consoles only**: MechaPwn your PS2 console with the latest release candidate, currently [MechaPwn 3.0 Release Candidate 4 (RC4)](https://github.com/MechaResearch/MechaPwn/releases/tag/3.00-rc4). It is important that you use a version of MechaPwn that does not change the **Model Name** of your console or it will break compatibility with the Kloader app, we use later in this guide. Currently the latest stable version is not compatible. More details about exactly what MechaPwn does and how to use it can be found [here](https://github.com/MechaResearch/MechaPwn).
-5. Format the PS2 HDD. In wLaunchELF press the `circle` button for **FileBrowser**, then select **MISC > HddManager**. Press `R1` to open the menu and select **Format**. When done, press `triangle` to exit.
-6. Launch the **Sony Utility Discs Compilation 3** DVD on your console. **SCPH-500xx consoles only:** Insert your newly burnt **Sony Utility Discs Compilation 3** DVD into the DVD drive on your PS2 console. On the first screen of wLaunchELF, press the `circle` button for **FileBrowser**, then select **MISC > PS2Disc**. The DVD will launch. On all other model consoles, launch the **Sony Utility Discs Compilation 3** DVD any way you can (e.g. Mod chip/Swap disc).
-7. After the disc loads, select **HDD Utility Discs > PlayStation BB Navigator Version 0.32** from the menu to begin the installation.
-
-**Installation:**  
-There's an excellent guide [here](https://bungiefan.tripod.com/psbbninstall_01.html) that talks you through the Japanese install. Because we have already formatted the hard drive, during the install you will be presented with a [different screen](https://bungiefan.tripod.com/psbbninstall_02.html). It's important that you select the 3rd install option. This will install PSBBN without re-formatting the HDD. When the install is complete you will be instructed to remove the DVD, do so but also remove your FreeMcBoot Memory Card, before pressing the `circle` button.
-
-**Network Settings:**  
-You will be asked to enter your network settings. Make sure your Ethernet cable is connected. Everything is still in Japanese, but it's relatively straightforward:
-1. Press the `circle` button on the first screen.
-2. On the next screen, select the **bottom** option, "Do not use PPPoE" and press `circle`.
-3. On the next screen, select the **top** option, "Auto" for you IP address and press `circle`.
-4. On the next screen, select the **top** option, "Auto" for DNS settings and press `circle`.
-5. Press `right` on the d-pad to proceed to the next screen.
-6. Select the **bottom** option, "Do not change router settings" and press `circle`.
-7. Finally, press `circle` again to confirm your settings.
-
-For your efforts you will be given a DNAS error. This is to be expected. We'll fix that next. Press `cross` and feel free to explore your fresh install of the Japanese PSBBN.
-
-**Disable DNAS Authentication:**  
-1. Turn off the console and put your FreeMcBoot Memory Card back into a memory card slot.  
-2. Turn the console on and load wLaunchELF.  
-3. Go to **FileBrowser**. Navigate to `hdd0:/__contents/bn.conf/` and delete the file `default_isp.dat`. This will disable the DNAS checks.
-
-**Please Note**
-Before installing the English patch, you **must** power off your console to standby mode by holding the reset button. Failure to do so will cause issues with Kloader.
-
-## Notes
-
-\* Also compatible with the PS2 Slim SCPH-700xx models with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar hardware mod. [PS2 HDD RAW Image Install](#ps2-hdd-raw-image-install) is not compatible with early model Japanese PS2 consoles (SCPH-10000, SCPH-15000 and SCPH-18000) that have an external HDD due to space limitations (unless the stock drive is replaced with a 120+ GB drive). When [patching an existing PSBBN install](#patch-an-existing-psbbn-install), Kloader might have compatibility issues with early model Japanese PS2 consoles (SCPH-10000, SCPH-15000 and SCPH-18000).  
-- Use OPL-Launcher to launch PS2 games from the Game Channel. More details can be found [here](https://github.com/ps2homebrew/OPL-Launcher).
-- Lacks support for large HDDs, drives larger than 130 GB cannot be taken full advantage of. PSBBN can only see the first 130,999 MB of data on your HDD/SSD (as reported by wLaunchELF). If there is 131,000 MB or more on your HDD/SSD, PSBBN will fail to launch. Delete data so there is less than 131,000 MB used, and PSBBN will launch again. Be extra careful if you have installed via the [PS2 HDD RAW Image](#ps2-hdd-raw-image-install) on a drive larger than 120 GB, going over 130,999 MB will corrupt the drive.
-- You may need to manually change the title of your "Favorite" folders if they were created before you [Patched an existing PSBBN install](#patch-an-existing-psbbn-install).
-
-</details>
-
-# Troubleshooting
-
-## Problems Launching PSBBN and HOSDMenu
-When you connect the drive to your PS2 console and power it on, **PSBBN** or [HOSDMenu](#hosdmenu) should automatically launch.
-
-**NOTE: There is currently a known issue when installing on Fedora. It is recommended to use a Debian-based distribution or the [PSBBN Launcher for Windows](#installing-on-windows) instead.**
-
-### Fat PS2 console models SCPH-3000x-500xx:
-If your console boots to the regular OSD or freezes, it means that your drive has not been recognised or you are experiencing a hardware issue. You should check the following:
-1. If using **PSBBN**, make sure you are using an **official Sony Network Adapter**; 3rd-party adapters are not supported
-2. Ensure the network/HDD adapter and drive are securely connected to the console
-3. Check that the connectors on the console and network/HDD adapter are clean and free of dust/debris
-4. If using a SATA mod, make sure it has been installed correctly
-5. Try using a different HDD/SSD
-6. Try using a different IDE converter/SATA mod
-7. Try using a different official Sony Network Adapter or 3rd-party HDD adapter
-8. Try a different PS2 console
-
-### Early (SCPH-10000–18000) and Slim (SCPH-700xx) Consoles
-If you are using a PS2 Slim **SCPH-700xx** model with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar hardware mod, or **SCPH-10000 to SCPH-18000** model with an official external HDD enclosure, download the [External HDD Drivers](https://israpps.github.io/FreeMcBoot-Installer/test/8_Downloads.html). Extract the files and place `hddload.irx`, `dev9.irx`, and `atad.irx` in the appropriate system folder for your region on an **official Sony PS2 Memory Card**:
+You must also download the [External HDD Drivers](https://israpps.github.io/FreeMcBoot-Installer/test/8_Downloads.html). Extract the files and place `hddload.irx`, `dev9.irx`, and `atad.irx` in the appropriate system folder for your region on an **official Sony PS2 Memory Card**:
 
 | Region   | Folder Name   |
 |----------|-------------- |
@@ -880,16 +710,38 @@ If you are using a PS2 Slim **SCPH-700xx** model with an [IDE Resurrector](https
 | European | BEEXEC-SYSTEM |
 | Chinese  | BCEXEC-SYSTEM |
 
-For the **SCPH-700xx** model if, after doing so, the console freezes at the "PlayStation 2" logo when launching **PSBBN**, the most likely cause is an incompatible IDE to SD card adapter.
+**SCPH-10000 to SCPH-18000** models with an official external HDD enclosure lack the ability to auto-boot without additional software. To launch PSBBN, it is recommend to use the **PlayStation 2 Basic Boot Loader (PS2BBL)**. [Install PS2BBL as a system update to your PS2 Memory Card](https://israpps.github.io/PlayStation2-Basic-BootLoader/Downloads/). In the configuration file, set `LK_AUTO_E1` to `hdd0:/__system/p2lboot/osdboot.elf`.
+
+# Troubleshooting
+
+## Problems Launching PSBBN and HOSDMenu
+When you connect the drive to your PS2 console and power it on, **PSBBN** or **[HOSDMenu](#hosdmenu)** should automatically launch.
+
+**NOTE: There is currently a known issue when installing on Fedora. It is recommended to use a Debian-based distribution or the [PSBBN Launcher for Windows](#installing-on-windows) instead.**
+
+### Fat PS2 console models SCPH-3000x-500xx:
+If your console boots to the regular OSD or freezes, it means that your drive has not been recognised and you are experiencing a hardware issue. You should check the following:
+1. If using **PSBBN**, make sure you are using an **official Sony Network Adapter**; 3rd-party adapters are not supported
+2. Ensure the network/HDD adapter and drive are securely connected to the console
+3. Check that the connectors on the console and network/HDD adapter are clean and free of dust/debris
+5. If using a SATA mod, make sure it has been installed correctly
+6. Try using a different HDD/SSD
+7. Try using a different IDE converter/SATA mod
+8. Try using a different official Sony Network Adapter or 3rd-party HDD adapter
+9. Try a different PS2 console
 
 ## Problems Launching Games
 If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL](#open-ps2-loader-opl) (after modifying the OPL settings as described [above](#open-ps2-loader-opl)), or fail to launch from the PSBBN Game Collection, try the following:
 
 1. If you have a [mod chip](#known-issues), disable it
-2. Re-run the [Game Installer](#game-and-app-installer) and select the alternative game launcher ([OPL](#open-ps2-loader-opl)/[Neutrino](#neutrino-and-nhddl))
-3. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then reinstall [PSBBN](#install-psbbn-and-hosdmenu) or [HOSDMenu](#install-hosdmenu-only)
-4. Try using a different HDD/SSD and then reinstall [PSBBN](#install-psbbn-and-hosdmenu) or [HOSDMenu](#install-hosdmenu-only)
-5. Try using a different IDE converter/SATA mod on your console
+2. Ensure the network/HDD adapter and drive are securely connected to the console
+3. Check that the connectors on the console and network/HDD adapter are clean and free of dust/debris
+4. If using a SATA mod, make sure it has been installed correctly
+5. Re-run the [Game Installer](#game-and-app-installer) and select the alternative game launcher ([OPL](#open-ps2-loader-opl)/[Neutrino](#neutrino-and-nhddl))
+6. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then reinstall [PSBBN](#install-psbbn-and-hosdmenu) or [HOSDMenu](#install-hosdmenu-only)
+7. Try using a different HDD/SSD and then reinstall [PSBBN](#install-psbbn-and-hosdmenu) or [HOSDMenu](#install-hosdmenu-only)
+8. Try using a different IDE converter/SATA mod on your console
+9. Try a different PS2 console
 
 # Known Issues
 - Instances in feega where some Japanese text couldn't be translated due to it being hard-coded in an encrypted file. Atok software has not been translated.  
@@ -905,9 +757,135 @@ If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL
 - APA partitions should not be created beyond the allocated space for APA set while installing PSBBN/HOSDMenu or it will corrupt the drive.
 - OPL cannot read settings saved on the exFAT partition of the internal drive. Settings should be saved to a PS2 memory card. If you have a MemCard Pro 2 or SD2PSX, it is recommended that you save your OPL settings to a standard PS2 memory card inserted in slot 2.
 
+# Legacy versions of the PSBBN Definitive English Patch
+<details>
+<summary>Click to expand</summary>
+
+**Patch Features**
+- A full English translation of the stock Japanese BB Navigator version 0.32
+- All binaries, XML files, textures, and pictures have been translated*
+- Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#slim-ps2-console-model-scph-700xx) or similar hardware mod, regardless of region
+- DNAS authorization checks bypassed to enable access the online channels
+- Online game channels from Sony, Hudson, EA, Konami, Capcom, Namco, and KOEI have been translated into English. Hosted courtesy of vitas155 at [psbbn.ru](https://psbbn.ru/)
+- "Audio Player" feature re-added to the Music Channel from an earlier release of PSBBN, allowing compatibility with NetMD MiniDisc Recorders
+- Associated manual pages and troubleshooting regarding the "Audio Player" feature translated and re-added to the user guide
+- Japanese QWERTY on-screen keyboard replaced with US English on-screen keyboard**
+- Storage capacity limited to 128 GB
+- Legacy versions of the **PSBBN Definitive Patch** are **not** compatible with the [PSBBN installer](#install-psbbn-and-hosdmenu), [PSBBN Software Updater](#update-psbbn-software), [Game Installer](#game-and-app-installer), [Media Installer](#media-installer), or [Extras](#extras)
+
+**Version History**  
+v1.2 - 4th September 2024:
+- Fixed a bug on the Photo Channel that could potentially prevent the Digital Camera feature from being launched.
+- Fixed formatting issues with a number of error messages where text was too long to fit on the screen.
+- Various small adjustments and corrections to the translation throughout.
+
+v1.1.1 - 8th March 2024:  
+- X11 has been set to run in English. The restore, move, resize, minimize, and close buttons now show in English while using the NetFront web browser. When saving files, time stamps now also display in English formatting.
+
+v1.1 - 5th March 2024:
+- The NetFront web browser is now in English. The browser can be accessed by going through the "Confirm/Change" network setting dialogs, then selecting "Change router settings".
+- Atok user manual has been translated.
+- Bug fixes:
+- **General**: When a game disc was inserted while on the Top Menu, it would cause the console to freeze.  
+- **Music Channel**: The number of times a track had been checked-out to a MiniDisc recorder was not displayed correctly.  
+- A number of typos have been fixed.
+
+v1.0 - 21st September 2023:
+- Initial release.
+
+**Installation Instructions**  
+There are two ways to install this English patch:
+
+1. **PS2 HDD RAW Image Install:** Use this method if you have access to a PC and a way to connect your PS2 HDD/SSD to your PC. This is the most straightforward option. All data on the HDD will be lost.
+
+2. **Patch an existing PSBBN install:** Use this method if you already have an existing PSBBN install on your PlayStation 2 console. Also, follow these instructions to install future patch updates. No data will be lost.
+
+**PS2 HDD RAW Image Install**  
+What You Will Need:
+- Any fat model PS2 console*
+- An official Sony Network Adapter
+- A compatible HDD or SSD (IDE or SATA with an adapter). The drive must be 120 GB or larger
+- A way to connect the PS2 HDD to a PC
+- 120 GB of free space on your PC to extract the files
+- Disk imaging software
+
+Installation Procedure:  
+1. Download [PSBBN_English_Patched_v1.x.x_Image.7z](https://archive.org/download/playstation-broadband-navigator-psbbn-definitive-english-patch-v1.0/PSBBN_English_Patched_v1.2_Image.7z) and uncompress it.
+`PSBBN_English_Patched_v1.x.x_HDD_RAW.img` is a raw PS2 disk image of the Japanese PlayStation BB Navigator Version 0.32 with the PlayStation Broadband Navigator (PSBBN) Definitive English Patch pre-installed.
+2. To write this image to your PS2 HDD, you need disk imaging software. For Windows, I recommend using HDD Raw Copy ver. 1.10 portable. You can download it [here](https://hddguru.com/software/HDD-Raw-Copy-Tool/).
+
+**Patch an existing PSBBN install**  
+What You Will Need:
+- Any fat model PS2 console*
+- An official Sony Network Adapter
+- A compatible HDD or SSD (IDE or SATA with an adapter)
+- An existing install of PSBBN software 0.32 on your PS2 console
+- A FreeMcBoot Memory Card
+- A USB flash drive formatted as FAT32
+- A USB keyboard
+
+Installing the English Patch:  
+1. Install the PSBBN software on your PS2 console if you haven't done so already. Either via a disk image or manually, see the section **Installing the Japanese PSBBN software** below for details on a manual install.
+2. Download [PSBBN_English_Patch_Installer_v1.x.x.zip](https://archive.org/download/playstation-broadband-navigator-psbbn-definitive-english-patch-v1.0/PSBBN_English_Patch_Installer_v1.2.zip) and unzip it on your PC.
+3. Copy the files `kloader3.0.elf`, `config.txt`, `xrvmlinux`, `xrinitfs_install.gz`, and `PSBBN_English.tar.gz` to the root of a FAT32 formatted USB flash drive.
+4. Connect the USB flash drive and a USB keyboard to the USB ports on the front of your PS2 console.
+5. Turn the PS2 console on with your FreeMcBoot Memory Card inserted and load wLaunchELF.
+6. Load `kloader3.0.elf` from the USB flash drive.
+7. Eventually, you will be presented with a login prompt:  
+     Type `root` and press enter.  
+     Type `install` and press enter.
+8. When you see the text `INIT: no more processes left in this runlevel`, hold the standby button down until the console powers off.
+
+Remove your FreeMcBoot Memory Card. Power the console on and enjoy PSBBN in full English!
+
+**Installing the Japanese PSBBN software**  
+There are a number of ways this can be achieved. On a Japanese PlayStation 2 console with an **official PSBBN installation disc**, or with **Sony Utility Discs Compilation 3**.
+
+To install via **Sony Utility Discs Compilation 3** you will need a way to boot backup discs on your console, be that a mod chip or a swap disc. If you are lucky enough to have a **SCPH-500xx** series console you can use the **MechaPwn** softmod.
+
+Installing with Sony Utility Discs Compilation 3  
+Preparations:
+1. Download the **Sony Utility Discs Compilation 3** ISO from the Internet Archive [here](https://archive.org/details/sony-utility-disc-compilation-v3).
+2. **SCPH-500xx consoles only**: Patch the ISO with the [Master Disc Patcher](https://www.psx-place.com/threads/playstation-2-master-disc-patcher-for-mechapwn.36547/).
+3. Burn this ISO to a writable DVD. I recommend using [ImgBurn](https://www.imgburn.com).
+4. **SCPH-500xx consoles only**: MechaPwn your PS2 console with the latest release candidate, currently [MechaPwn 3.0 Release Candidate 4 (RC4)](https://github.com/MechaResearch/MechaPwn/releases/tag/3.00-rc4). It is important that you use a version of MechaPwn that does not change the **Model Name** of your console or it will break compatibility with the Kloader app, we use later in this guide. Currently the latest stable version is not compatible. More details about exactly what MechaPwn does and how to use it can be found [here](https://github.com/MechaResearch/MechaPwn).
+5. Format the PS2 HDD. In wLaunchELF press the `circle` button for **FileBrowser**, then select **MISC > HddManager**. Press `R1` to open the menu and select **Format**. When done, press `triangle` to exit.
+6. Launch the **Sony Utility Discs Compilation 3** DVD on your console. **SCPH-500xx consoles only:** Insert your newly burnt **Sony Utility Discs Compilation 3** DVD into the DVD drive on your PS2 console. On the first screen of wLaunchELF, press the `circle` button for **FileBrowser**, then select **MISC > PS2Disc**. The DVD will launch. On all other model consoles, launch the **Sony Utility Discs Compilation 3** DVD any way you can (e.g. Mod chip/Swap disc).
+7. After the disc loads, select **HDD Utility Discs > PlayStation BB Navigator Version 0.32** from the menu to begin the installation.
+
+Installation:  
+There's an excellent guide [here](https://bungiefan.tripod.com/psbbninstall_01.html) that talks you through the Japanese install. Because we have already formatted the hard drive, during the install you will be presented with a [different screen](https://bungiefan.tripod.com/psbbninstall_02.html). It's important that you select the 3rd install option. This will install PSBBN without re-formatting the HDD. When the install is complete you will be instructed to remove the DVD, do so but also remove your FreeMcBoot Memory Card, before pressing the `circle` button.
+
+Network Settings:  
+You will be asked to enter your network settings. Make sure your Ethernet cable is connected. Everything is still in Japanese, but it's relatively straightforward:
+1. Press the `circle` button on the first screen.
+2. On the next screen, select the **bottom** option, "Do not use PPPoE" and press `circle`.
+3. On the next screen, select the **top** option, "Auto" for you IP address and press `circle`.
+4. On the next screen, select the **top** option, "Auto" for DNS settings and press `circle`.
+5. Press `right` on the d-pad to proceed to the next screen.
+6. Select the **bottom** option, "Do not change router settings" and press `circle`.
+7. Finally, press `circle` again to confirm your settings.
+
+For your efforts you will be given a DNAS error. This is to be expected. We'll fix that next. Press `cross` and feel free to explore your fresh install of the Japanese PSBBN.
+
+Disable DNAS Authentication:  
+1. Turn off the console and put your FreeMcBoot Memory Card back into a memory card slot.  
+2. Turn the console on and load wLaunchELF.  
+3. Go to **FileBrowser**. Navigate to `hdd0:/__contents/bn.conf/` and delete the file `default_isp.dat`. This will disable the DNAS checks.
+
+**Please Note:** Before installing the English patch, you **must** power off your console to standby mode by holding the reset button. Failure to do so will cause issues with Kloader.
+
+**Notes**  
+\* Also compatible with the PS2 Slim SCPH-700xx models with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar hardware mod. **PS2 HDD RAW Image Install** is not compatible with early model Japanese PS2 consoles (SCPH-10000, SCPH-15000 and SCPH-18000) that have an external HDD due to space limitations (unless the stock drive is replaced with a 120+ GB drive). When **patching an existing PSBBN install**, Kloader might have compatibility issues with early model Japanese PS2 consoles (SCPH-10000, SCPH-15000 and SCPH-18000).  
+- Use OPL-Launcher to launch PS2 games from the Game Channel. More details can be found [here](https://github.com/ps2homebrew/OPL-Launcher).
+- Lacks support for large HDDs, drives larger than 130 GB cannot be taken full advantage of. PSBBN can only see the first 130,999 MB of data on your HDD/SSD (as reported by wLaunchELF). If there is 131,000 MB or more on your HDD/SSD, PSBBN will fail to launch. Delete data so there is less than 131,000 MB used, and PSBBN will launch again. Be extra careful if you have installed via the **PS2 HDD RAW Image** on a drive larger than 120 GB, going over 130,999 MB will corrupt the drive.
+- You may need to manually change the title of your "Favorite" folders if they were created before you **Patched an existing PSBBN install**.
+
+</details>
+
 # Credits
 **PS2 Homebrew Community:**
-- PSBBN Definitive English Patch project by [CosmicScale](https://github.com/CosmicScale)
+- PSBBN Definitive Patch project by [CosmicScale](https://github.com/CosmicScale)
 - PSBBN English translation by [CosmicScale](https://github.com/CosmicScale)
 - `PSBBN-Definitive-Patch.sh`, `Setup.sh`, `PSBBN-Installer.sh`, `HOSDMenu-Installer.sh`, `Game-Installer.sh`, `Media-Installer.sh`, `music-installer.py`, `Extras.sh`, `art_downloader.py`, `list-sorter.py`, `txt_to_icon_sys.py`, `AppDB.csv`, `vmc_groups.list` written by [CosmicScale](https://github.com/CosmicScale)
 - `ps2iconmaker.sh` written by [Sakitoshi](https://github.com/Sakitoshi) and [CosmicScale](https://github.com/CosmicScale)
