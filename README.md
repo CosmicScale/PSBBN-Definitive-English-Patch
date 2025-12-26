@@ -719,7 +719,6 @@ When you connect the drive to your PS2 console and power it on, **PSBBN** or **[
 
 **NOTE: There is currently a known issue when installing on Fedora. It is recommended to use a Debian-based distribution or the [PSBBN Launcher for Windows](#installing-on-windows) instead.**
 
-### Fat PS2 console models SCPH-3000x-500xx:
 If your console boots to the regular OSD or freezes, it means that your drive has not been recognised and you are experiencing a hardware issue. You should check the following:
 1. If using **PSBBN**, make sure you are using an **official Sony Network Adapter**; 3rd-party adapters are not supported
 2. Ensure the network/HDD adapter and drive are securely connected to the console
