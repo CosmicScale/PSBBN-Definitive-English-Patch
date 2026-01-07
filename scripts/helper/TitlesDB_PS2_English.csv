@@ -165,9 +165,9 @@ SLES_540.16|AND 1 Streetball|Black Ops Entertainment
 SLUS_212.37|AND 1 Streetball|Black Ops Entertainment
 SCUS_971.04|ATV Offroad Fury|
 SCUS_971.22|ATV Offroad Fury (Demo)|
-SCUS_972.11|ATV Offroad Fury 2|Rainbow Studios
-SCUS_973.69|ATV Offroad Fury 2|Rainbow Studios
-SLES_518.14|ATV Offroad Fury 2|Rainbow Studios
+SCUS_972.11|ATV Offroad Fury 2|Sony Computer Entertainment
+SCUS_973.69|ATV Offroad Fury 2|Sony Computer Entertainment
+SLES_518.14|ATV Offroad Fury 2|THQ
 SCUS_972.38|ATV Offroad Fury 2 (Demo)|Rainbow Studios
 SLES_537.54|ATV Offroad Fury 3|Climax
 SCUS_974.05|ATV Offroad Fury 3|Climax
@@ -479,11 +479,11 @@ SLPS_250.40|Armored Core 2: Another Age|FromSoftware,Inc.
 SLPS_734.11|Armored Core 2: Another Age|FromSoftware,Inc.
 SLUS_202.49|Armored Core 2: Another Age|FromSoftware,Inc.
 SLES_513.99|Armored Core 3|Metro3D
-SLPM_675.24|Armored Core 3|Metro3D
-SLPS_251.12|Armored Core 3|Metro3D
-SLPS_257.32|Armored Core 3|Metro3D
-SLPS_734.17|Armored Core 3|Metro3D
-SLUS_204.35|Armored Core 3|Metro3D
+SLPM_675.24|Armored Core 3|FromSoftware
+SLPS_251.12|Armored Core 3|FromSoftware
+SLPS_257.32|Armored Core 3|FromSoftware
+SLPS_734.17|Armored Core 3|FromSoftware
+SLUS_204.35|Armored Core 3|Agetec
 SLKA_250.41|Armored Core 3: Silent Line|FromSoftware 
 SLPS_251.69|Armored Core 3: Silent Line|FromSoftware 
 SLPS_734.20|Armored Core 3: Silent Line|FromSoftware 
@@ -855,9 +855,9 @@ SLPM_625.72|Boboboubo Boubobo: Atsumare!! Taikan Boubobo|
 SLPM_652.62|Boboboubo Boubobo: Hajike Matsuri|Hudson
 SLPM_659.12|Boboboubo Boubobo: Hajike Matsuri|Hudson
 SLUS_213.81|Bode Miller Alpine Skiing|
-SCPS_150.26|Boku no Natsuyasumi 2: Umi no Bouken-hen|
-SCPS_192.09|Boku no Natsuyasumi 2: Umi no Bouken-hen|
-SCPS_193.03|Boku no Natsuyasumi 2: Umi no Bouken-hen|
+SCPS_150.26|Boku no Natsuyasumi 2: Umi no Bouken-hen|Sony Computer Entertainment
+SCPS_192.09|Boku no Natsuyasumi 2: Umi no Bouken-hen|Sony Computer Entertainment
+SCPS_193.03|Boku no Natsuyasumi 2: Umi no Bouken-hen|Sony Computer Entertainment
 SCPS_110.08|Boku to Maou|Sony Computer Entertainment
 SCPS_191.02|Boku to Maou|Sony Computer Entertainment
 PAPX_902.12|Boku to Maou (Taikenban)|Sony Computer Entertainment
@@ -871,7 +871,7 @@ SLPM_601.47|Bokujou Monogatari 3: Heart ni Hi o Tsukete (Taikenban)|
 SLPS_254.31|Bokujou Monogatari: Oh! Wonderful Life|
 SLPS_254.21|Bokujou Monogatari: Oh! Wonderful Life (Shokai Genteiban)|Marvelous Interactive
 SLPS_732.22|Bokujou Monogatari: Oh! Wonderful Life (Shokai Genteiban)|Marvelous Interactive
-SCPS_150.88|Bokura no Kazoku: My Family Growing Up in the 21st Century|
+SCPS_150.88|Bokura no Kazoku: My Family Growing Up In The 21st Century|Sony Computer Entertainment
 SLES_519.66|Bombastic|ShiftInc.
 SLUS_207.64|Bombastic|ShiftInc.
 SLPM_625.03|Bomberman Battles|
@@ -2336,9 +2336,9 @@ SLES_532.46|DreamWorks Madagascar|Activision
 SLES_533.73|DreamWorks Madagascar|Activision
 SLPS_204.26|DreamWorks Madagascar|Activision
 SLUS_210.15|DreamWorks Madagascar|Activision
-SLES_553.74|DreamWorks Madagascar: Escape 2 Africa|
-SLES_553.75|DreamWorks Madagascar: Escape 2 Africa|
-SLUS_218.40|DreamWorks Madagascar: Escape 2 Africa|
+SLES_553.74|DreamWorks Madagascar: Escape 2 Africa|Activision
+SLES_553.75|DreamWorks Madagascar: Escape 2 Africa|Activision
+SLUS_218.40|DreamWorks Madagascar: Escape 2 Africa|Activision
 SLES_553.90|DreamWorks Madagaskar 2|
 SLES_554.86|DreamWorks Monsters vs. Aliens|
 SLUS_218.70|DreamWorks Monsters vs. Aliens|
@@ -3677,10 +3677,10 @@ SLES_546.23|Grand Theft Auto: Vice City Stories|Rockstar Games
 SLPM_551.35|Grand Theft Auto: Vice City Stories|Rockstar Games
 SLPM_669.17|Grand Theft Auto: Vice City Stories|Rockstar Games
 SLUS_215.90|Grand Theft Auto: Vice City Stories|Rockstar Games
-SCPS_550.12|Grandia II|Game Arts
-SLES_504.98|Grandia II|Game Arts
-SLPM_650.81|Grandia II|Game Arts
-SLUS_201.94|Grandia II|Game Arts
+SCPS_550.12|Grandia II|Enix
+SLES_504.98|Grandia II|Ubisoft
+SLPM_650.81|Grandia II|Enix
+SLUS_201.94|Grandia II|Ubisoft
 SLPM_659.76|Grandia III (Disc 1)|Square Enix
 SLUS_213.34|Grandia III (Disc 1)|Game Arts
 SLPM_659.77|Grandia III (Disc 2)|Square Enix
@@ -3770,9 +3770,9 @@ SLPM_658.86|Guisard Revolution: Bokura wa Omoi o Mi ni Matou|
 SLES_540.93|Guitar Hero|RedOctane
 SLES_541.32|Guitar Hero|RedOctane
 SLUS_212.24|Guitar Hero|RedOctane
-SLES_555.33|Guitar Hero 5|Neversoft
-SLUS_218.65|Guitar Hero 5|Neversoft
-SLUS_215.86|Guitar Hero Encore: Rocks the 80s|
+SLES_555.33|Guitar Hero 5|Activision
+SLUS_218.65|Guitar Hero 5|Activision
+SLUS_215.86|Guitar Hero Encore: Rocks the 80s|Activision
 SLES_544.42|Guitar Hero II|RedOctane
 SLUS_214.47|Guitar Hero II|RedOctane
 SLED_545.09|Guitar Hero II (Demo)|RedOctane
@@ -4960,7 +4960,7 @@ SCES_509.70|Kingdom Hearts|Sony Computer Entertainment
 SCES_509.71|Kingdom Hearts|Sony Computer Entertainment
 SLPM_661.22|Kingdom Hearts|Square
 SLPS_251.05|Kingdom Hearts|Square
-SLUS_203.70|Kingdom Hearts|SquareSoft
+SLUS_203.70|Kingdom Hearts|Square
 SCED_513.14|Kingdom Hearts (Demo)|Sony Computer Entertainment
 SLPM_610.25|Kingdom Hearts (Taikenban)|Square
 SLES_541.14|Kingdom Hearts II|Square Enix
@@ -5331,8 +5331,8 @@ SLUS_206.76|Lowrider|Runtime
 SLES_546.14|Lucinda Green's Equestrian Challenge|
 SLUS_214.01|Lucinda Green's Equestrian Challenge|
 SLPM_602.82|Lucky Star: RAvish Romance (Taikenban)|
-SLPM_668.74|Lucky Star: Ryouou Gakuen Outousai|
-SLPM_668.73|Lucky Star: Ryouou Gakuen Outousai (DX Pack)|
+SLPM_668.74|Lucky Star: Ryouou Gakuen OutousaiKadokawa Shoten
+SLPM_668.73|Lucky Star: Ryouou Gakuen Outousai (DX Pack)|Kadokawa Shoten
 SCKA_200.56|LuluRara Noraebang Vol. 1|
 SCKA_200.72|LuluRara Noraebang Vol. 2|
 SLES_543.36|Lumines Plus|Q Entertainment
@@ -6682,8 +6682,8 @@ SLUS_206.96|Jimmy Neutron: Boy Genius: Jet Fusion|
 SLES_513.00|Jimmy Neutron: Der mutige Erfinder|
 SLES_513.12|Les Razmoket: La Rançon Royale|
 SLUS_219.26|Ni Hao, Kai-Lan: Super Game Day|
-SLES_511.88|Rocket Power: Beach Bandits|
-SLUS_204.73|Rocket Power: Beach Bandits|
+SLES_511.88|Rocket Power: Beach Bandits|THQ
+SLUS_204.73|Rocket Power: Beach Bandits|THQ
 SLES_513.85|Rugrats: Rescate Real|
 SLES_513.11|Rugrats: Royal Ransom|
 SLUS_204.43|Rugrats: Royal Ransom|
@@ -6708,8 +6708,8 @@ SLUS_212.52|SpongeBob SquarePants: Lights, Camera, Pants!|
 SLES_529.06|SpongeBob SquarePants: Movin' with Friends|
 SLES_529.07|SpongeBob SquarePants: Movin' with Friends|
 SLKA_252.45|SpongeBob SquarePants: Movin' with Friends|
-SLES_512.85|SpongeBob SquarePants: Revenge of the Flying Dutchman|
-SLUS_204.25|SpongeBob SquarePants: Revenge of the Flying Dutchman|
+SLES_512.85|SpongeBob SquarePants: Revenge of the Flying Dutchman|THQ
+SLUS_204.25|SpongeBob SquarePants: Revenge of the Flying Dutchman|THQ
 SLES_549.91|SpongeBob and Friends: Attack of the Toybots|
 SLES_545.21|SpongeBob and Friends: Battle for Volcano Island|
 SLES_545.22|SpongeBob and Friends: Battle for Volcano Island|
@@ -6739,7 +6739,7 @@ SLES_536.34|Nicktoons Unite!|
 SLUS_212.84|Nicktoons Unite!|
 SLES_549.90|Nicktoons: Attack of the Toybots|
 SLUS_216.05|Nicktoons: Attack of the Toybots|
-SLUS_214.69|Nicktoons: Battle for Volcano Island|
+SLUS_214.69|Nicktoons: Battle for Volcano Island|THQ
 SLPM_669.36|Night Wizard the Video Game: Denial of the World|
 SLES_522.38|Nightshade|
 SLUS_208.10|Nightshade|
@@ -7603,20 +7603,20 @@ SLES_538.63|Pool Paradise: International Edition|
 SLES_527.73|Pool Shark 2|Zoo Digital
 SLES_518.25|Pop Idol|Hothouse Creations
 SLES_520.62|Pop Star Academy|Nobilis
-SLPM_657.69|Pop'n Music 10|
-SLPM_657.70|Pop'n Music 10|
-SLPM_662.10|Pop'n Music 10|
-SLPM_660.65|Pop'n Music 11|
-SLPM_663.14|Pop'n Music 12: Iroha|
-SLPM_665.33|Pop'n Music 13: Carnival|
-SLPM_667.42|Pop'n Music 14: Fever!|
-SLPM_652.08|Pop'n Music 7|
-SLPM_661.78|Pop'n Music 7|
-SLPM_653.16|Pop'n Music 8|
-SLPM_661.79|Pop'n Music 8|
-SLPM_655.08|Pop'n Music 9|
-SLPM_662.09|Pop'n Music 9|
-SLPM_622.88|Pop'n Music Best Hits!|
+SLPM_657.69|pop'n music 10|Konami
+SLPM_657.70|pop'n music 10|Konami
+SLPM_662.10|pop'n music 10|Konami
+SLPM_660.65|pop'n music 11|Konami
+SLPM_663.14|pop'n music 12 Iroha|Konami
+SLPM_665.33|pop'n music 13 Carnival|Konami
+SLPM_667.42|pop'n music 14 FEVER!|Konami
+SLPM_652.08|pop'n music 7|Konami
+SLPM_661.78|pop'n music 7|Konami
+SLPM_653.16|pop'n Music 8|Konami
+SLPM_661.79|pop'n music 8|Konami
+SLPM_655.08|pop'n music 9|Konami
+SLPM_662.09|pop'n music 9|Konami
+SLPM_622.88|pop'n music Best Hits!|Konami
 SLPM_624.64|Pop'n Taisen Puzzle-dama Online|
 SLUS_217.10|PopCap Hits! Vol. 1|
 SLUS_217.68|PopCap Hits! Vol. 2|
@@ -7795,8 +7795,8 @@ SLKA_251.39|Pungun Sinseonjo|
 SLPM_658.62|Pure Pure: Mimi to Shippo no Monogatari|
 SLPM_668.14|Pure x Cure Recovery|
 SLES_519.51|Puyo Pop Fever|Sega
-SLPM_655.32|Puyo Puyo Fever|Sega
-SLPM_742.10|Puyo Puyo Fever|Sega
+SLPM_655.32|Puyo Puyo Fever|SEGA
+SLPM_742.10|Puyo Puyo Fever|SEGA
 SLPM_610.72|Puyo Puyo Fever (Taikenban)|Sega
 SLPM_661.04|Puyo Puyo Fever 2|Sega
 SLPM_611.39|Puyo Puyo Fever 2 (Taikenban)|Sega
@@ -8126,8 +8126,8 @@ SLUS_208.23|Robotech: Invasion|Take 2 Interactive
 SLES_530.52|Robots|
 SLPM_660.59|Robots|
 SLUS_209.42|Robots|
-SLES_550.39|Rock Band|Harmonix
-SLUS_216.82|Rock Band|Harmonix
+SLES_550.39|Rock Band|MTV Games
+SLUS_216.82|Rock Band|MTV Games
 SLES_554.51|Rock Band 2|Electronic Arts
 SLUS_218.00|Rock Band 2|Electronic Arts
 SLUS_218.76|Rock Band Track Pack: Classic Rock|
@@ -11389,9 +11389,9 @@ SLES_546.70|Wacky Races: Mad Motors|
 SLES_549.56|Wacky Zoo GP|Phoenix Games
 SCPS_150.80|Waga Ryuu o Miyo: Pride of the Dragon Peace|
 PAPX_905.21|Waga Ryuu o Miyo: Pride of the Dragon Peace (Taikenban)|
-SLES_512.72|Wakeboarding Unleashed featuring Shaun Murray|Shaba Games
-SLES_512.73|Wakeboarding Unleashed featuring Shaun Murray|Shaba Games
-SLUS_204.18|Wakeboarding Unleashed featuring Shaun Murray|Shaba Games
+SLES_512.72|Wakeboarding Unleashed featuring Shaun Murray|Activision
+SLES_512.73|Wakeboarding Unleashed featuring Shaun Murray|Activision
+SLUS_204.18|Wakeboarding Unleashed featuring Shaun Murray|Activision
 SLES_513.72|Wallace & Gromit in Project Zoo|BAM! Entertainment
 SLES_519.89|Wallace & Gromit in Project Zoo|BAM! Entertainment
 SLES_520.26|Wallace & Gromit in Project Zoo|BAM! Entertainment
