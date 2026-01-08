@@ -10,7 +10,7 @@ PSBBN is official Sony software for the PlayStation 2, released exclusively in J
 - Watching videos in the Movie Channel
 - Transferring photos from a digital camera and viewing them in the Photo Channel
 
-This project aims to translate **PSBBN** from Japanese to English, introduce modern features, and make it a viable daily driver in 2025 and beyond.
+This project aims to translate **PSBBN** from Japanese to multiple languages, introduce modern features, and make it a viable daily driver in 2025 and beyond.
 
 You can find out more about the **PSBBN** software on [Wikipedia](https://en.wikipedia.org/wiki/PlayStation_Broadband_Navigator) and on my [YouTube channel](https://www.youtube.com/@CosmicScaleFactor).
 
@@ -55,6 +55,8 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 # Changelog
 
 **January 8th, 2026 - PSBBN Definitive Project: New Name and Multilingual Support**  
+
+[![PSBBN Definitive Project: New Name and Multilingual Support](https://github.com/user-attachments/assets/32bb93f2-c009-4b82-ba62-67933ff30e83)](https://www.youtube.com/watch?v=dvCt_ExHwro)
 
 Starting life in 2023 as an English language patch for PSBBN, this work has steadily expanded well beyond its original scope. Going forward, it will now collectively be called the **PSBBN Definitive Project**.
 
