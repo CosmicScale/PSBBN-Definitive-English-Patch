@@ -92,8 +92,11 @@ When the language is set to Japanese, titles of Japanese-region games are displa
 **`list-builder.py`:**
 - Updated to handle Japanese game titles
 
-**General**:  
+**PSBBN Definitive Patch updated to v4.1.0**
 - Updated the link to the new Konami Channel for non-Japanese installations
+- Modified `fstab` to mount `channels` partition
+
+**General**:  
 - The system language is now set to the selected PSBBN language and is no longer reset to English or Japanese when launching PSBBN
 - Added `libicu-dev` and `pkg-config` to the dependencies
 - Improved POPS English IGR message
