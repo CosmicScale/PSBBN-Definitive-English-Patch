@@ -39,9 +39,9 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 - Launch up to 800 PS1/PS2 games and apps directly from the [Game Collection](#game-collection)
 - Large HDD support: No longer limited to 128 GB — now supports larger drives, with a user-definable space between 16 GB and 128 GB allocated to the PlayStation File System (PFS), and up to 2 TB allocated to exFAT
 - exFAT filesystem for storing both PS2 games and homebrew applications
-- [POPS](#popstarter-and-virtual-memory-cards) partition up to 116 GB for PS1 games
-- Set a custom size for your music partition. Originally limited to 5 GB. Now the partition can be up to 114 GB for around 180 albums[*](#known-issues)
-- Set a custom size for your contents partition for the storage of movies and photos. Originally limited to 5 GB, can now be up to 114 GB
+- [POPS](#popstarter-and-virtual-memory-cards) partition up to 113 GB for PS1 games
+- Set a custom size for your music partition. Originally limited to 5 GB. Now the partition can be up to 113 GB for around 180 albums[*](#known-issues)
+- Set a custom size for your contents partition for the storage of movies and photos. Originally limited to 5 GB, can now be up to 113 GB
 - [VMC Groups](#popstarter-and-virtual-memory-cards) for PS1 games
 - Full [Game ID](#game-id) support for the **Pixel FX Retro GEM** and **MemCard Pro/SD2PSX** — works with installed games and apps as well as physical PS1 and PS2 game discs
 - [HOSDMenu](#hosdmenu): A patched **HDD-OSD** that brings a number of improvements
@@ -58,7 +58,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 [![PSBBN Definitive Project: New Name and Multilingual Support](https://github.com/user-attachments/assets/32bb93f2-c009-4b82-ba62-67933ff30e83)](https://www.youtube.com/watch?v=dvCt_ExHwro)
 
-Starting life in 2023 as an English language patch for PSBBN, this work has steadily expanded well beyond its original scope. Going forward, it will now collectively be called the **PSBBN Definitive Project**.
+The PSBBN Definitive English Patch started life in 2023 as an English language patch for PSBBN, this work has steadily expanded well beyond its original scope. Going forward, it will now collectively be called the **PSBBN Definitive Project**.
 
 PSBBN is now available in English, German and the original Japanese, with French and Italian translations coming soon. You will be given a choice of languages when installing PSBBN. The language can also be changed later in the **[Extras Menu](#optional-extras)**.
 
