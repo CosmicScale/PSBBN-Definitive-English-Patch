@@ -12,11 +12,13 @@ HELPER_DIR="${SCRIPTS_DIR}/helper"
 ASSETS_DIR="${SCRIPTS_DIR}/assets"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
 OPL="${SCRIPTS_DIR}/OPL"
+OSDMBR_CNF="${SCRIPTS_DIR}/tmp/OSDMBR.CNF"
 LOG_FILE="${TOOLKIT_PATH}/logs/extras.log"
 
 path_arg="$1"
-
 arch="$(uname -m)"
+
+URL="https://archive.org/download/psbbn-definitive-patch-v4.1"
 
 if [[ "$arch" = "x86_64" ]]; then
     # x86-64
@@ -56,7 +58,42 @@ error_msg() {
     echo
 }
 
+spinner() {
+    local pid=$1
+    local message=$2
+    local delay=0.1
+    local spinstr='|/-\'
+    local exit_code
+
+    # Print initial spinner
+    echo
+    printf "\r[%c] %s" "${spinstr:0:1}" "$message"
+
+    # Animate while the process is running
+    while kill -0 "$pid" 2>/dev/null; do
+        for i in {0..3}; do
+            printf "\r[%c] %s" "${spinstr:i:1}" "$message"
+            sleep $delay
+        done
+    done
+
+    # Wait for the process to capture its exit code
+    wait "$pid"
+    exit_code=$?
+
+    # Replace spinner with success/failure
+    if [ $exit_code -eq 0 ]; then
+        printf "\r[✓] %s\n" "$message" | tee -a "${LOG_FILE}"
+    else
+        printf "\r[X] %s\n" "$message" | tee -a "${LOG_FILE}"
+    fi
+}
+
 clean_up() {
+
+    sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1
+    sudo rm -rf "${SCRIPTS_DIR}/tmp"
+
     failure=0
 
     submounts=$(findmnt -nr -o TARGET | grep "^${STORAGE_DIR}/" | sort -r)
@@ -318,18 +355,120 @@ AVAILABLE_SPACE(){
     echo "Free Space: $free_space GB" >> "${LOG_FILE}"
 }
 
+get_latest_file() {
+    local prefix="$1"        # e.g., "psbbn-eng" or "psbbn-definitive-patch"
+    local display="$2"       # e.g., "English language pack"
+    local remote_list remote_versions remote_version
+    local local_file local_version
+
+    # Reset globals
+    LATEST_FILE=""
+
+    # Extract .gz filenames from the HTML
+    remote_list=$(grep -oP "${prefix}-v[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz" "$HTML_FILE" 2>/dev/null)
+
+    if [[ -n "$remote_list" ]]; then
+    # Extract version numbers and sort them
+        remote_versions=$(echo "$remote_list" | \
+            grep -oP 'v[0-9]+\.[0-9]+\.[0-9]+' | \
+            sed 's/v//' | \
+            sort -V)
+        remote_version=$(echo "$remote_versions" | tail -n1)
+        echo | tee -a "${LOG_FILE}"
+        echo "Found $display version $remote_version" | tee -a "${LOG_FILE}"
+    else
+        echo | tee -a "${LOG_FILE}"
+        echo "Could not find the latest version of the $display." | tee -a "${LOG_FILE}"
+        echo "Please check the status of archive.org. You may need to use a VPN depending on your location."
+    fi
+
+   # Check if any local file is newer than the remote version
+    local_file=$(ls "${ASSETS_DIR}/${prefix}"*.tar.gz 2>/dev/null | sort -V | tail -n1)
+    if [[ -n "$local_file" ]]; then
+        local_version=$(basename "$local_file" | sed -E 's/.*-v([0-9.]+)\.tar\.gz/\1/')
+    fi
+
+    #Decide which file wins
+    if [[ -n "$local_file" ]]; then
+        if [[ -z "$remote_version" ]] || \
+           [[ "$(printf '%s\n' "$remote_version" "$local_version" | sort -V | tail -n1)" == "$local_version" ]]; then
+
+            # Local is equal/newer then local wins
+            LATEST_FILE=$(basename "$local_file")
+            echo
+            echo "Newer local file found: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
+
+            # Only set LATEST_VERSION for the patch prefix
+            if [[ "$prefix" == "language-pak-$LANG" ]]; then
+                LATEST_LANG="$local_version"
+            elif [[ "$prefix" == "channels-$LANG" ]]; then
+                LATEST_CHAN="$local_version"
+            fi
+            return 0
+        fi
+    fi
+
+    # Remote exists and is newer then remote wins
+    if [[ -n "$remote_version" ]]; then
+        LATEST_FILE="${prefix}-v${remote_version}.tar.gz"
+
+        # Only set LATEST_VERSION for the patch prefix
+        if [[ "$prefix" == "language-pak-$LANG" ]]; then
+            LATEST_LANG="$remote_version"
+        elif [[ "$prefix" == "channels-$LANG" ]]; then
+            LATEST_CHAN="$remote_version"
+        fi
+        return 0
+    fi
+
+    # If neither version exists error
+    error_msg "[X] Error: Failed to find ${display}. Aborting."
+    return 1
+}
+
+downoad_latest_file() {
+    local prefix="$1"
+    # Check if the latest file exists in ${ASSETS_DIR}
+    if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
+        echo | tee -a "${LOG_FILE}"
+        echo "File ${LATEST_FILE} exists. Skipping download." | tee -a "${LOG_FILE}"
+    else
+        # Check for and delete older files
+        for file in "${ASSETS_DIR}"/$prefix*.tar.gz; do
+            if [[ -f "$file" && "$(basename "$file")" != "$LATEST_FILE" ]]; then
+                echo "Deleting old file: $file" | tee -a "${LOG_FILE}"
+                rm -f "$file"
+            fi
+        done
+
+        # Construct the full URL for the .gz file and download it
+        TAR_URL="$URL/$LATEST_FILE"
+        echo "Downloading ${LATEST_FILE}..." | tee -a "${LOG_FILE}"
+        axel -n 8 -a "$TAR_URL" -o "${ASSETS_DIR}"
+
+        # Check if the file was downloaded successfully
+        if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
+            echo "Download completed: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
+        else
+            error_msg "[X] Error: Download failed for ${LATEST_FILE}." "Please check your internet connection and try again."
+            return 1
+        fi
+    fi
+
+}
+
 
 SWAP_SPLASH(){
     clear
     cat << "EOF"
-            ______                   _              ______       _   _                  
-            | ___ \                 (_)             | ___ \     | | | |                 
-            | |_/ /___  __ _ ___ ___ _  __ _ _ __   | |_/ /_   _| |_| |_ ___  _ __  ___ 
-            |    // _ \/ _` / __/ __| |/ _` | '_ \  | ___ \ | | | __| __/ _ \| '_ \/ __|
-            | |\ \  __/ (_| \__ \__ \ | (_| | | | | | |_/ / |_| | |_| || (_) | | | \__ \
-            \_| \_\___|\__,_|___/___/_|\__, |_| |_| \____/ \__,_|\__|\__\___/|_| |_|___/
-                                        __/ |                                           
-                                       |___/    
+                ______                   _              ______       _   _                  
+                | ___ \                 (_)             | ___ \     | | | |                 
+                | |_/ /___  __ _ ___ ___ _  __ _ _ __   | |_/ /_   _| |_| |_ ___  _ __  ___ 
+                |    // _ \/ _` / __/ __| |/ _` | '_ \  | ___ \ | | | __| __/ _ \| '_ \/ __|
+                | |\ \  __/ (_| \__ \__ \ | (_| | | | | | |_/ / |_| | |_| || (_) | | | \__ \
+                \_| \_\___|\__,_|___/___/_|\__, |_| |_| \____/ \__,_|\__|\__\___/|_| |_|___/
+                                            __/ |                                           
+                                           |___/    
 
 
 EOF
@@ -339,14 +478,30 @@ LINUX_SPLASH(){
     clear
     cat << "EOF"
 
-                          ______  _____  _____   _     _                  
-                          | ___ \/  ___|/ __  \ | |   (_)                 
-                          | |_/ /\ `--. `' / /' | |    _ _ __  _   ___  __
-                          |  __/  `--. \  / /   | |   | | '_ \| | | \ \/ /
-                          | |    /\__/ /./ /___ | |___| | | | | |_| |>  < 
-                          \_|    \____/ \_____/ \_____/_|_| |_|\__,_/_/\_\
+                              ______  _____  _____   _     _                  
+                              | ___ \/  ___|/ __  \ | |   (_)                 
+                              | |_/ /\ `--. `' / /' | |    _ _ __  _   ___  __
+                              |  __/  `--. \  / /   | |   | | '_ \| | | \ \/ /
+                              | |    /\__/ /./ /___ | |___| | | | | |_| |>  < 
+                              \_|    \____/ \_____/ \_____/_|_| |_|\__,_/_/\_\
 
 
+EOF
+}            
+
+LANGUAGE_SPLASH(){
+    clear
+cat << "EOF"
+            _____ _                              _                                              
+           /  __ \ |                            | |                                             
+           | /  \/ |__   __ _ _ __   __ _  ___  | |     __ _ _ __   __ _ _   _  __ _  __ _  ___ 
+           | |   | '_ \ / _` | '_ \ / _` |/ _ \ | |    / _` | '_ \ / _` | | | |/ _` |/ _` |/ _ \
+           | \__/\ | | | (_| | | | | (_| |  __/ | |___| (_| | | | | (_| | |_| | (_| | (_| |  __/
+            \____/_| |_|\__,_|_| |_|\__, |\___| \_____/\__,_|_| |_|\__, |\__,_|\__,_|\__, |\___|
+                                     __/ |                          __/ |             __/ |     
+                                    |___/                          |___/             |___/      
+
+                                
 EOF
 }                         
 
@@ -377,24 +532,24 @@ option_one() {
         else
             while true; do
                 LINUX_SPLASH
-                echo "               Linux is already installed on your PS2. Do you want to reinstall it?" | tee -a "${LOG_FILE}"
+                echo "                   Linux is already installed on your PS2. Do you want to reinstall it?" | tee -a "${LOG_FILE}"
                 
                 if cat "${hdl_output}" | grep -q '\b__linux\.10\b'; then
                     echo
-                    echo "               - All Linux system files will be reinstalled." | tee -a "${LOG_FILE}"
-                    echo "               - Your personal files in the home directory will not be affected." | tee -a "${LOG_FILE}"
+                    echo "                   - All Linux system files will be reinstalled." | tee -a "${LOG_FILE}"
+                    echo "                   - Your personal files in the home directory will not be affected." | tee -a "${LOG_FILE}"
                 else
                     echo
-                    echo "               ============================== WARNING ============================="
+                    echo "                   ============================== WARNING ============================="
                     echo
-                    echo "                All PS2 Linux data will be erased, including your home direcrtory." | tee -a "${LOG_FILE}"
-                    echo "                Make sure to back up your files before continuing."
+                    echo "                    All PS2 Linux data will be erased, including your home direcrtory." | tee -a "${LOG_FILE}"
+                    echo "                    Make sure to back up your files before continuing."
                     echo
-                    echo "               ===================================================================="
+                    echo "                   ===================================================================="
                 fi
                 
                 echo
-                read -p "               Reinstall PS2 Linux? (y/n): " answer
+                read -p "                   Reinstall PS2 Linux? (y/n): " answer
                 case "$answer" in
                     [Yy])
                         break
@@ -404,7 +559,7 @@ option_one() {
                         ;;
                     *)
                         echo
-                        echo -n "               Please enter y or n."
+                        echo -n "                   Please enter y or n."
                         sleep 3
                         ;;
                 esac
@@ -552,7 +707,7 @@ option_one() {
 ====================================================================================================
 
 EOF
-    read -n 1 -s -r -p "                               Press any key to return to the menu..." </dev/tty
+    read -n 1 -s -r -p "                                   Press any key to return to the menu..." </dev/tty
 
 }
 
@@ -560,12 +715,10 @@ EOF
 option_two() {
     echo "########################################################################################################" >> "${LOG_FILE}"
     echo "Reassign Buttons:" >> "${LOG_FILE}"
-    clear
+    SWAP_SPLASH
 
     detect_drive    && \
     MOUNT_OPL   || return 1
-
-    SWAP_SPLASH
     
     psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
     
@@ -573,11 +726,11 @@ option_two() {
 
     if [[ "$(printf '%s\n' "$psbbn_version" "2.10" | sort -V | head -n1)" != "2.10" ]]; then
         # $psbbn_version < 2.10
-        error_msg "[X] Error: PSBBN Definitive Patch version is lower than 3.00." "To update, please select 'Install PSBBN' from the main menu and try again."
+        error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 3.00." "To update, please select 'Install PSBBN' from the main menu and try again."
         exit 1
     elif [[ "$(printf '%s\n' "$psbbn_version" "3.00" | sort -V | head -n1)" = "$psbbn_version" ]] \
         && [[ "$psbbn_version" != "3.00" ]]; then
-        error_msg "[X] Error: PSBBN Definitive Patch version is lower than 3.00." "To update, please select “Update PSBBN Software” from the main menu and try again."
+        error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 3.00." "To update, please select “Update PSBBN Software” from the main menu and try again."
         exit 1
     fi
 
@@ -598,13 +751,15 @@ option_two() {
     while :; do
         SWAP_SPLASH
         cat << "EOF"
-                                  1) Cross = Enter, Circle = Back
-                                  2) Circle = Enter, Cross = Back
+                                      Please select a button layout:
 
-                                  b) Back
+                                      1) Cross = Enter, Circle = Back
+                                      2) Circle = Enter, Cross = Back
+
+                                      b) Back
 
 EOF
-        read -rp "                                  Select an option: " choice
+        read -rp "                                      Select an option: " choice
         case "$choice" in
             1)
                 echo "Western layout selected." >> "${LOG_FILE}"
@@ -634,7 +789,7 @@ EOF
                     SWAP_SPLASH
                     echo "================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
                     echo
-                    read -n 1 -s -r -p "                                Press any key to return to the menu..." </dev/tty
+                    read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
                 else
                     SWAP_SPLASH
                     error_msg "[X] Error: Failed to swap buttons. See log for details."
@@ -646,7 +801,7 @@ EOF
                 break
                 ;;
             *)
-                echo -n "                                  Invalid choice, please enter 1, 2, or b."
+                echo -n "                                      Invalid choice, please enter 1, 2, or b."
                 sleep 3
             ;;
         esac
@@ -658,15 +813,166 @@ EOF
     df >> "${LOG_FILE}"
 }
 
+
+option_three() {
+    echo "########################################################################################################" >> "${LOG_FILE}"
+    echo "Change Language:" >> "${LOG_FILE}"
+    
+    LANGUAGE_SPLASH
+
+    detect_drive    && \
+    MOUNT_OPL   || return 1
+    
+    psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
+    
+    if [[ "$(printf '%s\n' "$psbbn_version" "2.10" | sort -V | head -n1)" != "2.10" ]]; then
+        # $psbbn_version < 2.10
+        error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.1.0." "To update, please select 'Install PSBBN' from the main menu and try again."
+        exit 1
+    elif [[ "$(printf '%s\n' "$psbbn_version" "4.1.0" | sort -V | head -n1)" = "$psbbn_version" ]] \
+        && [[ "$psbbn_version" != "4.1.0" ]]; then
+        error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.1.0." "To update, please select “Update PSBBN Software” from the main menu and try again."
+        exit 1
+    fi
+
+    while :; do
+        LANGUAGE_SPLASH
+        cat << "EOF"
+                               Please select a language from the list below:
+
+                               1) English
+                               2) Japanese
+                               3) German
+
+EOF
+        read -rp "                               Select an option: " choice
+
+        case "$choice" in
+            1)
+                LANG="eng"
+                LANG_DISPLAY="English"
+                break
+                ;;
+            2)
+                LANG="jpn"
+                LANG_DISPLAY="Japanese"
+                break
+                ;;
+            3)
+                LANG="ger"
+                LANG_DISPLAY="German"
+                break
+                ;;
+            *)
+                echo
+                echo -n "                               Invalid choice, enter a number between 1 and 3."
+                sleep 3
+                ;;
+        esac
+    done
+
+    echo "Language selected: $LANG_DISPLAY" >> "${LOG_FILE}"
+    LANGUAGE_SPLASH
+
+    # Download the HTML of the page
+    HTML_FILE=$(mktemp)
+    timeout 20 wget -O "$HTML_FILE" "$URL" -o - >> "$LOG_FILE" 2>&1 &
+    WGET_PID=$!
+
+    spinner $WGET_PID "Checking for latest version of the PSBBN Definitive Patch"
+
+    get_latest_file "language-pak-$LANG" "$LANG_DISPLAY language pack" || return 1
+    downoad_latest_file "language-pak" || return 1
+    LANG_PACK="${ASSETS_DIR}/${LATEST_FILE}"
+
+    if [[ "$LANG" == "jpn" ]]; then
+        get_latest_file "channels-$LANG" "$LANG_DISPLAY channels" || return 1
+        downoad_latest_file "channels" || return 1
+        CHANNELS="${ASSETS_DIR}/${LATEST_FILE}"
+    fi
+
+    sed -i "s/^LANG =.*/LANG = $LANG/" "$OPL/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
+    sed -i "s|^LANG_VER =.*|LANG_VER = $LATEST_LANG|" "${OPL}/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
+    sed -i "s|^CHAN_VER =.*|CHAN_VER = $LATEST_CHAN|" "${OPL}/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
+
+    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.9" )
+    APA_PARTITIONS=("__system" "__sysconf" "__common")
+
+    clean_up   && \
+    mapper_probe || return 1
+    sudo mke2fs -t ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}__linux.9" >> "${LOG_FILE}" 2>&1 || { error_msg "[X] Error: Failed to initialise channels filesystem." "See ${LOG_FILE} for details."; return 1; }
+    mount_cfs    && \
+    mount_pfs    || return 1
+
+    ls -l /dev/mapper >> "${LOG_FILE}"
+    df >> "${LOG_FILE}"
+
+    echo
+    echo -n "Installing language pack..."
+    sudo tar zxpf "$LANG_PACK" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || { error_msg "[X] Error: Failed to install $LANG_DISPLAY language pack." "See ${LOG_FILE} for details."; return 1; }
+
+    if [[ "$LANG" == "jpn" ]]; then
+        cp -f "${ASSETS_DIR}/kernel/vmlinux_jpn" "${STORAGE_DIR}/__system/p2lboot/vmlinux" 2>> "${LOG_FILE}" || { error_msg "[X] Error: Failed to copy kernel file."; return 1; }
+        sudo tar zxpf "${CHANNELS}" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || { error_msg "[X] Error: Failed to install channels." "See ${LOG_FILE} for details."; return 1; }
+    else
+        cp -f "${ASSETS_DIR}/kernel/vmlinux" "${STORAGE_DIR}/__system/p2lboot/vmlinux" 2>> "${LOG_FILE}" || { error_msg "[X] Error: Failed to copy kernel file."; return 1; }
+    fi
+
+    mkdir -p "${SCRIPTS_DIR}/tmp"
+    cp "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to copy OSDMBR.CNF."; return 1; }
+    sed -i "s/^osd_language =.*/osd_language = $LANG/" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to update language in OSDMBR.CNF."; return 1; }
+    cp -f "${OSDMBR_CNF}" "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" || { error_msg "[X] Error: Failed to replace OSDMBR.CNF."; return 1; }
+    
+    if [[ "$LANG" == "jpn" ]]; then
+        rm -f "${STORAGE_DIR}/__common/POPS/"{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} 2>> "${LOG_FILE}" || { error_msg "[X] Error: Update POPS IGR textures."; return 1; }
+    else
+        mkdir -p "${STORAGE_DIR}/__common/POPS"
+        cp -f "${ASSETS_DIR}/POPStarter/$LANG/"{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} "${STORAGE_DIR}/__common/POPS/" 2>> "${LOG_FILE}" || { error_msg "[X] Error: Update POPS IGR textures."; return 1; }
+    fi
+
+    clean_up || return 1
+    echo clean up afterwards: >> "${LOG_FILE}"
+    ls -l /dev/mapper >> "${LOG_FILE}"
+    df >> "${LOG_FILE}"
+
+    msg=" [✓] Language Successfully Changed to $LANG_DISPLAY "
+    total_width=100
+
+    # Length of the message including spaces around it
+    msg_len=${#msg}
+
+    # Calculate number of "=" on each side
+    pad=$(( (total_width - msg_len) / 2 ))
+
+    # If odd padding required, right side will get one more "=", so account for it
+    extra=$(( (total_width - msg_len) % 2 ))
+
+    left_pad=$(printf '%*s' "$pad" | tr ' ' '=')
+    right_pad=$(printf '%*s' $((pad + extra)) | tr ' ' '=')
+
+    LANGUAGE_SPLASH
+    echo "    ${left_pad}${msg}${right_pad}"
+    echo
+    echo "      It's recommended to rerun the Game Installer and choose \"Add Additional Games and Apps\" to"
+    echo "      update the game titles and PlaySation game manuals to your selected language."
+    echo
+    echo "      If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
+    echo
+    echo "    ===================================================================================================="
+    echo
+    read -n 1 -s -r -p "                                Press any key to return to the menu..." </dev/tty
+    
+}
+
 EXTRAS_SPLASH() {
 clear
     cat << "EOF"
-                                     _____     _                 
-                                    |  ___|   | |                
-                                    | |____  _| |_ _ __ __ _ ___ 
-                                    |  __\ \/ / __| '__/ _` / __|
-                                    | |___>  <| |_| | | (_| \__ \
-                                    \____/_/\_\\__|_|  \__,_|___/
+                                         _____     _                 
+                                        |  ___|   | |                
+                                        | |____  _| |_ _ __ __ _ ___ 
+                                        |  __\ \/ / __| '__/ _` / __|
+                                        | |___>  <| |_| | | (_| \__ \
+                                        \____/_/\_\\__|_|  \__,_|___/
 
 
 EOF
@@ -676,10 +982,11 @@ EOF
 display_menu() {
     EXTRAS_SPLASH
     cat << "EOF"
-                                1) Install PS2 Linux
-                                2) Reassign Cross and Circle Buttons
+                                    1) Install PS2 Linux
+                                    2) Reassign Cross and Circle Buttons
+                                    3) Change Language
 
-                                b) Back to Main Menu
+                                    b) Back to Main Menu
 
 EOF
 }
@@ -719,7 +1026,7 @@ fi
 
 while true; do
     display_menu
-    read -p "                                Select an option: " choice
+    read -p "                                    Select an option: " choice
 
     case $choice in
         1)
@@ -728,12 +1035,15 @@ while true; do
         2)
             option_two
             ;;
+        3)
+            option_three
+            ;;
         b|B)
             break
             ;;
         *)
             echo
-            echo -n "                                Invalid option, please try again."
+            echo -n "                                    Invalid option, please try again."
             sleep 2
             ;;
     esac

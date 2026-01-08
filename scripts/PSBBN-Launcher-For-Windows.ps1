@@ -27,7 +27,7 @@ $defaultFolders = @('DVD', 'CD', 'POPS', 'APPS', 'music', 'movie', 'photo')
 $gitBranch = "main"
 
 # the console size that is set at the start of the script
-$consoleWidth = 100
+$consoleWidth = 108
 $consoleHeight = 45
 
 # the filename of the file holding the last path used
@@ -242,17 +242,19 @@ function checkAndEnableFeature ($featureName) {
 # prints the big psbbn logo and the version number
 function printTitle {
   Write-Host "
-______  _________________ _   _  ______      __ _       _ _   _            ______     _       _
-| ___ \/  ___| ___ \ ___ \ \ | | |  _  \    / _(_)     (_) | (_)           | ___ \   | |     | |
-| |_/ /\ ``--.| |_/ / |_/ /  \| | | | | |___| |_ _ _ __  _| |_ ___   _____  | |_/ /_ _| |_ ___| |__
-|  __/  ``--. \ ___ \ ___ \ . `` | | | | / _ \  _| | '_ \| | __| \ \ / / _ \ |  __/ _`` | __/ __| '_ \
-| |    /\__/ / |_/ / |_/ / |\  | | |/ /  __/ | | | | | | | |_| |\ V /  __/ | | | (_| | || (__| | | |
-\_|    \____/\____/\____/\_| \_/ |___/ \___|_| |_|_| |_|_|\__|_| \_/ \___| \_|  \__,_|\__\___|_| |_|
+______  _________________ _   _  ______      __ _       _ _   _            ______          _           _   
+| ___ \/  ___| ___ \ ___ \ \ | | |  _  \    / _(_)     (_) | (_)           | ___ \        (_)         | |  
+| |_/ /\ `--.| |_/ / |_/ /  \| | | | | |___| |_ _ _ __  _| |_ ___   _____  | |_/ / __ ___  _  ___  ___| |_ 
+|  __/  `--. \ ___ \ ___ \ . ` | | | | / _ \  _| | '_ \| | __| \ \ / / _ \ |  __/ '__/ _ \| |/ _ \/ __| __|
+| |    /\__/ / |_/ / |_/ / |\  | | |/ /  __/ | | | | | | | |_| |\ V /  __/ | |  | | | (_) | |  __/ (__| |_ 
+\_|    \____/\____/\____/\_| \_/ |___/ \___|_| |_|_| |_|_|\__|_| \_/ \___| \_|  |_|  \___/| |\___|\___|\__|
+                                                                                         _/ |              
+                                                                                        |__/               
 
-                                       Created by CosmicScale
-                                                ---
-                                     Launcher for Windows v$version
-                                          Written by Yornn
+                                           Created by CosmicScale
+                                                    ---
+                                         Launcher for Windows v$version
+                                              Written by Yornn
 
 "
 }

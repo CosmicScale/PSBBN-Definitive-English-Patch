@@ -138,8 +138,8 @@ check_required_files() {
         "${HELPER_DIR}/ziso.py"
         "${HELPER_DIR}/AppDB.csv"
         "${HELPER_DIR}/ArtDB.csv"
-        "${HELPER_DIR}/TitlesDB_PS1_English.csv"
-        "${HELPER_DIR}/TitlesDB_PS2_English.csv"
+        "${HELPER_DIR}/TitlesDB_PS1.csv"
+        "${HELPER_DIR}/TitlesDB_PS2.csv"
         "${HELPER_DIR}/txt_to_icon_sys.py"
         "${HELPER_DIR}/vmc_groups.list"
         "${CUE2POPS}"
@@ -223,6 +223,12 @@ check_dep(){
     check_cmd sfdisk
     check_cmd partprobe
     check_cmd bchunk
+    check_cmd pkg-config
+
+    if ! pkg-config --exists icu-i18n; then
+        echo "[X] libicu-dev not found." >> "$LOG_FILE"
+        MISSING=1
+    fi
 
     echo >> "$LOG_FILE"
     echo "--- exFAT support ---" >> "$LOG_FILE"
@@ -252,6 +258,8 @@ check_dep(){
         check_python_pkg natsort
         check_python_pkg mutagen
         check_python_pkg tqdm
+        check_python_pkg icu
+        check_python_pkg pykakasi
     fi
 
     if { ldconfig -p 2>/dev/null | grep -q "libfuse.so.2"; } || pkg-config --exists fuse 2>/dev/null; then
@@ -293,14 +301,16 @@ option_six() {
 SPLASH() {
     clear
     cat << "EOF"
-______  _________________ _   _  ______      __ _       _ _   _            ______     _       _     
-| ___ \/  ___| ___ \ ___ \ \ | | |  _  \    / _(_)     (_) | (_)           | ___ \   | |     | |    
-| |_/ /\ `--.| |_/ / |_/ /  \| | | | | |___| |_ _ _ __  _| |_ ___   _____  | |_/ /_ _| |_ ___| |__  
-|  __/  `--. \ ___ \ ___ \ . ` | | | | / _ \  _| | '_ \| | __| \ \ / / _ \ |  __/ _` | __/ __| '_ \ 
-| |    /\__/ / |_/ / |_/ / |\  | | |/ /  __/ | | | | | | | |_| |\ V /  __/ | | | (_| | || (__| | | |
-\_|    \____/\____/\____/\_| \_/ |___/ \___|_| |_|_| |_|_|\__|_| \_/ \___| \_|  \__,_|\__\___|_| |_|
+______  _________________ _   _  ______      __ _       _ _   _            ______          _           _   
+| ___ \/  ___| ___ \ ___ \ \ | | |  _  \    / _(_)     (_) | (_)           | ___ \        (_)         | |  
+| |_/ /\ `--.| |_/ / |_/ /  \| | | | | |___| |_ _ _ __  _| |_ ___   _____  | |_/ / __ ___  _  ___  ___| |_ 
+|  __/  `--. \ ___ \ ___ \ . ` | | | | / _ \  _| | '_ \| | __| \ \ / / _ \ |  __/ '__/ _ \| |/ _ \/ __| __|
+| |    /\__/ / |_/ / |_/ / |\  | | |/ /  __/ | | | | | | | |_| |\ V /  __/ | |  | | | (_) | |  __/ (__| |_ 
+\_|    \____/\____/\____/\_| \_/ |___/ \___|_| |_|_| |_|_|\__|_| \_/ \___| \_|  |_|  \___/| |\___|\___|\__|
+                                                                                         _/ |              
+                                                                                        |__/               
 
-                                       Created by CosmicScale
+                                           Created by CosmicScale
 
 
 
@@ -311,14 +321,14 @@ EOF
 display_menu() {
     SPLASH
     cat << "EOF"
-               1) Install PSBBN & HOSDMenu (Official Sony Network Adapter required)
-               2) Update PSBBN Software
-               3) Install HOSDMenu only (3rd-party HDD adapters supported)
-               4) Install Games and Apps
-               5) Install Media
-               6) Optional Extras
+                   1) Install PSBBN & HOSDMenu (Official Sony Network Adapter required)
+                   2) Update PSBBN Software
+                   3) Install HOSDMenu only (3rd-party HDD adapters supported)
+                   4) Install Games and Apps
+                   5) Install Media
+                   6) Optional Extras
                                      
-               q) Quit
+                   q) Quit
 
 EOF
 }
@@ -330,7 +340,7 @@ fi
 trap 'echo; exit 130' INT
 trap copy_log EXIT
 
-echo -e "\e[8;45;100t"
+echo -e "\e[8;45;108t"
 
 SPLASH
 
@@ -396,7 +406,7 @@ fi
 
 while true; do
     display_menu
-    read -p "               Select an option: " choice
+    read -p "                   Select an option: " choice
 
     case $choice in
         1)
@@ -423,7 +433,7 @@ while true; do
             ;;
         *)
             echo
-            echo -n "               Invalid option, please try again."
+            echo -n "                   Invalid option, please try again."
             sleep 2
             ;;
     esac

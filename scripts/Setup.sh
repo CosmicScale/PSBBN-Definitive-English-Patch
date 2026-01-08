@@ -55,14 +55,14 @@ if [[ -f "$SOURCES_LIST" ]]; then
 fi
 
 cat << "EOF"
-                                    _____      _               
-                                   /  ___|    | |              
-                                   \ `--.  ___| |_ _   _ _ __  
-                                    `--. \/ _ \ __| | | | '_ \ 
-                                   /\__/ /  __/ |_| |_| | |_) |
-                                   \____/ \___|\__|\__,_| .__/ 
-                                                        | |    
-                                                        |_|    
+                                        _____      _               
+                                       /  ___|    | |              
+                                       \ `--.  ___| |_ _   _ _ __  
+                                        `--. \/ _ \ __| | | | '_ \ 
+                                       /\__/ /  __/ |_| |_| | |_) |
+                                       \____/ \___|\__|\__,_| .__/ 
+                                                            | |    
+                                                            |_|    
 
 
 Installing Dependences:
@@ -70,14 +70,14 @@ EOF
 
 # Detect package manager and install packages
 if [ -x "$(command -v apt-get)" ]; then
-    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 libfuse2 dosfstools e2fsprogs libc-bin exfatprogs exfat-fuse util-linux parted bchunk 2>&1 | tee -a "${LOG_FILE}"
+    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 libfuse2 dosfstools e2fsprogs libc-bin exfatprogs exfat-fuse util-linux parted bchunk libicu-dev pkg-config 2>&1 | tee -a "${LOG_FILE}"
 # Or if user is on Fedora-based system, do this instead
 elif [ -x "$(command -v dnf)" ]; then
     sudo dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm 2>&1 | tee -a "${LOG_FILE}"
-    sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 fuse-libs dosfstools e2fsprogs glibc-common exfatprogs fuse-exfat util-linux parted bchunk 2>&1 | tee -a "${LOG_FILE}"
+    sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 fuse-libs dosfstools e2fsprogs glibc-common exfatprogs fuse-exfat util-linux parted bchunk libicu-devel pkgconf 2>&1 | tee -a "${LOG_FILE}"
 # Or if user is on Arch-based system, do this instead
 elif [ -x "$(command -v pacman)" ]; then
-    sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip bc rsync curl zip unzip wget ffmpeg lvm2 fuse2 dosfstools e2fsprogs glibc exfatprogs util-linux parted bchunk 2>&1 | tee -a "${LOG_FILE}"
+    sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip bc rsync curl zip unzip wget ffmpeg lvm2 fuse2 dosfstools e2fsprogs glibc exfatprogs util-linux parted bchunk icu pkgconf 2>&1 | tee -a "${LOG_FILE}"
 elif [ -n "$IN_NIX_SHELL" ]; then
     error_msg "Running in Nix environment - packages should be provided by flake and setup should not be run."
 else
@@ -94,7 +94,7 @@ fi
 (
     python3 -m venv scripts/venv >> "${LOG_FILE}" 2>&1 || error_msg "Failed to create Python virtual environment."
     source scripts/venv/bin/activate || error_msg "Failed to activate the Python virtual environment."
-    pip install lz4 natsort mutagen tqdm >> "${LOG_FILE}" || error_msg "Failed to install Python dependencies."
+    pip install lz4 natsort mutagen tqdm PyICU pykakasi >> "${LOG_FILE}" || error_msg "Failed to install Python dependencies."
     deactivate
 ) &
 PID=$!

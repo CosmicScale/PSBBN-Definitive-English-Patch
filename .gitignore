@@ -10,11 +10,11 @@ scripts/assets/NHDDL/system.cnf
 scripts/assets/extras/
 scripts/helper/.libs
 games/ART/*.png
-games/APPS/*.psu
 scripts/assets/HDD-OSD/
-games/APPS/HDD-OSD.elf
-games/APPS/PSBBN.ELF
+games/APPS/*.elf
+games/APPS/*.ELF
 scripts/tmp
+logs/
 *.log
 *.gz
 *.zip
@@ -25,6 +25,11 @@ scripts/tmp
 *.ZSO
 *.vcd
 *.VCD
+*.cue
+*.cue
+*.CUE
+*.bin
+*.BIN
 *.json
 *.mp3
 *.m4a

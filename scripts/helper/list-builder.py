@@ -134,8 +134,8 @@ def process_files(folder, extensions):
         with open(gameid_file_path, 'r') as gameid_file:
             for line in gameid_file:
                 parts = line.strip().split('|')  # Split title ID and game name
-                if len(parts) == 3:
-                    game_names[parts[0]] = (parts[1], parts[2])
+                if len(parts) == 4:
+                    game_names[parts[0]] = (parts[1], parts[2], parts[3])
 
     # Prepare a list to hold all game list entries
     game_list_entries = []
@@ -267,26 +267,27 @@ def process_files(folder, extensions):
         # Determine game name and publisher
         entry = game_names.get(string)
         if entry:
-            game_name, publisher = entry
+            game_name, publisher, jpn_title = entry
             if not game_name:
                 game_name = os.path.splitext(image)[0]
                 publisher = ""
+                jpn_title = ""
         else:
             base_name = os.path.splitext(image)[0]
             # If filename begins with the Game ID, strip it off
             if base_name.upper().startswith(string):
-                # also strip optional separators like '_' or '.'
                 stripped = base_name[len(string):].lstrip('_. ')
                 game_name = stripped if stripped else base_name
             else:
                 game_name = base_name
             publisher = ""
+            jpn_title = ""
             
         print(f"Game ID '{string}' -> Game='{game_name}', Publisher='{publisher}'")
 
         # Add to game list entries
         folder_image = re.sub(r'^/(?:__\.)?', '', folder)
-        game_list_entries.append(f"{game_name}|{string}|{publisher}|{folder_image}|{original_image}")
+        game_list_entries.append(f"{game_name}|{string}|{publisher}|{folder_image}|{original_image}|{jpn_title}")
 
         count += 1
         print(math.floor((count * 100) / total), '% complete')
@@ -308,10 +309,10 @@ def main(arg1, arg2):
 
         # Set correct TitlesDB path based on output list name
         if games_list_path.endswith("ps2.list"):
-            gameid_file_path = "./scripts/helper/TitlesDB_PS2_English.csv"
+            gameid_file_path = "./scripts/helper/TitlesDB_PS2.csv"
             folders_to_scan = [('/DVD', ['.iso', '.zso']), ('/CD', ['.iso', '.zso'])]
         elif games_list_path.endswith("ps1.list"):
-            gameid_file_path = "./scripts/helper/TitlesDB_PS1_English.csv"
+            gameid_file_path = "./scripts/helper/TitlesDB_PS1.csv"
             folders_to_scan = [('/__.POPS', ['.vcd', '.VCD'])]
         else:
             print("Error: Output list must end with either 'ps2.list' or 'ps1.list'.")

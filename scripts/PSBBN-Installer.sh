@@ -16,6 +16,8 @@ OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/PSBBN-installer.log"
 arch="$(uname -m)"
 
+URL="https://archive.org/download/psbbn-definitive-patch-v4.1"
+
 if [[ "$arch" = "x86_64" ]]; then
     # x86-64
     CUE2POPS="${HELPER_DIR}/cue2pops"
@@ -64,7 +66,7 @@ if [ "$MODE" = "install" ]; then
     LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.6" "__linux.7" "__linux.8" "__linux.9" )
     PFS_PARTITIONS=("__contents" "__system" "__sysconf" "__common" )
 else
-    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.7" "__linux.9" )
+    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.6" "__linux.7" "__linux.9" )
     PFS_PARTITIONS=("__system" "__sysconf" )
 fi
 
@@ -142,6 +144,7 @@ clean_up() {
 
     # Clean up directories and temp files
     sudo rm -rf /tmp/{apa_header_checksum.bin,apa_header_full.bin,apajail_magic_number.bin,apa_index.xz,gpt_2nd.xz} >> "${LOG_FILE}" 2>&1
+    sudo rm -f "$HTML_FILE"
     sudo rm -rf "${SCRIPTS_DIR}/tmp"    
     # Abort if any failures occurred
     if [ "$failure" -ne 0 ]; then
@@ -155,6 +158,109 @@ exit_script() {
     if [[ -n "$path_arg" ]]; then
         cp "${LOG_FILE}" "${path_arg}" > /dev/null 2>&1
     fi
+}
+
+get_latest_file() {
+    local prefix="$1"        # e.g., "psbbn-eng" or "psbbn-definitive-patch"
+    local display="$2"       # e.g., "English language pack"
+    local remote_list remote_versions remote_version
+    local local_file local_version
+
+    # Reset globals
+    LATEST_FILE=""
+
+    # Extract .gz filenames from the HTML
+    remote_list=$(grep -oP "${prefix}-v[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz" "$HTML_FILE" 2>/dev/null)
+
+    if [[ -n "$remote_list" ]]; then
+    # Extract version numbers and sort them
+        remote_versions=$(echo "$remote_list" | \
+            grep -oP 'v[0-9]+\.[0-9]+\.[0-9]+' | \
+            sed 's/v//' | \
+            sort -V)
+        remote_version=$(echo "$remote_versions" | tail -n1)
+        echo | tee -a "${LOG_FILE}"
+        echo "Found $display version $remote_version" | tee -a "${LOG_FILE}"
+    else
+        echo | tee -a "${LOG_FILE}"
+        echo "Could not find the latest version of the $display." | tee -a "${LOG_FILE}"
+        echo "Please check the status of archive.org. You may need to use a VPN depending on your location."
+    fi
+
+   # Check if any local file is newer than the remote version
+    local_file=$(ls "${ASSETS_DIR}/${prefix}"*.tar.gz 2>/dev/null | sort -V | tail -n1)
+    if [[ -n "$local_file" ]]; then
+        local_version=$(basename "$local_file" | sed -E 's/.*-v([0-9.]+)\.tar\.gz/\1/')
+    fi
+
+    #Decide which file wins
+    if [[ -n "$local_file" ]]; then
+        if [[ -z "$remote_version" ]] || \
+           [[ "$(printf '%s\n' "$remote_version" "$local_version" | sort -V | tail -n1)" == "$local_version" ]]; then
+
+            # Local is equal/newer then local wins
+            LATEST_FILE=$(basename "$local_file")
+            echo "Newer local file found: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
+
+            # Only set LATEST_VERSION for the patch prefix
+            if [[ "$prefix" == "psbbn-definitive-patch" ]]; then
+                LATEST_VERSION="$local_version"
+            elif [[ "$prefix" == "language-pak-$LANG" ]]; then
+                LATEST_LANG="$local_version"
+            elif [[ "$prefix" == "channels-$LANG" ]]; then
+                LATEST_CHAN="$local_version"
+            fi
+            return 0
+        fi
+    fi
+
+    # Remote exists and is newer then remote wins
+    if [[ -n "$remote_version" ]]; then
+        LATEST_FILE="${prefix}-v${remote_version}.tar.gz"
+
+        # Only set LATEST_VERSION for the patch prefix
+        if [[ "$prefix" == "psbbn-definitive-patch" ]]; then
+            LATEST_VERSION="$remote_version"
+        elif [[ "$prefix" == "language-pak-$LANG" ]]; then
+            LATEST_LANG="$remote_version"
+        elif [[ "$prefix" == "channels-$LANG" ]]; then
+            LATEST_CHAN="$remote_version"
+        fi
+        return 0
+    fi
+
+    # If neither version exists error
+    error_msg "Failed to find ${display}. Aborting."
+}
+
+downoad_latest_file() {
+    local prefix="$1"
+    # Check if the latest file exists in ${ASSETS_DIR}
+    if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
+        echo | tee -a "${LOG_FILE}"
+        echo "File ${LATEST_FILE} exists. Skipping download." | tee -a "${LOG_FILE}"
+    else
+        # Check for and delete older files
+        for file in "${ASSETS_DIR}"/$prefix*.tar.gz; do
+            if [[ -f "$file" && "$(basename "$file")" != "$LATEST_FILE" ]]; then
+                echo "Deleting old file: $file" | tee -a "${LOG_FILE}"
+                rm -f "$file"
+            fi
+        done
+
+        # Construct the full URL for the .gz file and download it
+        TAR_URL="$URL/$LATEST_FILE"
+        echo "Downloading ${LATEST_FILE}..." | tee -a "${LOG_FILE}"
+        axel -n 8 -a "$TAR_URL" -o "${ASSETS_DIR}"
+
+        # Check if the file was downloaded successfully
+        if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
+            echo "Download completed: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
+        else
+            error_msg "Download failed for ${LATEST_FILE}." "Please check your internet connection and try again."
+        fi
+    fi
+
 }
 
 PFS_COMMANDS() {
@@ -200,11 +306,11 @@ mount_cfs() {
     for PARTITION_NAME in "${LINUX_PARTITIONS[@]}"; do
         MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
         if [ -e "${MAPPER}${PARTITION_NAME}" ]; then
-            if [[ "$PARTITION_NAME" = "__linux.9" ]] && ! version_le "${psbbn_version:-0}" "3.00"; then
+            if [[ "$PARTITION_NAME" = "__linux.9" ]] && ! version_le "${psbbn_version:-0}" "4.1.0"; then
                 echo "Skipping mke2fs for __linux.9" >>"${LOG_FILE}"
-            elif [[ "$PARTITION_NAME" = "__linux.7" ]] && [ "$MODE" = "update" ]; then
-                 echo "Skipping mke2fs for __linux.7" >>"${LOG_FILE}"
-            elif [[ "$PARTITION_NAME" = "__linux.8" || "$PARTITION_NAME" = "__linux.9" ]]; then
+            elif [[ "$PARTITION_NAME" =~ ^__linux\.(1|4|5|7)$ ]] && [ "$MODE" = "update" ] && ! version_le "${psbbn_version:-0}" "4.0.0"; then
+                echo "Skipping mke2fs for $PARTITION_NAME" >>"${LOG_FILE}"
+            elif [[ "$PARTITION_NAME" = "__linux.8" ]]; then
                 if ! sudo mkfs.vfat -F 32 "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
                     error_msg "Failed to create filesystem ${PARTITION_NAME}."
                 fi            
@@ -374,12 +480,12 @@ HDL_TOC() {
 INSTALL_SPLASH(){
     clear
         cat << "EOF"
-              ______  _________________ _   _   _____          _        _ _           
-              | ___ \/  ___| ___ \ ___ \ \ | | |_   _|        | |      | | |          
-              | |_/ /\ `--.| |_/ / |_/ /  \| |   | | _ __  ___| |_ __ _| | | ___ _ __ 
-              |  __/  `--. \ ___ \ ___ \ . ` |   | || '_ \/ __| __/ _` | | |/ _ \ '__|
-              | |    /\__/ / |_/ / |_/ / |\  |  _| || | | \__ \ || (_| | | |  __/ |   
-              \_|    \____/\____/\____/\_| \_/  \___/_| |_|___/\__\__,_|_|_|\___|_|   
+                  ______  _________________ _   _   _____          _        _ _           
+                  | ___ \/  ___| ___ \ ___ \ \ | | |_   _|        | |      | | |          
+                  | |_/ /\ `--.| |_/ / |_/ /  \| |   | | _ __  ___| |_ __ _| | | ___ _ __ 
+                  |  __/  `--. \ ___ \ ___ \ . ` |   | || '_ \/ __| __/ _` | | |/ _ \ '__|
+                  | |    /\__/ / |_/ / |_/ / |\  |  _| || | | \__ \ || (_| | | |  __/ |   
+                  \_|    \____/\____/\____/\_| \_/  \___/_| |_|___/\__\__,_|_|_|\___|_|   
 
 
 EOF
@@ -388,14 +494,14 @@ EOF
 UPDATE_SPLASH(){
     clear
     cat << "EOF"
-               ______  _________________ _   _   _   _           _       _            
-               | ___ \/  ___| ___ \ ___ \ \ | | | | | |         | |     | |           
-               | |_/ /\ `--.| |_/ / |_/ /  \| | | | | |_ __   __| | __ _| |_ ___ _ __ 
-               |  __/  `--. \ ___ \ ___ \ . ` | | | | | '_ \ / _` |/ _` | __/ _ \ '__|
-               | |    /\__/ / |_/ / |_/ / |\  | | |_| | |_) | (_| | (_| | ||  __/ |   
-               \_|    \____/\____/\____/\_| \_/  \___/| .__/ \__,_|\__,_|\__\___|_|   
-                                                      | |                             
-                                                      |_|                             
+                   ______  _________________ _   _   _   _           _       _            
+                   | ___ \/  ___| ___ \ ___ \ \ | | | | | |         | |     | |           
+                   | |_/ /\ `--.| |_/ / |_/ /  \| | | | | |_ __   __| | __ _| |_ ___ _ __ 
+                   |  __/  `--. \ ___ \ ___ \ . ` | | | | | '_ \ / _` |/ _` | __/ _ \ '__|
+                   | |    /\__/ / |_/ / |_/ / |\  | | |_| | |_) | (_| | (_| | ||  __/ |   
+                   \_|    \____/\____/\____/\_| \_/  \___/| .__/ \__,_|\__,_|\__\___|_|   
+                                                          | |                             
+                                                          |_|                             
 
 EOF
 }
@@ -472,19 +578,64 @@ if [ "$MODE" = "install" ]; then
 
         echo
         echo "Selected drive: $drive_model" | tee -a "${LOG_FILE}"
+
+        while true; do
         echo
         echo "Are you sure you want to install to the selected drive?" | tee -a "${LOG_FILE}"
         echo
         read -p "This will erase all data on the drive. (yes/no): " CONFIRM
-            if [[ $CONFIRM != "yes" ]]; then
-                echo "Aborted." | tee -a "${LOG_FILE}"
+
+            case "$CONFIRM" in
+                yes)
+                # Valid confirmation → break out of loop and continue
+                break
+                ;;
+            no)
                 echo
-                read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
+                read -n 1 -s -r -p "Aborted. Press any key to return to the menu..." </dev/tty
                 echo
                 exit 1
-            fi
+                ;;
+            *)
+                echo
+                echo "Please enter 'yes' or 'no'."
+                ;;
+            esac
+        done
     fi
-    LANG="eng"
+
+    echo
+    echo "Please select a language from the list below:"
+    echo
+    echo "1) English"
+    echo "2) Japanese"
+    echo "3) German"
+    echo
+    read -p "Enter the number for your chosen language: " choice
+
+    case "$choice" in
+        1)
+            LANG="eng"
+            LANG_DISPLAY="English"
+            ;;
+        2)
+            LANG="jpn"
+            LANG_DISPLAY="Japanese"
+            CHAN_UPDATE="yes"
+            ;;
+        3)
+            LANG="ger"
+            LANG_DISPLAY="German"
+            ;;
+        *)
+            echo
+            echo "Invalid selection. Defaulting to English." | tee -a "${LOG_FILE}"
+            LANG="eng"
+            LANG_DISPLAY="English"
+            ;;
+    esac
+
+    echo "Language set to: $LANG" >> "${LOG_FILE}"
 else
 
     UPDATE_SPLASH
@@ -512,9 +663,12 @@ else
     fi
 
     LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
-    if [ -z "$LANG" ]; then
+    if [[ "$LANG" != "jpn" && "$LANG" != "ger" ]]; then
         LANG="eng"
     fi
+
+    LANG_VER=$(awk -F' *= *' '$1=="LANG_VER"{print $2}' "${OPL}/version.txt")
+    CHAN_VER=$(awk -F' *= *' '$1=="CHAN_VER"{print $2}' "${OPL}/version.txt")
 
     UNMOUNT_OPL
 fi
@@ -525,9 +679,6 @@ if [ "$MODE" = "install" ]; then
     clean_up
 fi
 
-# URL of the webpage
-URL="https://archive.org/download/psbbn-definitive-patch-v4"
-
 # Download the HTML of the page
 HTML_FILE=$(mktemp)
 timeout 20 wget -O "$HTML_FILE" "$URL" -o - >> "$LOG_FILE" 2>&1 &
@@ -535,136 +686,101 @@ WGET_PID=$!
 
 spinner $WGET_PID "Checking for latest version of the PSBBN Definitive Patch"
 
-# Extract .gz filenames from the HTML
-COMBINED_LIST=$(grep -oP 'psbbn-definitive-patch-v[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz' "$HTML_FILE")
-
-# Extract version numbers and sort them
-VERSION_LIST=$(echo "$COMBINED_LIST" | \
-    grep -oP 'v[0-9]+\.[0-9]+\.[0-9]+' | \
-    sed 's/v//' | \
-    sort -V)
-
-# Determine the latest version from the sorted list
-LATEST_VERSION=$(echo "$VERSION_LIST" | tail -n 1)
-
-if [ -z "$LATEST_VERSION" ]; then
-    echo | tee -a "${LOG_FILE}"
-    echo "Could not find the latest version." | tee -a "${LOG_FILE}"
-    echo "Please check the status of archive.org. You may need to use a VPN depending on your location."
-    # If $LATEST_VERSION is empty, check for psbbn-definitive-patch*.gz files
-    PATCH_FILE=$(ls "${ASSETS_DIR}"/psbbn-definitive-patch*.tar.gz 2>/dev/null)
-    if [ -n "$PATCH_FILE" ]; then
-        # If patch file exists, set LATEST_FILE to the patch file name
-        LATEST_VERSION=$(echo "$PATCH_FILE" | sed -E 's/.*-v([0-9.]+)\.tar.gz/\1/')
-        LATEST_FILE=$(basename "$PATCH_FILE")
-    else
-        rm -f "$HTML_FILE"
-        error_msg "Failed to find the PSBBN patch file. Aborting."
-    fi
-else
-    # Set the default latest file based on remote version
-    LATEST_FILE="psbbn-definitive-patch-v${LATEST_VERSION}.tar.gz"
-    echo | tee -a "${LOG_FILE}"
-    echo "Latest version of PSBBN Definitive English patch is v${LATEST_VERSION}" | tee -a "${LOG_FILE}"
-
-    # Check if any local file is newer than the remote version
-    PATCH_FILE=$(ls "${ASSETS_DIR}"/psbbn-definitive-patch*.tar.gz 2>/dev/null | sort -V | tail -n1)
-    if [ -n "$PATCH_FILE" ]; then
-        LOCAL_VERSION=$(echo "$PATCH_FILE" | sed -E 's/.*-v([0-9.]+)\.tar.gz/\1/')
-        # Compare local vs remote version
-        if [ "$(printf '%s\n' "$LATEST_VERSION" "$LOCAL_VERSION" | sort -V | tail -n1)" != "$LATEST_VERSION" ]; then
-            LATEST_VERSION="$LOCAL_VERSION"
-            LATEST_FILE=$(basename "$PATCH_FILE")
-            echo "Newer local file found: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
-        fi
-    fi
-fi
+get_latest_file "psbbn-definitive-patch" "PSBBN Definitive English patch"
 
 if [ "$MODE" = "update" ]; then
-    echo "Current version: $psbbn_version"
+    echo "Current version: $psbbn_version" | tee -a "${LOG_FILE}"
     
     if [ "$(printf '%s\n' "$LATEST_VERSION" "$psbbn_version" | sort -V | tail -n1)" = "$psbbn_version" ]; then
         echo
-        echo "You are already running the latest version. No need to update." | tee -a "${LOG_FILE}"
-        echo
-        read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
-        echo
-        exit 0
+        echo "You already have the latest PSBBN system software installed." | tee -a "${LOG_FILE}"
+        PSBBN_UPDATE="no"
     fi
 fi
 
-if [[ "$(printf '%s\n' "$LATEST_VERSION" "4.0.0" | sort -V | head -n1)" != "4.0.0" ]]; then
-    error_msg "The latest version currently available is v$LATEST_VERSION." "The installer requires version v4.0.0 or higher. Please try again later."
+if [ "$PSBBN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
+    if [[ "$(printf '%s\n' "$LATEST_VERSION" "4.0.0" | sort -V | head -n1)" != "4.0.0" ]]; then
+        error_msg "The latest version currently available is v$LATEST_VERSION." "The installer requires version v4.1.0 or higher. Please try again later."
+    fi
+
+    downoad_latest_file "psbbn-definitive-patch"
+    PSBBN_PATCH="${ASSETS_DIR}/${LATEST_FILE}"
 fi
 
-# Check if the latest file exists in ${ASSETS_DIR}
-if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
-    echo | tee -a "${LOG_FILE}"
-    echo "File ${LATEST_FILE} exists. Skipping download." | tee -a "${LOG_FILE}"
-else
-    # Check for and delete older files
-    for file in "${ASSETS_DIR}"/psbbn-definitive-patch*.tar.gz; do
-        if [[ -f "$file" && "$(basename "$file")" != "$LATEST_FILE" ]]; then
-            echo "Deleting old file: $file" | tee -a "${LOG_FILE}"
-            rm -f "$file"
-        fi
-    done
+get_latest_file "language-pak-$LANG" "$LANG_DISPLAY language pack"
 
-    # Construct the full URL for the .gz file and download it
-    TAR_URL="$URL/$LATEST_FILE"
-    echo "Downloading ${LATEST_FILE}..." | tee -a "${LOG_FILE}"
-    axel -n 8 -a "$TAR_URL" -o "${ASSETS_DIR}"
+echo "Current language pack version: $LANG_VER" | tee -a "${LOG_FILE}"
 
-    # Check if the file was downloaded successfully
-    if [[ -f "${ASSETS_DIR}/${LATEST_FILE}" && ! -f "${ASSETS_DIR}/${LATEST_FILE}.st" ]]; then
-        echo "Download completed: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
+if [ "$(printf '%s\n' "$LATEST_LANG" "$LANG_VER" | sort -V | tail -n1)" = "$LANG_VER" ]; then
+    echo
+    echo "You already have the latest language pack installed." | tee -a "${LOG_FILE}"
+    LANG_UPDATE="no"
+fi
+
+if [ "$LANG_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
+    downoad_latest_file "language-pak"
+    LANG_PACK="${ASSETS_DIR}/${LATEST_FILE}"
+fi
+
+if [[ "$LANG" == "jpn" ]]; then
+    get_latest_file "channels-$LANG" "$LANG_DISPLAY channels"
+
+    echo "Current channels version: $CHAN_VER" | tee -a "${LOG_FILE}"
+    if [ "$(printf '%s\n' "$LATEST_CHAN" "$CHAN_VER" | sort -V | tail -n1)" = "$CHAN_VER" ]; then
+        echo
+        echo "You already have the latest game channels installed." | tee -a "${LOG_FILE}"
+        CHAN_UPDATE="no"
     else
-        error_msg "Download failed for ${LATEST_FILE}. Please check your internet connection and try again."
+        CHAN_UPDATE="yes"
     fi
+
+    if [ "$CHAN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
+        downoad_latest_file "channels"
+        CHANNELS="${ASSETS_DIR}/${LATEST_FILE}"
+    fi
+else
+    CHAN_UPDATE="no"
 fi
 
-if [ "$MODE" = "update" ]; then
-    UPDATE_SPLASH
-else
+if [ "$PSBBN_UPDATE" == "no" ] && [ "$LANG_UPDATE" == "no" ] && [ "$CHAN_UPDATE" == "no" ]; then
+    echo
+    echo "You are already running the latest version. No need to update." | tee -a "${LOG_FILE}"
+    echo
+    read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
+    echo
+    exit 0
+fi
+
+if [ "$MODE" = "install" ]; then
     INSTALL_SPLASH
 fi
-echo "================================== PSBBN Definitive Patch v$LATEST_VERSION ==================================="
-if [ "$LATEST_VERSION" = "4.0.0" ] || [ "$LATEST_VERSION" = "4.0.1" ]; then
+
+if [ "$PSBBN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
+    if [ "$MODE" = "update" ]; then
+        UPDATE_SPLASH
+    fi
+    echo "================================== PSBBN Definitive Patch v$LATEST_VERSION ==================================="
+    if [ "$LATEST_VERSION" = "4.1.0" ]; then
+        echo
+        echo "        NEW! Multilingual Support:"
+        echo "        - The PSBBN Definitive Patch now supports English, Japanese and German"
+        echo "        - Select your preferred language during PSBBN installation"
+        echo "        - The language can also be changed later from the Extras menu"
+        echo "        - When the language is set to Japanese, Japan-region games will be displayed in the"
+        echo "          Game Collection on HOSDMenu using their Japanese titles."
+        echo "        - When the language is set to Japanese, the original Japanese online Game Channels"
+        echo "          can be accessed from the Game Channel."
+        echo
+        echo "    Full Release notes on GitHub: https://github.com/CosmicScale/PSBBN-Definitive-English-Patch"  
+        echo
+        echo "    Watch the latest video covering this update: https://youtu.be/dvCt_ExHwro"
+    fi
     echo
-    echo "       PSBBN Installer:"
-    echo "       - The PSBBN Installer and Updater now install HOSDMenu alongside PSBBN"
-    echo "       - Supports smaller drives - minimum capacity reduced from 200 GB to 32 GB"
-    echo "       - After partitioning, any unallocated space is now assigned to the OPL partition"
+    echo "===================================================================================================="
     echo
-    echo "       NEW! OSDMenu MBR - Replaces Sony's original MBR application:"
-    echo "       - Removed BBN Launch (BBNL), OSDMenu MBR now handles launching games and apps directly"
-    echo "       - Improves boot speed and game startup times"
-    echo "       - Eliminates the need for the PlayStation 2 Basic Boot Loader (PS2BBL)"
-    echo "       - PS2 Linux is now booted directly by holding CIRCLE at power-on instead of"
-    echo "         interrupting PSBBN startup"
-    echo "       - Removed Launch Disc app, simply insert a game disc to play — Fully compatible"
-    echo "         with Game ID and MechaPwn!"
+    read -n 1 -s -r -p "                               Press any key to return to continue..." </dev/tty
     echo
-    echo "       NEW! HOSDMenu - Patches HDD-OSD:"
-    echo "       - Hold CROSS at startup to boot into HOSDMenu"
-    echo "       - Supports larger drives (HDD-OSD previously limited to 1 TB)"
-    echo "       - Launch installed homebrew apps directly from the OSDSYS menu"
-    echo "       - Launch SAS-compatible applications from Memory Cards and and from the internal drive"
-    echo "         in Browser 2.0 and much more..."
-    echo
-    echo "    Full Release notes on GitHub: https://github.com/CosmicScale/PSBBN-Definitive-English-Patch"  
-    echo
-    echo "    Watch the latest video covering this update: https://www.youtube.com/watch?v=fT368C90Trc"
 fi
-echo
-echo "===================================================================================================="
-echo
-read -n 1 -s -r -p "                               Press any key to return to continue..." </dev/tty
-echo
-
-rm -f "$HTML_FILE"
-
-PSBBN_PATCH="${ASSETS_DIR}/${LATEST_FILE}"
 
 if [ "$MODE" = "install" ]; then
     echo | tee -a "${LOG_FILE}"
@@ -685,7 +801,7 @@ if [ "$MODE" = "install" ]; then
     COMMANDS+="mkpart __linux.5 512M EXT2\n"
     COMMANDS+="mkpart __linux.6 128M EXT2\n"
     COMMANDS+="mkpart __linux.7 256M EXT2\n"
-    COMMANDS+="mkpart __linux.9 3072M EXT2\n"
+    COMMANDS+="mkpart __linux.9 2048M EXT2\n"
     COMMANDS+="exit"
 
     PFS_COMMANDS
@@ -885,8 +1001,19 @@ fi
 
 echo | tee -a "${LOG_FILE}"
 if [ "$MODE" = "update" ]; then
-    UPDATE_SPLASH
+    if [ "$PSBBN_UPDATE" != "no" ]; then
+        UPDATE_SPLASH
+    fi
     echo -n "Updating PSBBN..." | tee -a "${LOG_FILE}"
+
+    if version_le "${psbbn_version:-0}" "4.1.0"; then
+        COMMANDS="device ${DEVICE}\n"
+        COMMANDS+="rmpart __linux.9\n"
+        COMMANDS+="mkpart __linux.9 2048M EXT2\n"
+        COMMANDS+="exit"
+        echo "Deleting and recreating __linux.9..." >>"${LOG_FILE}"
+        PFS_COMMANDS
+    fi
 else
     echo -n "Installing PSBBN..." | tee -a "${LOG_FILE}"
 fi
@@ -897,17 +1024,32 @@ mount_pfs
 
 if [ "$MODE" = "install" ]; then
     sudo mkdir -p "${STORAGE_DIR}/__linux.8/MusicCh/contents" || error_msg "Failed to create __linux.8/MusicCh/contents"
-    mkdir -p "${STORAGE_DIR}/__common"/{POPS,"Your Saves"} 2>> "${LOG_FILE}"
-    sudo cp "${ASSETS_DIR}/POPStarter/eng"/{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} "${STORAGE_DIR}/__common/POPS/" 2>> "${LOG_FILE}"
+    mkdir -p "${STORAGE_DIR}/__common/Your Saves" 2>> "${LOG_FILE}"
 fi
 
-ALL_ERRORS=$(sudo tar zxpf "${PSBBN_PATCH}" -C "${STORAGE_DIR}/" 2>&1 >/dev/null)
+if [ "$PSBBN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
+    echo "Installing PSBBN Update..." >> "${LOG_FILE}"
+    ALL_ERRORS=$(sudo tar zxpf "${PSBBN_PATCH}" -C "${STORAGE_DIR}/" 2>&1 >/dev/null)
 
-FILTERED_ERRORS=$(echo "$ALL_ERRORS" | grep -v -e "Cannot change ownership" -e "tar: Exiting with failure status")
+    FILTERED_ERRORS=$(echo "$ALL_ERRORS" | grep -v -e "Cannot change ownership" -e "tar: Exiting with failure status")
 
-if [ -n "$FILTERED_ERRORS" ]; then
-    echo "$FILTERED_ERRORS" >> "${LOG_FILE}"
-    error_msg "Failed to install PSBBN." "See ${LOG_FILE} for details."
+    if [ -n "$FILTERED_ERRORS" ]; then
+        echo "$FILTERED_ERRORS" >> "${LOG_FILE}"
+        error_msg "Failed to install PSBBN." "See ${LOG_FILE} for details."
+    fi
+fi
+
+if [ "$LANG_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
+    echo "Installing PSBBN Language Pack..." >> "${LOG_FILE}"
+    sudo tar zxpf "$LANG_PACK" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || error_msg "Failed to install $LANG_DISPLAY language pack." "See ${LOG_FILE} for details."
+    if [[ "$LANG" == "jpn" ]]; then
+        cp -f "${ASSETS_DIR}/kernel/vmlinux_jpn" "${STORAGE_DIR}/__system/p2lboot/vmlinux" 2>> "${LOG_FILE}" || error_msg "Failed to copy kernel file."
+    fi
+fi
+
+if [ "$CHAN_UPDATE" == "yes" ]; then
+    echo "Installing Online Channels..." >> "${LOG_FILE}"
+    sudo tar zxpf "${CHANNELS}" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || error_msg "Failed to install channels." "See ${LOG_FILE} for details."
 fi
 
 cp -f "${ASSETS_DIR}/osdmenu/"{hosdmenu.elf,version.txt} "${STORAGE_DIR}/__system/osdmenu/" 2>> "${LOG_FILE}" || error_msg "Failed to copy hosdmenu.elf."
@@ -1104,15 +1246,37 @@ if [ "$MODE" = "install" ]; then
     mkdir -p "${OPL}"/{APPS,ART,CFG,CHT,LNG,THM,VMC,CD,DVD,bbnl} 2>>"${LOG_FILE}" || error_msg "Failed to create OPL folders."
     echo "$LATEST_VERSION" > "${OPL}/version.txt"
     echo "APA_SIZE = $APA_MiB" >> "${OPL}/version.txt"
-    echo "LANG = eng" >> "${OPL}/version.txt"
+    echo "LANG = $LANG" >> "${OPL}/version.txt"
+    echo "LANG_VER = $LATEST_LANG" >> "${OPL}/version.txt"
+    echo "CHAN_VER = $LATEST_CHAN" >> "${OPL}/version.txt"
+    
 else
     if [[ -f "${OPL}/version.txt" ]]; then
         sed -i "1s|.*|$LATEST_VERSION|" "${OPL}/version.txt"
         if ! grep -q "APA_SIZE *=" "${OPL}/version.txt"; then
             echo "APA_SIZE = 131072" >> "${OPL}/version.txt"
         fi
-        if grep -q "^eng" "${OPL}/version.txt"; then
-            sed -i "s/^eng.*/LANG = eng/" "${OPL}/version.txt"
+
+        # Delete any line beginning with "eng"
+        sed -i '/^eng/d' "${OPL}/version.txt"
+
+        # If no line begins with "LANG =" then append it
+        if ! grep -q "^LANG =" "${OPL}/version.txt"; then
+            echo "LANG = $LANG" >> "${OPL}/version.txt"
+        fi
+
+        # Update or add LANG_VER
+        if grep -q "^LANG_VER =" "${OPL}/version.txt"; then
+            sed -i "s|^LANG_VER =.*|LANG_VER = $LATEST_LANG|" "${OPL}/version.txt"
+        else
+            echo "LANG_VER = $LATEST_LANG" >> "${OPL}/version.txt"
+        fi
+
+        # Update or add CHAN_VER
+        if grep -q "^CHAN_VER =" "${OPL}/version.txt"; then
+            sed -i "s|^CHAN_VER =.*|CHAN_VER = $LATEST_CHAN|" "${OPL}/version.txt"
+        else
+            echo "CHAN_VER = $LATEST_CHAN" >> "${OPL}/version.txt"
         fi
     else
         error_msg "Error" "Failed to update version.txt."
@@ -1138,22 +1302,37 @@ echo | tee -a "${LOG_FILE}"
 if [ "$MODE" = "install" ]; then
     echo "[✓] PSBBN Successfully Installed!" | tee -a "${LOG_FILE}"
 else
-    echo "================================== [✓] PSBBN Successfully Updated =================================" | tee -a "${LOG_FILE}"
+    UPDATE_SPLASH
+    echo "    ================================== [✓] PSBBN Successfully Updated =================================" | tee -a "${LOG_FILE}"
     echo
-    if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "3.00"; then
-        echo "  Now connect the drive to your PS2 console and boot into PSBBN to complete the installation."
-        echo "  This must be done before running the Game Installer."
+    if [ "$PSBBN_UPDATE" != "no" ]; then
+        echo "      PSBBN System Software updated to version: $LATEST_VERSION"
+    fi
+    if [ "$LANG_UPDATE" != "no" ]; then
+        echo "      Language Pack updated to version: $LANG $LATEST_LANG"
+    fi
+    if [ "$CHAN_UPDATE" == "yes" ]; then
+        echo "      Online Channels uptaded to version: $LANG $LATEST_CHAN"
+    fi
+    echo
+
+    if [ "$PSBBN_UPDATE" != "no" ] && version_le "${psbbn_version:-0}" "3.00"; then
+        echo "      Now connect the drive to your PS2 console and boot into PSBBN to complete the installation."
+        echo "      This must be done before running the Game Installer."
         echo
     fi
 
-    if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
-        echo "  It's recommended to rerun the Game Installer and choose \"Add Additional Games and Apps\" to"
-        echo "  improve game startup times and add apps to the System Menu in HOSDMenu."
+    if [ "$PSBBN_UPDATE" != "no" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
+        echo "      It's recommended to rerun the Game Installer and choose \"Add Additional Games and Apps\" to"
+        echo "      improve game startup times and add apps to the System Menu in HOSDMenu."
         echo
     fi
-    echo "  If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
-    echo
-    echo "===================================================================================================="
+
+    if [ "$PSBBN_UPDATE" != "no" ] || [ "$LANG_UPDATE" != "no" ]; then
+        echo "      If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
+        echo
+    fi
+    echo "    ===================================================================================================="
 fi
 echo
 read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty

@@ -30,6 +30,8 @@
             natsort
             mutagen
             tqdm
+            PyICU
+            pykakasi
           ]
         );
       in
@@ -53,6 +55,7 @@
             fuse2
             bchunk
             e2fsprogs
+            libicu-dev
             pkg-config
             patchelf
 

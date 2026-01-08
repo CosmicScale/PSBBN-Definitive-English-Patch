@@ -29,7 +29,10 @@ CONFIG_FILE="${SCRIPTS_DIR}/gamepath.cfg"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
 OPL="${SCRIPTS_DIR}/OPL"
 PS1_LIST="${SCRIPTS_DIR}/tmp/ps1.list"
+PS1_JPN_LIST="${SCRIPTS_DIR}/tmp/ps1-jpn.list"
 PS2_LIST="${SCRIPTS_DIR}/tmp/ps2.list"
+PS2_JPN_LIST="${SCRIPTS_DIR}/tmp/ps2-jpn.list"
+TMP_LIST="${SCRIPTS_DIR}/tmp/tmp.list"
 ALL_GAMES="${SCRIPTS_DIR}/tmp/master.list"
 ELF_LIST="${SCRIPTS_DIR}/tmp/elf.list"
 SAS_LIST="${SCRIPTS_DIR}/tmp/sas.list"
@@ -421,8 +424,8 @@ CREATE_VMC() {
     fi
 
     # First pass: Group file names by base title
-    exec 3< "$PS1_LIST"
-    while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+    exec 3< "${PS1_LIST}"
+    while IFS='|' read -r title game_id publisher disc_type file_name jpn_title <&3; do
         base_title="${title%%(Disc*}"
         base_title="${base_title%" "}"  # Remove trailing space
         disc_groups["$base_title"]+="$title|$file_name"$'\n'
@@ -445,7 +448,7 @@ CREATE_VMC() {
 
     # Second pass: Create folders, DISCS.TXT, and VMCDIR.TXT
     exec 3< "$PS1_LIST"
-    while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+    while IFS='|' read -r title game_id publisher disc_type file_name jpn_title <&3; do
         folder_name="${file_name%.*}"
         base_title="${title%%(Disc*}"
         base_title="${base_title%" "}"
@@ -742,9 +745,9 @@ install_pops() {
         fi
     fi
 
-    if [ ! -f "${STORAGE_DIR}/__common/POPS/IGR_BG.TM2" ] || [ ! -f "${STORAGE_DIR}/__common/POPS/IGR_YES.TM2" ] || [ ! -f "${STORAGE_DIR}/__common/POPS/IGR_NO.TM2" ]; then
+    if { [ ! -f "${STORAGE_DIR}/__common/POPS/IGR_BG.TM2" ] || [ ! -f "${STORAGE_DIR}/__common/POPS/IGR_YES.TM2" ] || [ ! -f "${STORAGE_DIR}/__common/POPS/IGR_NO.TM2" ]; } && [[ "$LANG" != "JPN" ]]; then
         echo "Copying POPS IRG files..." | tee -a "${LOG_FILE}"
-        cp -f "${ASSETS_DIR}/POPStarter/eng/"{IGR_BG.TM2,IGR_YES.TM2,IGR_NO.TM2} "${STORAGE_DIR}/__common/POPS"  >> "${LOG_FILE}" 2>&1
+        cp -f "${ASSETS_DIR}/POPStarter/$LANG/"{IGR_BG.TM2,IGR_YES.TM2,IGR_NO.TM2} "${STORAGE_DIR}/__common/POPS"  >> "${LOG_FILE}" 2>&1
     else
         echo "POPS IGR files already exist." | tee -a "${LOG_FILE}"
     fi
@@ -1260,15 +1263,79 @@ unmount_apa(){
     done
 }
 
+sort_jpn(){
+    local GAME_LIST=$1
+    local JPN_LIST=$2
+
+    python3 <<EOF
+import re
+import csv
+from icu import Collator, Locale
+import pykakasi
+
+jp_re = re.compile(r'^[\u3040-\u309F\u30A0-\u30FF\u31F0-\u31FF\u4E00-\u9FFF]')
+
+# Read GAME_LIST
+with open("${GAME_LIST}", encoding="utf-8", newline='') as f:
+    rows = list(csv.reader(f, delimiter='|'))
+
+jpn_rows = []
+non_jpn_rows = []
+
+for row in rows:
+    if len(row) >= 6 and jp_re.match(row[5]):
+        jpn_rows.append(row)
+    else:
+        non_jpn_rows.append(row)
+
+# Write back non-JPN rows to GAME_LIST
+with open("${GAME_LIST}", "w", encoding="utf-8", newline='') as f:
+    csv.writer(f, delimiter='|').writerows(non_jpn_rows)
+
+# Sort JPN rows if not empty
+if jpn_rows:
+    collator = Collator.createInstance(Locale("ja_JP"))
+    kks = pykakasi.kakasi()
+
+    def normalize_for_sort(s):
+        result = kks.convert(s)
+        hira = "".join(r['hira'] for r in result)
+        return hira
+
+    jpn_rows.sort(key=lambda r: collator.getSortKey(normalize_for_sort(r[5])))
+
+    # Write sorted JPN_LIST
+    with open("${JPN_LIST}", "w", encoding="utf-8", newline='') as f:
+        csv.writer(f, delimiter='|').writerows(jpn_rows)
+EOF
+}
+
+normalize_roman_numerals() {
+    local s=$1
+    s=${s//Ⅰ/I}
+    s=${s//Ⅱ/II}
+    s=${s//Ⅲ/III}
+    s=${s//Ⅳ/IV}
+    s=${s//Ⅴ/V}
+    s=${s//Ⅵ/VI}
+    s=${s//Ⅶ/VII}
+    s=${s//Ⅷ/VIII}
+    s=${s//Ⅸ/IX}
+    s=${s//Ⅹ/X}
+    s=${s//Ⅺ/XI}
+    s=${s//Ⅻ/XII}
+    printf '%s' "$s"
+}
+
 SPLASH() {
     clear
     cat << "EOF"
-                  _____                        _____          _        _ _ 
-                 |  __ \                      |_   _|        | |      | | |          
-                 | |  \/ __ _ _ __ ___   ___    | | _ __  ___| |_ __ _| | | ___ _ __ 
-                 | | __ / _` | '_ ` _ \ / _ \   | || '_ \/ __| __/ _` | | |/ _ \ '__|
-                 | |_\ \ (_| | | | | | |  __/  _| || | | \__ \ || (_| | | |  __/ |   
-                  \____/\__,_|_| |_| |_|\___|  \___/_| |_|___/\__\__,_|_|_|\___|_|   
+                      _____                        _____          _        _ _ 
+                     |  __ \                      |_   _|        | |      | | |          
+                     | |  \/ __ _ _ __ ___   ___    | | _ __  ___| |_ __ _| | | ___ _ __ 
+                     | | __ / _` | '_ ` _ \ / _ \   | || '_ \/ __| __/ _` | | |/ _ \ '__|
+                     | |_\ \ (_| | | | | | |  __/  _| || | | \__ \ || (_| | | |  __/ |   
+                      \____/\__,_|_| |_| |_|\___|  \___/_| |_|___/\__\__,_|_|_|\___|_|   
 
 
 EOF
@@ -1350,6 +1417,7 @@ fi
 
 APA_SIZE=$(awk -F' *= *' '$1=="APA_SIZE"{print $2}' "${OPL}/version.txt")
 LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
+echo "Language: $LANG" >> "${LOG_FILE}"
 
 if [ -z "$APA_SIZE" ] || [ -z "$LANG" ]; then
     error_msg "Error" "Missing required value(s) in ${OPL}/version.txt"
@@ -1623,7 +1691,7 @@ echo
 
 prevent_sleep_start
 
-# Delete existing BBL partitions
+# Delete existing PP partitions
 
 HDL_TOC
 
@@ -1749,6 +1817,7 @@ else
     echo "PS1 games are already up-to-date." | tee -a "${LOG_FILE}"
 fi
 
+# Create games list of PS1 games to be installed
 if find "${STORAGE_DIR}/__.POPS/" -maxdepth 1 -type f \( -iname "*.vcd" \) | grep -q .; then
     echo | tee -a "${LOG_FILE}"
     echo "Creating PS1 games list..." | tee -a "${LOG_FILE}"
@@ -1812,12 +1881,33 @@ if find "${OPL}/CD" "${OPL}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname
     fi
 fi
 
-if [ -f "${PS1_LIST}" ]; then
+# Sort games list
+if [[ "$LANG" == "jpn" &&  -f "${PS1_LIST}" ]]; then
+    sort_jpn "${PS1_LIST}" "$PS1_JPN_LIST"
+fi
+
+if [ -s "${PS1_LIST}" ]; then
     python3 "${HELPER_DIR}/list-sorter.py" "${PS1_LIST}" || error_msg "Error" "Failed to sort PS1 games list."
 fi
 
-if [ -f "${PS2_LIST}" ]; then
+if [ -s "${PS1_JPN_LIST}" ]; then
+    cat "${PS1_JPN_LIST}" > "${TMP_LIST}"
+    cat "${PS1_LIST}" >> "${TMP_LIST}" 2> "${LOG_FILE}"
+    cat "${TMP_LIST}" > "${PS1_LIST}"
+fi
+
+if [[ "$LANG" == "jpn" &&  -f "${PS2_LIST}" ]]; then
+    sort_jpn "${PS2_LIST}" "$PS2_JPN_LIST"
+fi
+
+if [ -s "${PS2_LIST}" ]; then
     python3 "${HELPER_DIR}/list-sorter.py" "${PS2_LIST}" || error_msg "Error" "Failed to sort PS2 games list."
+fi
+
+if [ -s "${PS2_JPN_LIST}" ]; then
+    cat "${PS2_JPN_LIST}" > "${TMP_LIST}"
+    cat "${PS2_LIST}" >> "${TMP_LIST}" 2> "${LOG_FILE}"
+    cat "${TMP_LIST}" > "${PS2_LIST}"
 fi
 
 # Deactivate the virtual environment
@@ -1826,15 +1916,15 @@ if [[ -n "$VIRTUAL_ENV" ]]; then
 fi
 
 # Create master list combining PS1 and PS2 games to a single list
-if [[ ! -f "${PS1_LIST}" && ! -f "${PS2_LIST}" ]] && find "${GAMES_PATH}/CD" "${GAMES_PATH}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) | grep -q .; then
+if [[ ! -s "${PS1_LIST}" && ! -s "${PS2_LIST}" ]] && find "${GAMES_PATH}/CD" "${GAMES_PATH}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) | grep -q .; then
     error_msg "Error" "Failed to create games list."
 fi
 
-if [[ -f "${PS1_LIST}" ]] && [[ ! -f "${PS2_LIST}" ]]; then
+if [[ -s "${PS1_LIST}" ]] && [[ ! -s "${PS2_LIST}" ]]; then
     { cat "${PS1_LIST}" > "${ALL_GAMES}"; } 2>> "${LOG_FILE}"
-elif [[ ! -f "${PS1_LIST}" ]] && [[ -f "${PS2_LIST}" ]]; then
+elif [[ ! -s "${PS1_LIST}" ]] && [[ -s "${PS2_LIST}" ]]; then
     { cat "${PS2_LIST}" >> "${ALL_GAMES}"; } 2>> "${LOG_FILE}"
-elif [[ -f "${PS1_LIST}" ]] && [[ -f "${PS2_LIST}" ]]; then
+elif [[ -s "${PS1_LIST}" ]] && [[ -s "${PS2_LIST}" ]]; then
     { cat "${PS1_LIST}" > "${ALL_GAMES}"; } 2>> "${LOG_FILE}"
     { cat "${PS2_LIST}" >> "${ALL_GAMES}"; } 2>> "${LOG_FILE}"
 fi
@@ -1910,7 +2000,7 @@ for dir in "${SOURCE_DIR}"/*/; do
 
     # Stop if we've reached the limit
     if [ "$SAS_COUNT" -ge "$pp_max" ]; then
-        error_msg "Warning" "Insufficient space to create BBL partitions for remaining SAS apps." " " "The first $pp_max apps will appear in the PSBBN Game Channel." "All apps will appear in OPL."
+        error_msg "Warning" "Insufficient space to create PP partitions for remaining SAS apps." " " "The first $pp_max apps will appear in the PSBBN Game Channel." "All apps will appear in OPL."
         break
     fi
 
@@ -2005,7 +2095,7 @@ for dir in "${SOURCE_DIR}"/*/; do
 
     # Stop if we've reached the max
     if [ "$APP_COUNT" -ge "$pp_max" ]; then
-        error_msg "Warning" "Insufficient space to create BBL partitions for remaining ELF files." " " "The first $pp_max apps will appear in the PSBBN Game Channel." "All apps will appear in OPL."
+        error_msg "Warning" "Insufficient space to create PP partitions for remaining ELF files." " " "The first $pp_max apps will appear in the PSBBN Game Channel." "All apps will appear in OPL."
         break
     fi
 
@@ -2074,7 +2164,7 @@ if [ -f "$ALL_GAMES" ]; then
 
     # First loop: Run the art downloader script for each game_id if artwork doesn't already exist
     exec 3< "$ALL_GAMES"
-    while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+    while IFS='|' read -r title game_id publisher disc_type file_name jpn_title <&3; do
         # Skip downloading if disc_type is "POPS"
         if [[ "$disc_type" == "POPS" ]]; then
             continue
@@ -2133,7 +2223,7 @@ fi
 pp_max=$(( pp_max - APP_COUNT ))
 
 if [ "$GAME_COUNT" -gt "$pp_max" ]; then
-    error_msg "Warning" "Insufficient space to create BBL partitions for remaining games." " " "The first $pp_max games will appear in the PSBBN Game Collection." "All PS2 games will appear in OPL/NHDDL."
+    error_msg "Warning" "Insufficient space to create PP partitions for remaining games." " " "The first $pp_max games will appear in the PSBBN Game Collection." "All PS2 games will appear in OPL/NHDDL."
     # Overwrite master.list with the first $pp_max lines
     head -n "$pp_max" "$ALL_GAMES" > "${ALL_GAMES}.tmp"
     mv "${ALL_GAMES}.tmp" "$ALL_GAMES" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to updated master.list."
@@ -2151,7 +2241,7 @@ if [ -f "$ALL_GAMES" ]; then
 
         # First loop: Run the art downloader script for each game_id if artwork doesn't already exist
         exec 3< "$ALL_GAMES"
-        while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+        while IFS='|' read -r title game_id publisher disc_type file_name jpn_title <&3; do
             # Check if the artwork file already exists
             png_file="${ARTWORK_DIR}/${game_id}.png"
             if [[ -f "$png_file" ]]; then
@@ -2223,7 +2313,7 @@ if [ -f "$ALL_GAMES" ]; then
     echo "Downloading HDD-OSD icons for games:"  | tee -a "${LOG_FILE}"
 
     exec 3< "$ALL_GAMES"
-    while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+    while IFS='|' read -r title game_id publisher disc_type file_name jpn_title <&3; do
 
         ico_file="${ICONS_DIR}/ico/$game_id.ico"
         
@@ -2320,11 +2410,11 @@ if [ -f "$ALL_GAMES" ]; then
 
     echo | tee -a "${LOG_FILE}"
 
-    if [ -f "$PS1_LIST" ]; then
+    if [ -s "${PS1_LIST}" ]; then
         echo "Downloading VMC icons:"  | tee -a "${LOG_FILE}"
 
-        exec 3< "$PS1_LIST"
-        while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+        exec 3< "${PS1_LIST}"
+        while IFS='|' read -r title game_id publisher disc_type file_name jpn_title <&3; do
                 ico_file="${ICONS_DIR}/ico/vmc/$game_id.ico"
         
                 if [[ ! -s "$ico_file" ]]; then
@@ -2372,26 +2462,73 @@ if [ -f "$ALL_GAMES" ]; then
     # Read the file line by line
 
     exec 3< "$ALL_GAMES"
-    while IFS='|' read -r title game_id publisher disc_type file_name <&3; do
+    while IFS='|' read -r title game_id publisher disc_type file_name jpn_title <&3; do
         echo | tee -a "${LOG_FILE}"
         echo "Processing $title..." 
         # Create a sub-folder named after the game_id
         game_dir="$ICONS_DIR/$game_id"
         mkdir -p "$game_dir" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to create $dir."
 
+        if [[ "$LANG" == "jpn" && -z "$jpn_title" ]]; then
+            title=${title//"(disc 1)"/"（ディスク１）"}
+            title=${title//"(disc 2)"/"（ディスク２）"}
+            title=${title//"(disc 3)"/"（ディスク３）"}
+            title=${title//"(disc 4)"/"（ディスク４）"}
+            title=${title//"(disc 5)"/"（ディスク５）"}
+            title=${title//"(disc 6)"/"（ディスク６）"}
+            title=${title//"(Taikenban)"/"（体験版）"}
+        fi
+
         if [ "$OS" = "PSBBN" ]; then
             # Generate the info.sys file
             info_sys_filename="$game_dir/info.sys"
-            create_info_sys "$title" "$game_id" "$publisher"
-        fi
-
-        if [ ${#title} -gt 48 ]; then
-            game_title_icon="${title:0:45}..."
-        else
-            game_title_icon="$title"
+            if [[ "$LANG" == "jpn" && -n "$jpn_title" ]]; then
+                jpn_title=$(normalize_roman_numerals "$jpn_title")
+                create_info_sys "$jpn_title" "$game_id" "$publisher"
+            else
+                create_info_sys "$title" "$game_id" "$publisher"
+            fi
         fi
 
         # Generate the icon.sys file
+        if [[ "$LANG" == "jpn" ]]; then
+            jpn_title=$(normalize_roman_numerals "$jpn_title")
+            bottom_line=""
+
+            if [[ -n "$jpn_title" ]]; then
+                game_title_icon="$jpn_title"
+            else
+                game_title_icon="$title"
+            fi
+
+            case "$game_title_icon" in
+            *"（体験版）"*|*"（ディスク１）"*|*"（ディスク２）"*|*"（ディスク３）"*|*"（ディスク４）"*|*"（ディスク５）"*|*"（ディスクク６）"*)
+                bottom_line="（${game_title_icon##*（}"
+                game_title_icon="${game_title_icon%（*}"
+                ;;
+            esac
+
+            if [[ -n "$jpn_title" ]]; then
+                if [ ${#game_title_icon} -gt 16 ]; then
+                    game_title_icon="${game_title_icon:0:13}..."
+                fi
+            else
+                if [ ${#game_title_icon} -gt 48 ]; then
+                    game_title_icon="${game_title_icon:0:45}..."
+                fi
+            fi
+
+            if [[ -n "$bottom_line" ]]; then
+                publisher="$bottom_line"
+            fi
+
+        else
+            game_title_icon="$title"
+            if [ ${#game_title_icon} -gt 48 ]; then
+                game_title_icon="${game_title_icon:0:45}..."
+            fi
+        fi
+
         icon_sys_filename="$game_dir/icon.sys"
         create_icon_sys "$game_title_icon" "$publisher"
 
@@ -2547,7 +2684,7 @@ if [ "$OS" = "PSBBN" ]; then
     mount_cfs
 fi
 
-if [ -f "$PS1_LIST" ]; then
+if [ -s "${PS1_LIST}" ]; then
     CREATE_VMC
 fi
 
@@ -2960,7 +3097,7 @@ if [ -f "$ALL_GAMES" ]; then
             if [[ "$disc_type" == "POPS" ]]; then
                 COMMANDS+="lcd '${ASSETS_DIR}/POPStarter'\n"
                 COMMANDS+="put bg.png\n"
-                COMMANDS+="lcd '${ASSETS_DIR}/POPStarter/eng'\n"
+                COMMANDS+="lcd '${ASSETS_DIR}/POPStarter/$LANG'\n"
                 COMMANDS+="put 1.png\n"
                 COMMANDS+="put 2.png\n"
                 COMMANDS+="put man.xml\n"
