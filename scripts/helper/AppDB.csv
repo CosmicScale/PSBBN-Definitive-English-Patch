@@ -4,6 +4,7 @@ WLAUNCHELF|wLaunchELF
 OPNPS2LD|Open PS2 Loader
 OPL12O|Open PS2 Loader
 OPL093|Open PS2 Loader
+OPL0.8CHILDPROOF|OPL (Childproof)
 REBOOT|Reboot System
 POWEROFF|Shutdown System
 OFF|Shutdown System
@@ -27,6 +28,7 @@ SMS|Simple Media System
 HDDOSD|HDD-OSD
 HOSDMENU|HOSDMenu
 HDL|HD Loader
+HDL_V0.8C|HD Loader
 NEOCD|NeoCD/PS2
 UOPL|Unofficial Open PS2 Loader
 HDLSVR093|HDL Server
