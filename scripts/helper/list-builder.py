@@ -193,8 +193,13 @@ def process_files(folder, extensions):
                         raw_bytes = segment.split(b'\\')[-1]
                         string = raw_bytes.decode('utf-8', errors='ignore').upper()
 
-                        if len(string) == 11 and string[4] != '_':
-                            string = string[:4] + '_' + string[5:]
+                        if len(string) == 11:
+                            # Only fix if underscore or dot are in the wrong positions
+                            if string[4] != '_' or string[8] != '.':
+                                # Remove any existing underscore or dot
+                                cleaned = string.replace('_', '').replace('.', '')
+                                # Rebuild with underscore at index 4 and dot at index 8
+                                string = cleaned[:4] + '_' + cleaned[4:7] + '.' + cleaned[7:]
                         break
         
         # Fallback for ISO and VCD
