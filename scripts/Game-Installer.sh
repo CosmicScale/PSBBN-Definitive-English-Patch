@@ -301,7 +301,11 @@ process_psu_files() {
             [ -e "$file" ] || continue  # Skip if no PSU files exist
 
             echo "Extracting $file..."
-            "${PSU_EXTRACT}" "$file" >> "${LOG_FILE}" 2>&1
+            if [[ "$(basename "$file")" == "APP_WLE-ISR-XF-MM.psu" ]]; then
+                "${PSU_EXTRACT}" "$file" >> "${LOG_FILE}" 2>&1
+            else
+                "${PSU_EXTRACT}" "$file" -f >> "${LOG_FILE}" 2>&1
+            fi
         done
     fi
 }
@@ -1128,6 +1132,9 @@ create_system_cnf() {
 }
 
 APP_ART() {
+    title_id="${title_id//[^A-Za-z0-9_-]/}"
+    title_id="${title_id:0:11}"
+    title_id="${title_id%-}"
     png_file="${ARTWORK_DIR}/${title_id}.png"
     # Copy the matching PNG file from ART_DIR, or default to APP.png
     if [ -f "$png_file" ]; then
@@ -2059,25 +2066,26 @@ else
             esac
         done < "$dir/title.cfg"
 
+        [ ${#title} -gt 79 ] && title="${title:0:76}..."
+
+        cat >> "${SAS_LIST}" <<EOL
+$title,ata:/APPS/$title_id/$elf,$title_id
+EOL
+
+        if [ "$title_id" = "APP_WLE-ISR-" ]; then
+            LAUNCHELF_INSTALLED="yes"
+        fi
+
+        # Generate the system.cnf file
+        system_cnf="${dir}/system.cnf"
+        create_system_cnf "/APPS/$title_id/$elf" "$title_id"
+
         # Generate the info.sys file
         info_sys_filename="${dir}/info.sys"
         create_info_sys "$title" "$title_id" "$publisher"
 
         APP_ART
 
-        # Generate the system.cnf file
-        system_cnf="${dir}/system.cnf"
-        create_system_cnf "/APPS/$title_id/$elf" "$title_id"
-
-        if [ "$title_id" = "APP_WLE-ISR-" ]; then
-            LAUNCHELF_INSTALLED="yes"
-        fi
-
-        [ ${#title} -gt 79 ] && title="${title:0:76}..."
-
-        cat >> "${SAS_LIST}" <<EOL
-$title,ata:/APPS/$title_id/$elf,$title_id
-EOL
     done < <(find "${ICONS_DIR}/SAS" -mindepth 1 -maxdepth 1 -type d | sort)
     sort -t',' -k1,1 -f "${SAS_LIST}" -o "${SAS_LIST}"
 fi
@@ -2700,9 +2708,9 @@ if [ "$OS" = "PSBBN" ]; then
 
     # If TARGET exists, remove lines containing PP.LAUNCHER and PP.LAUNCHELF
     if [ -f "$TARGET" ]; then
-        sudo sed -i '/PP\.LAUNCHER$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
-        sudo sed -i '/PP\.APP_WLE-ISR$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
-        sudo sed -i '/PP\.HOSDMENU\.HIDDEN$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+        sudo sed -i '/PP\.LAUNCHER/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+        sudo sed -i '/PP\.APP_WLE-ISR/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+        sudo sed -i '/PP\.HOSDMENU\.HIDDEN/d' "$TARGET" >> "${LOG_FILE}" 2>&1
     fi
 
     # Count lines in TARGET (0 if doesn't exist)
@@ -2722,7 +2730,7 @@ if [ "$OS" = "PSBBN" ]; then
     fi
 
     if [ $((LINE_COUNT + 1)) -lt 4 ] && [ "$LAUNCHELF_INSTALLED" = "yes" ]; then
-        echo "wLaunchELF_isr file%3A%2Fopt0%2Fbn%2Fscript%2Fgame%2Fboot_game3.xml uri%3Dpfs%3A%2FPP.APP_WLE-ISR" >> "$TMP_FILE"
+        echo "wLaunchELF_isr file%3A%2Fopt0%2Fbn%2Fscript%2Fgame%2Fboot_game3.xml uri%3Dpfs%3A%2FPP.APP_WLE-ISR-" >> "$TMP_FILE"
     fi
 
     if [ $((LINE_COUNT + 2)) -lt 4 ]; then
@@ -2807,7 +2815,7 @@ if find "${ICONS_DIR}/SAS" -mindepth 1 -maxdepth 1 -type d ! -name '.*' | grep -
     while IFS= read -r dir; do
 
         folder_name=$(basename "$dir")
-        pp_name="PP.$(sed -E 's/[^A-Za-z0-9]+$//' <<<"$folder_name")"
+        pp_name="PP.${folder_name:0:29}"
 
         APA_SIZE_CHECK
 
