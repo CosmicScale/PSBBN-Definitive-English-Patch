@@ -10,9 +10,9 @@ PSBBN is official Sony software for the PlayStation 2, released exclusively in J
 - Watching videos in the Movie Channel
 - Transferring photos from a digital camera and viewing them in the Photo Channel
 
-This project aims to translate **PSBBN** from Japanese to multiple languages, introduce modern features, and make it a viable daily driver in 2025 and beyond.
+The **PSBBN Definitive Project** (formerly the PSBBN Definitive English Patch) began in 2023 as an English-language patch for PSBBN, but steadily expanded well beyond its original scope. The project aims to translate PSBBN from Japanese into multiple languages, introduce modern features, and make it a viable daily driver in 2026 and beyond.
 
-You can find out more about the **PSBBN** software on [Wikipedia](https://en.wikipedia.org/wiki/PlayStation_Broadband_Navigator) and on my [YouTube channel](https://www.youtube.com/@CosmicScaleFactor).
+You can find out more about the original PSBBN software on [Wikipedia](https://en.wikipedia.org/wiki/PlayStation_Broadband_Navigator) and follow the development of this project on my [YouTube channel](https://www.youtube.com/@CosmicScaleFactor).
 
 # Donations  
 If you appreciate my work and want to support the ongoing development of the **PSBBN Definitive Project** and other PS2-related projects, [you can donate to my Ko-Fi](https://ko-fi.com/cosmicscale).
@@ -23,7 +23,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 [![PSBBN in 2024](https://github.com/user-attachments/assets/298c8c0b-5726-4485-840d-9d567498fd95)](https://www.youtube.com/watch?v=kR1MVcAkW5M)
 
-# Patch Features
+# Features
 - A full translation of the stock Japanese BB Navigator version 0.32 — All binaries, XML files, textures, and pictures have been translated[*](#known-issues)
 - Available in English, German and the original Japanese
 - Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#slim-ps2-console-model-scph-700xx) or similar hardware mod, regardless of region
