@@ -388,29 +388,29 @@ VMC_TITLE() {
 
 GROUP_VMC() {
     if [ "$VMC_GROUP_FOLDER" = "GP_Konami JPN" ] || [ "$VMC_GROUP_FOLDER" = "GP_Konami PAL" ] || [ "$VMC_GROUP_FOLDER" = "GP_Konami USA" ]; then
-        cp "${VMC_ICON_DIR}/KONAMI.ico" ./list.ico
+        cp "${VMC_ICON_DIR}/GP_KONAMI.ico" ./list.ico
     elif [ "$VMC_GROUP_FOLDER" = "GP_Tomba! USA" ]; then
-        cp "${VMC_ICON_DIR}/TOMBA.ico" ./list.ico
+        cp "${VMC_ICON_DIR}/GP_TOMBA.ico" ./list.ico
     elif [ "$VMC_GROUP_FOLDER" = "GP_Tombi! PAL" ]; then
-        cp "${VMC_ICON_DIR}/TOMBI.ico" ./list.ico
+        cp "${VMC_ICON_DIR}/GP_TOMBI.ico" ./list.ico
     elif [ "$VMC_GROUP_FOLDER" = "GP_Tomba! JAP" ]; then
-        cp "${VMC_ICON_DIR}/TOMBA-JPN.ico" ./list.ico
+        cp "${VMC_ICON_DIR}/GP_TOMBA-JPN.ico" ./list.ico
     elif [ "$VMC_GROUP_FOLDER" = "GP_Square JAP" ] || [ "$VMC_GROUP_FOLDER" = "GP_Square USA" ]; then
-        cp "${VMC_ICON_DIR}/SQUARE.ico" ./list.ico
+        cp "${VMC_ICON_DIR}/GP_SQUARE.ico" ./list.ico
     elif [ "$VMC_GROUP_FOLDER" = "GP_Arc the Lad USA" ] || [ "$VMC_GROUP_FOLDER" = "GP_Arc the Lad JPN" ]; then
-        cp "${VMC_ICON_DIR}/ARK-THE-LAD.ico" ./list.ico
+        cp "${VMC_ICON_DIR}/GP_ARK-THE-LAD.ico" ./list.ico
     elif [ "$VMC_GROUP_FOLDER" = "GP_Armored Core JPN" ] || [ "$VMC_GROUP_FOLDER" = "GP_Armored Core USA" ]; then
-        cp "${VMC_ICON_DIR}/ARMORED-CORE.ico" ./list.ico
+        cp "${VMC_ICON_DIR}/GP_ARMORED-CORE.ico" ./list.ico
     elif [ "$VMC_GROUP_FOLDER" = "GP_Gran Turismo JPN" ] || [ "$VMC_GROUP_FOLDER" = "GP_Gran Turismo PAL" ] || [ "$VMC_GROUP_FOLDER" = "GP_Gran Turismo USA" ]; then
-        cp "${VMC_ICON_DIR}/GRAN-TURISMO.ico" ./list.ico
+        cp "${VMC_ICON_DIR}/GP_GRAN-TURISMO.ico" ./list.ico
     elif [ "$VMC_GROUP_FOLDER" = "GP_Tekken JPN" ] || [ "$VMC_GROUP_FOLDER" = "GP_Tekken PAL" ] || [ "$VMC_GROUP_FOLDER" = "GP_Tekken USA" ]; then
-        cp "${VMC_ICON_DIR}/TEKKEN.ico" ./list.ico
+        cp "${VMC_ICON_DIR}/GP_TEKKEN.ico" ./list.ico
     elif [ "$VMC_GROUP_FOLDER" = "GP_Monster Rancher" ]; then
-        cp "${VMC_ICON_DIR}/MONSTER-RANCHER.ico" ./list.ico
+        cp "${VMC_ICON_DIR}/GP_MONSTER-RANCHER.ico" ./list.ico
     elif [ "$VMC_GROUP_FOLDER" = "GP_Monster Farm JPN" ]; then
-        cp "${VMC_ICON_DIR}/MONSTER-FARM.ico" ./list.ico
+        cp "${VMC_ICON_DIR}/GP_MONSTER-FARM.ico" ./list.ico
     elif [ "$VMC_GROUP_FOLDER" = "GP_PopoloCrois JPN" ]; then
-        cp "${VMC_ICON_DIR}/POPOLOCROIS.ico" ./list.ico
+        cp "${VMC_ICON_DIR}/GP_POPOLOCROIS.ico" ./list.ico
     fi
 }
 
