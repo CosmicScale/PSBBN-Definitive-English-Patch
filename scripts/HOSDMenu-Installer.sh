@@ -18,24 +18,18 @@ arch="$(uname -m)"
 
 if [[ "$arch" = "x86_64" ]]; then
     # x86-64
-    CUE2POPS="${HELPER_DIR}/cue2pops"
     HDL_DUMP="${HELPER_DIR}/HDL Dump.elf"
     MKFS_EXFAT="${HELPER_DIR}/mkfs.exfat"
     PFS_FUSE="${HELPER_DIR}/PFS Fuse.elf"
     PFS_SHELL="${HELPER_DIR}/PFS Shell.elf"
     APA_FIXER="${HELPER_DIR}/PS2 APA Header Checksum Fixer.elf"
-    PSU_EXTRACT="${HELPER_DIR}/PSU Extractor.elf"
-    SQLITE="${HELPER_DIR}/sqlite"
 elif [[ "$arch" = "aarch64" ]]; then
     # ARM64
-    CUE2POPS="${HELPER_DIR}/aarch64/cue2pops"
     HDL_DUMP="${HELPER_DIR}/aarch64/HDL Dump.elf"
     MKFS_EXFAT="${HELPER_DIR}/aarch64/mkfs.exfat"
     PFS_FUSE="${HELPER_DIR}/aarch64/PFS Fuse.elf"
     PFS_SHELL="${HELPER_DIR}/aarch64/PFS Shell.elf"
     APA_FIXER="${HELPER_DIR}/aarch64/PS2 APA Header Checksum Fixer.elf"
-    PSU_EXTRACT="${HELPER_DIR}/aarch64/PSU Extractor.elf"
-    SQLITE="${HELPER_DIR}/aarch64/sqlite"
 fi
 
 serialnumber="$1"
@@ -377,9 +371,9 @@ fi
 SIZE_CHECK=$(lsblk -o NAME,SIZE -b | grep -w $(basename $DEVICE) | awk '{print $2}')
 
 # Convert size to GB
-size_gb=$(echo "$SIZE_CHECK / 1000000000" | bc)
+size_gb=$(echo "$SIZE_CHECK / (1024 * 1024 * 1024)" | bc)
         
-if (( size_gb < 32 )); then
+if (( size_gb < 31 )); then
     error_msg "Device is $size_gb GB. Required minimum is 32 GB."
 else
     echo "Device Name: $DEVICE" >> "${LOG_FILE}"
@@ -403,6 +397,34 @@ fi
 UNMOUNT_ALL
 clean_up
 
+echo
+echo "Please select a language from the list below:"
+echo
+echo "1) English"
+echo "2) Japanese"
+echo "3) German"
+echo
+read -p "Enter the number for your chosen language: " choice
+
+case "$choice" in
+    1)
+        LANG="eng"
+        ;;
+    2)
+        LANG="jpn"
+        ;;
+    3)
+        LANG="ger"
+        ;;
+    *)
+        echo
+        echo "Invalid selection. Defaulting to English." | tee -a "${LOG_FILE}"
+        LANG="eng"
+        ;;
+esac
+
+echo "Language set to: $LANG" >> "${LOG_FILE}"
+
 echo | tee -a "${LOG_FILE}"
 echo -n "Initialising the drive..." | tee -a "${LOG_FILE}"
 
@@ -424,17 +446,26 @@ output=$(sudo "${HDL_DUMP}" toc ${DEVICE} 2>&1)
 
 # Extract the "used" value, remove "MB" and any commas
 used=$(echo "$output" | awk '/used:/ {print $6}' | sed 's/,//; s/MB//')
-capacity=131072
+capacity=$(echo "$SIZE_CHECK / (1024 * 1024)" | bc)
 
 # Calculate available space (capacity - used)
-available=$((capacity - used - 6400))
-free_space=$((available / 1024))
-max_pops=$((available / 1024))
+
+if [ $capacity -gt 2097152 ]; then
+    available=$((2097152 - used - 6400 - 128 - 32))
+else
+    available=$((capacity - used - 6400 - 128 - 32))
+fi
+
+max_pops=$((available / 1024 - 1))
+
+if [ $max_pops -gt 130 ]; then
+    max_pops="130"
+fi
 
 echo | tee -a "${LOG_FILE}"
 echo | tee -a "${LOG_FILE}"
 SPLASH
-echo "====================================== Partitioning the Drive ======================================"
+echo "    ====================================== Partitioning the Drive ======================================"
 
 # Prompt user for partition size for POPS, Music and Contents, validate input, and keep asking until valid input is provided
 while true; do
@@ -463,9 +494,8 @@ while true; do
 
     # Convert bytes to MB
     pops_partition=$(( pops_gb * 1024 ))
-    SIZE_MB=$(( SIZE_CHECK / 1024 / 1024 ))
     APA_MiB=$(( pops_partition + used + 6400 +128 ))
-    DIFF_MB=$(( SIZE_MB - APA_MiB - 32 ))
+    DIFF_MB=$(( capacity - APA_MiB - 32 ))
 
     # Convert to GiB for display (1 GiB = 1024 MiB) with 2 decimal places
     OPL_GB=$(awk "BEGIN { printf \"%.2f\", ${DIFF_MB}/1024 }")
@@ -494,7 +524,7 @@ while true; do
 
 echo >> "${LOG_FILE}"
 echo "##########################################################################" >> "${LOG_FILE}"
-echo "Disk size: $SIZE_MB MB" >> "${LOG_FILE}"
+echo "Disk size: $capacity MB" >> "${LOG_FILE}"
 echo "POPS partition size: $pops_partition MB" >> "${LOG_FILE}"
 echo "Total APA Size: $APA_MiB MB" >> "${LOG_FILE}"
 echo "OPL partition size: $DIFF_MB MB" >> "${LOG_FILE}"
@@ -513,7 +543,6 @@ mount_pfs
 mkdir -p "${STORAGE_DIR}/__common"/{POPS,"Your Saves"} 2>> "${LOG_FILE}"
 mkdir -p "${STORAGE_DIR}/__system"/{osdmenu,osd100} 2>> "${LOG_FILE}" || error_msg "Failed to create OSDMenu folders."
 mkdir -p "${STORAGE_DIR}/__sysconf/osdmenu/" 2>> "${LOG_FILE}" || error_msg "Failed to create OSDMenu config folder."
-sudo cp "${ASSETS_DIR}/POPStarter/eng"/{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} "${STORAGE_DIR}/__common/POPS/" 2>> "${LOG_FILE}"
 cp "${ASSETS_DIR}/osdmenu/hosdmenu.elf" "${STORAGE_DIR}/__system/osdmenu/" 2>> "${LOG_FILE}" || error_msg "Failed to copy hosdmenu.elf."
 cp "${ASSETS_DIR}/extras"/{OSDSYS_A.XLF,FNTOSD,ICOIMAGE,JISUCS,SKBIMAGE,SNDIMAGE,TEXIMAGE} "${STORAGE_DIR}/__system/osd100/" 2>> "${LOG_FILE}" || error_msg "Failed to copy hosdmenu.elf."
 
@@ -615,7 +644,7 @@ sudo umount -l "${STORAGE_DIR}/recovery" 2>> "${LOG_FILE}"
 CHECK_PARTITIONS
 MOUNT_OPL
 
-if ! mkdir -p "${OPL}"/{APPS,ART,CFG,CHT,LNG,THM,VMC,CD,DVD,bbnl}; then
+if ! mkdir -p "${OPL}"/{APPS,ART,CFG,CHT,LNG,THM,VMC,CD,DVD}; then
     error_msg "Failed to create OPL folders."
 fi
 
@@ -624,7 +653,7 @@ echo | tee -a "${LOG_FILE}"
 
 printf "OSDMenu = %s\n" "$(cat "${ASSETS_DIR}/osdmenu/version.txt")" >> "${OPL}/version.txt"
 echo "APA_SIZE = $APA_MiB" >> "${OPL}/version.txt"
-echo "LANG = eng" >> "${OPL}/version.txt"
+echo "LANG = $LANG" >> "${OPL}/version.txt"
 
 UNMOUNT_OPL
 
