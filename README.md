@@ -26,7 +26,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 # Features
 - A full translation of the stock Japanese BB Navigator version 0.32 — All binaries, XML files, textures, and pictures have been translated[*](#known-issues)
 - Available in English, German and the original Japanese
-- Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#slim-ps2-console-model-scph-700xx) or similar hardware mod, regardless of region
+- Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#early-scph-1000018000-and-slim-scph-700xx-consoles) or similar hardware mod, regardless of region
 - DNAS authorization checks bypassed to enable access the online channels
 - English translations of the [online game channels](#game-channel) from Sony, Hudson, EA, Konami, Capcom, Namco, KOEI, and Bandai hosted by vitas155 at [psbbn.ru](https://psbbn.ru/) (work in progress)
 - Access the original Japanese [online game channels](#game-channel) if you select Japanese as your language
@@ -476,7 +476,7 @@ You will also need an HDD/SSD for your PS2 that is at least 32 GB, ideally betwe
 ## Installing on Linux
 64-bit Debian-based distributions using `apt`, Arch-based distributions using `pacman`, and Fedora-based[*](#troubleshooting) distributions using `dnf` are supported. Nix-based systems are also supported via flakes. Recommended distributions are Linux Mint, and for Raspberry Pi, Raspberry Pi OS.
 
-**The PSBBN Definitive Project is a rolling release. To get automatic updates and the latest bug fixes, you must install the scripts using `git clone`++++.**
+**The PSBBN Definitive Project is a rolling release. To get automatic updates and the latest bug fixes, you must install the scripts using `git clone`.**
 
 Install git, for Debian-based distributions run:
 ```
@@ -593,7 +593,7 @@ Fully automates the installation of PS1 and PS2 games, as well as homebrew apps:
 - Offers the option to apply a HDTV fix for PS1 games, useful for users with a TV that does not support 240p
 - Offers the option to [synchronise](#synchronize-all-games-and-apps) the games and apps on your PC with your PS2's drive, or to [add additional](#add-additional-games-and-apps) games and apps
 - Automatically converts PS2 games in `BIN/CUE` format to `ISO` when placed in the `CD` folder on your PC, and PS1 games in `BIN/CUE` format to `VCD` when placed in the `POPS` folder on your PC
-- Creates [Virtual Memory Cards (VMCs)](#popstarter-and-virtual-memory-cards) for all PS1 games. Creates VMC Groups for for games that can interact with each other's save data
+- Creates [Virtual Memory Cards (VMCs)](#popstarter-and-virtual-memory-cards) for all PS1 games. Creates VMC Groups for games that can interact with each other's save data
 - Creates all assets including meta-data, artwork and icons for all your games/apps:
   - Downloads artwork for the PSBBN [Game Collection](#game-collection) from the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database) or IGN if not found in the database
   - Automatically contributes game artwork downloaded from IGN and reports missing artwork to the [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database)
@@ -627,7 +627,7 @@ Select **Install Media** from the main menu and you will be presented with the f
 ### Music Installer
 Install music for playback on the [PSBBN Music Channel](#music-channel). To use the Music Installer, you must be running **PSBBN Definitive Project version 3.00 or later**. If you have previously upgraded from a lower version, you must [Initialise the Music Partition](#initialise-music-partition) first.
 
-Supported formats are `.mp3`, `.m4a`, `.flac` and `.ogg`. Each file’s metadata must include the album title and track number. Place your music files in the default `music` folder, or choose a custom location using [Set Media Location](#set-media-location) and place the files its `music` subfolder.
+Supported formats are `.mp3`, `.m4a`, `.flac` and `.ogg`. Each file’s metadata must include the album title and track number. Place your music files in the default `music` folder, or choose a custom location using [Set Media Location](#set-media-location) and place the files in the `music` subfolder.
 
 ### Set Media Location
 Set a custom location for your `media` folder. Music should be placed in a `music` subfolder.
@@ -663,7 +663,7 @@ This option lets you swap the functions of the **×** and **○** buttons on you
 # Notes
 
 ## OSDMenu MBR
-Written by [pcm720](https://github.com/pcm720). This program is executed on every system boot or when an application is launched from **PSBBN**. It is a homebrew replacement for Sony’s original MBR program. It is responsible for initializing the hardware, launching applications and game discs.
+Written by [pcm720](https://github.com/pcm720). This program is executed on every system boot and when an application is launched from **PSBBN**. It is a homebrew replacement for Sony’s original MBR program. It is responsible for initializing the hardware, launching applications and game discs.
 
 **OSDMenu MBR** comes with many advantages over the original implementation including support for launching ELFs by holding a gamepad button at startup, skipping the "PlayStation 2" logo when [launching PS2 game discs](#launching-ps1-and-ps2-game-discs), adjusting video modes when [launching imported PS1 game discs](#launching-ps1-and-ps2-game-discs), [Visual Game ID](#game-id) for the Retro GEM, modifying system settings, and launching games via [OPL](#open-ps2-loader-opl), [NHDDL](#neutrino-and-nhddl) and [POPStarter](#popstarter-and-virtual-memory-cards).
 
@@ -779,7 +779,7 @@ A fork of [wLaunchELF](https://github.com/ps2homebrew/wLaunchELF) written by [Ma
 **Warning: Manually creating new APA partitions on your PS2 drive and exceeding the allocated space for APA will corrupt the drive.**
 
 ## Early (SCPH-10000–18000) and Slim (SCPH-700xx) Consoles
-The **PSBBN Definitive Project** can be installed on PS2 Slim **SCPH-700xx** models with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar hardware mod. Installing to a SD card is not supported, A SATA drive must be used.
+The **PSBBN Definitive Project** can be installed on PS2 Slim **SCPH-700xx** models with an [IDE Resurrector](https://gusse.in/shop/ps2-modding-parts/ide-resurrector-origami-v0-7-flex-cable-for-ps2-slim-spch700xx/) or similar hardware mod. Installing to a SD card is not supported, A SATA adapter must be used, such as the [iFlash-Sata v10](https://www.iflash.xyz/store/iflash-sata-v10/).
 
 You must also download the [External HDD Drivers](https://israpps.github.io/FreeMcBoot-Installer/test/8_Downloads.html). Extract the files and place `hddload.irx`, `dev9.irx`, and `atad.irx` in the appropriate system folder for your region on an **official Sony PS2 Memory Card**:
 
@@ -845,7 +845,7 @@ If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL
 **Patch Features**
 - A full English translation of the stock Japanese BB Navigator version 0.32
 - All binaries, XML files, textures, and pictures have been translated*
-- Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#slim-ps2-console-model-scph-700xx) or similar hardware mod, regardless of region
+- Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#early-scph-1000018000-and-slim-scph-700xx-consoles) or similar hardware mod, regardless of region
 - DNAS authorization checks bypassed to enable access the online channels
 - Online game channels from Sony, Hudson, EA, Konami, Capcom, Namco, and KOEI have been translated into English. Hosted courtesy of vitas155 at [psbbn.ru](https://psbbn.ru/)
 - "Audio Player" feature re-added to the Music Channel from an earlier release of PSBBN, allowing compatibility with NetMD MiniDisc Recorders
