@@ -22,24 +22,14 @@ URL="https://archive.org/download/psbbn-definitive-patch-v4.1"
 
 if [[ "$arch" = "x86_64" ]]; then
     # x86-64
-    CUE2POPS="${HELPER_DIR}/cue2pops"
     HDL_DUMP="${HELPER_DIR}/HDL Dump.elf"
-    MKFS_EXFAT="${HELPER_DIR}/mkfs.exfat"
     PFS_FUSE="${HELPER_DIR}/PFS Fuse.elf"
     PFS_SHELL="${HELPER_DIR}/PFS Shell.elf"
-    APA_FIXER="${HELPER_DIR}/PS2 APA Header Checksum Fixer.elf"
-    PSU_EXTRACT="${HELPER_DIR}/PSU Extractor.elf"
-    SQLITE="${HELPER_DIR}/sqlite"
 elif [[ "$arch" = "aarch64" ]]; then
     # ARM64
-    CUE2POPS="${HELPER_DIR}/aarch64/cue2pops"
     HDL_DUMP="${HELPER_DIR}/aarch64/HDL Dump.elf"
-    MKFS_EXFAT="${HELPER_DIR}/aarch64/mkfs.exfat"
     PFS_FUSE="${HELPER_DIR}/aarch64/PFS Fuse.elf"
     PFS_SHELL="${HELPER_DIR}/aarch64/PFS Shell.elf"
-    APA_FIXER="${HELPER_DIR}/aarch64/PS2 APA Header Checksum Fixer.elf"
-    PSU_EXTRACT="${HELPER_DIR}/aarch64/PSU Extractor.elf"
-    SQLITE="${HELPER_DIR}/aarch64/sqlite"
 fi
 
 error_msg() {
@@ -222,7 +212,7 @@ detect_drive() {
         echo | tee -a "${LOG_FILE}"
         echo "[X] Error: Unable to detect the PS2 drive. Please ensure the drive is properly connected." | tee -a "${LOG_FILE}"
         echo
-        echo "You must install PSBBN first before insalling extras."
+        echo "You must install PSBBN or HOSDMenu before insalling extras."
         echo
         read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
         return 1
@@ -307,23 +297,40 @@ download_linux() {
 }
 
 CHECK_PARTITIONS() {
-    TOC_OUTPUT=$(sudo "${HDL_DUMP}" toc "${DEVICE}")
-    STATUS=$?
 
-    if [ $STATUS -ne 0 ]; then
-        error_msg "APA partition is broken on ${DEVICE}. Install failed."
+    # only grab the partition name column from lines that begin with 0x0100 or 0x0001
+    mapfile -t names < <(grep -E '^0x0[01][0-9A-Fa-f]{2}' "${hdl_output}" | awk '{print $NF}')
+
+    has_all() {
+        local targets=("$@")
+        for t in "${targets[@]}"; do
+            local found=false
+            for n in "${names[@]}"; do
+                if [[ "$n" == "$t" ]]; then
+                    found=true
+                    break
+                fi
+            done
+            # If any required partition is missing, return failure immediately
+            $found || return 1
+        done
+        return 0  # all partitions found
+        }
+
+    psbbn_parts=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.8 __linux.9 __contents)
+    hosd_parts=(__system __sysconf __.POPS __common)
+
+    if has_all "${psbbn_parts[@]}"; then
+        echo "PSBBN Detected" >> "${LOG_FILE}"
+        OS="PSBBN"
+    elif has_all "${hosd_parts[@]}"; then
+        echo "HOSDMenu Detected" >> "${LOG_FILE}"
+        OS="HOSD"
+    else
+        error_msg "[X] Error: Failed to detect PSBBN or HOSDMenu on ${DEVICE}."
+        return 1
     fi
 
-    # List of required partitions
-    required=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.8 __linux.9 __contents __system __sysconf __.POPS __common)
-
-    # Check all required partitions
-    for part in "${required[@]}"; do
-        if ! echo "$TOC_OUTPUT" | grep -Fq "$part"; then
-            error_msg "[X] Error: This feature requires PSBBN." " " "Some partitions are missing on ${DEVICE}. See log for details."
-            exit 1
-        fi
-    done
 }
 
 PFS_COMMANDS() {
@@ -503,16 +510,18 @@ cat << "EOF"
 
                                 
 EOF
-}                         
+}
 
 # Function for Option 1 - Install PS2 Linux
 option_one() {
     echo "########################################################################################################" >> "${LOG_FILE}"
     echo "Install PS2 Linux:" >> "${LOG_FILE}"
     LINUX_SPLASH
+    if [ "$OS" = "HOSD" ]; then
+        error_msg "[X] Error: PSBBN is not installed. Please install PSBBN to use this feature."
+        return 1
+    fi
 
-
-    detect_drive   && \
     MOUNT_OPL || return 1
     
     psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
@@ -717,7 +726,11 @@ option_two() {
     echo "Reassign Buttons:" >> "${LOG_FILE}"
     SWAP_SPLASH
 
-    detect_drive    && \
+    if [ "$OS" = "HOSD" ]; then
+        error_msg "[X] Error: PSBBN is not installed. Please install PSBBN to use this feature."
+        return 1
+    fi
+
     MOUNT_OPL   || return 1
     
     psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
@@ -768,7 +781,7 @@ EOF
                     && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1
                 then
                     SWAP_SPLASH
-                    echo "================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
+                    echo "    ================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
                     echo
                     read -n 1 -s -r -p "                                Press any key to return to the menu..." </dev/tty
                 else
@@ -787,7 +800,7 @@ EOF
                     && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1
                 then
                     SWAP_SPLASH
-                    echo "================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
+                    echo "    ================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
                     echo
                     read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
                 else
@@ -820,19 +833,20 @@ option_three() {
     
     LANGUAGE_SPLASH
 
-    detect_drive    && \
     MOUNT_OPL   || return 1
     
-    psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
+    if [ "$OS" = "PSBBN" ]; then
+        psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
     
-    if [[ "$(printf '%s\n' "$psbbn_version" "2.10" | sort -V | head -n1)" != "2.10" ]]; then
-        # $psbbn_version < 2.10
-        error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.1.0." "To update, please select 'Install PSBBN' from the main menu and try again."
-        exit 1
-    elif [[ "$(printf '%s\n' "$psbbn_version" "4.1.0" | sort -V | head -n1)" = "$psbbn_version" ]] \
-        && [[ "$psbbn_version" != "4.1.0" ]]; then
-        error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.1.0." "To update, please select “Update PSBBN Software” from the main menu and try again."
-        exit 1
+        if [[ "$(printf '%s\n' "$psbbn_version" "2.10" | sort -V | head -n1)" != "2.10" ]]; then
+            # $psbbn_version < 2.10
+            error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.1.0." "To update, please select 'Install PSBBN' from the main menu and try again."
+            exit 1
+        elif [[ "$(printf '%s\n' "$psbbn_version" "4.1.0" | sort -V | head -n1)" = "$psbbn_version" ]] \
+            && [[ "$psbbn_version" != "4.1.0" ]]; then
+            error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.1.0." "To update, please select “Update PSBBN Software” from the main menu and try again."
+            exit 1
+        fi
     fi
 
     while :; do
@@ -874,55 +888,64 @@ EOF
     echo "Language selected: $LANG_DISPLAY" >> "${LOG_FILE}"
     LANGUAGE_SPLASH
 
-    # Download the HTML of the page
-    HTML_FILE=$(mktemp)
-    timeout 20 wget -O "$HTML_FILE" "$URL" -o - >> "$LOG_FILE" 2>&1 &
-    WGET_PID=$!
 
-    spinner $WGET_PID "Checking for latest version of the PSBBN Definitive Patch"
+    if [ "$OS" = "PSBBN" ]; then
+        # Download the HTML of the page
+        HTML_FILE=$(mktemp)
+        timeout 20 wget -O "$HTML_FILE" "$URL" -o - >> "$LOG_FILE" 2>&1 &
+        WGET_PID=$!
 
-    get_latest_file "language-pak-$LANG" "$LANG_DISPLAY language pack" || return 1
-    downoad_latest_file "language-pak" || return 1
-    LANG_PACK="${ASSETS_DIR}/${LATEST_FILE}"
+        spinner $WGET_PID "Checking for latest version of the PSBBN Definitive Patch"
 
-    if [[ "$LANG" == "jpn" ]]; then
-        get_latest_file "channels-$LANG" "$LANG_DISPLAY channels" || return 1
-        downoad_latest_file "channels" || return 1
-        CHANNELS="${ASSETS_DIR}/${LATEST_FILE}"
-    fi
+        get_latest_file "language-pak-$LANG" "$LANG_DISPLAY language pack" || return 1
+        downoad_latest_file "language-pak" || return 1
+        LANG_PACK="${ASSETS_DIR}/${LATEST_FILE}"
 
-    sed -i "s/^LANG =.*/LANG = $LANG/" "$OPL/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
-    sed -i "s|^LANG_VER =.*|LANG_VER = $LATEST_LANG|" "${OPL}/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
-    sed -i "s|^CHAN_VER =.*|CHAN_VER = $LATEST_CHAN|" "${OPL}/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
+        if [[ "$LANG" == "jpn" ]]; then
+            get_latest_file "channels-$LANG" "$LANG_DISPLAY channels" || return 1
+            downoad_latest_file "channels" || return 1
+            CHANNELS="${ASSETS_DIR}/${LATEST_FILE}"
+        fi
 
-    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.9" )
-    APA_PARTITIONS=("__system" "__sysconf" "__common")
+        sed -i "s/^LANG =.*/LANG = $LANG/" "$OPL/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
+        sed -i "s|^LANG_VER =.*|LANG_VER = $LATEST_LANG|" "${OPL}/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
+        sed -i "s|^CHAN_VER =.*|CHAN_VER = $LATEST_CHAN|" "${OPL}/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
 
-    clean_up   && \
-    mapper_probe || return 1
-    sudo mke2fs -t ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}__linux.9" >> "${LOG_FILE}" 2>&1 || { error_msg "[X] Error: Failed to initialise channels filesystem." "See ${LOG_FILE} for details."; return 1; }
-    mount_cfs    && \
-    mount_pfs    || return 1
+        LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.9" )
+        APA_PARTITIONS=("__system" "__sysconf" "__common")
 
-    ls -l /dev/mapper >> "${LOG_FILE}"
-    df >> "${LOG_FILE}"
+        clean_up   && \
+        mapper_probe || return 1
+        sudo mke2fs -t ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}__linux.9" >> "${LOG_FILE}" 2>&1 || { error_msg "[X] Error: Failed to initialise channels filesystem." "See ${LOG_FILE} for details."; return 1; }
+        mount_cfs    && \
+        mount_pfs    || return 1
 
-    echo
-    echo -n "Installing language pack..."
-    sudo tar zxpf "$LANG_PACK" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || { error_msg "[X] Error: Failed to install $LANG_DISPLAY language pack." "See ${LOG_FILE} for details."; return 1; }
+        ls -l /dev/mapper >> "${LOG_FILE}"
+        df >> "${LOG_FILE}"
 
-    if [[ "$LANG" == "jpn" ]]; then
-        cp -f "${ASSETS_DIR}/kernel/vmlinux_jpn" "${STORAGE_DIR}/__system/p2lboot/vmlinux" 2>> "${LOG_FILE}" || { error_msg "[X] Error: Failed to copy kernel file."; return 1; }
-        sudo tar zxpf "${CHANNELS}" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || { error_msg "[X] Error: Failed to install channels." "See ${LOG_FILE} for details."; return 1; }
+        echo
+        echo -n "Installing language pack..."
+        sudo tar zxpf "$LANG_PACK" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || { error_msg "[X] Error: Failed to install $LANG_DISPLAY language pack." "See ${LOG_FILE} for details."; return 1; }
+
+        if [[ "$LANG" == "jpn" ]]; then
+            cp -f "${ASSETS_DIR}/kernel/vmlinux_jpn" "${STORAGE_DIR}/__system/p2lboot/vmlinux" 2>> "${LOG_FILE}" || { error_msg "[X] Error: Failed to copy kernel file."; return 1; }
+            sudo tar zxpf "${CHANNELS}" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || { error_msg "[X] Error: Failed to install channels." "See ${LOG_FILE} for details."; return 1; }
+        else
+            cp -f "${ASSETS_DIR}/kernel/vmlinux" "${STORAGE_DIR}/__system/p2lboot/vmlinux" 2>> "${LOG_FILE}" || { error_msg "[X] Error: Failed to copy kernel file."; return 1; }
+        fi
+
+        mkdir -p "${SCRIPTS_DIR}/tmp"
+        cp "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to copy OSDMBR.CNF."; return 1; }
+        sed -i "s/^osd_language =.*/osd_language = $LANG/" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to update language in OSDMBR.CNF."; return 1; }
+        cp -f "${OSDMBR_CNF}" "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" || { error_msg "[X] Error: Failed to replace OSDMBR.CNF."; return 1; }
     else
-        cp -f "${ASSETS_DIR}/kernel/vmlinux" "${STORAGE_DIR}/__system/p2lboot/vmlinux" 2>> "${LOG_FILE}" || { error_msg "[X] Error: Failed to copy kernel file."; return 1; }
+        sed -i "s/^LANG =.*/LANG = $LANG/" "$OPL/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
+        APA_PARTITIONS=("__common")
+        clean_up   && \
+        mapper_probe && \
+        mount_pfs    || return 1
     fi
 
-    mkdir -p "${SCRIPTS_DIR}/tmp"
-    cp "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to copy OSDMBR.CNF."; return 1; }
-    sed -i "s/^osd_language =.*/osd_language = $LANG/" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to update language in OSDMBR.CNF."; return 1; }
-    cp -f "${OSDMBR_CNF}" "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" || { error_msg "[X] Error: Failed to replace OSDMBR.CNF."; return 1; }
-    
     if [[ "$LANG" == "jpn" ]]; then
         rm -f "${STORAGE_DIR}/__common/POPS/"{IGR_BG.TM2,IGR_NO.TM2,IGR_YES.TM2} 2>> "${LOG_FILE}" || { error_msg "[X] Error: Update POPS IGR textures."; return 1; }
     else
@@ -953,14 +976,18 @@ EOF
     LANGUAGE_SPLASH
     echo "    ${left_pad}${msg}${right_pad}"
     echo
-    echo "      It's recommended to rerun the Game Installer and choose \"Add Additional Games and Apps\" to"
-    echo "      update the game titles and PlaySation game manuals to your selected language."
-    echo
-    echo "      If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
+    echo "      It is recommended to rerun the Game Installer and choose \"Add Additional Games and Apps\" to"
+    if [ "$OS" = "PSBBN" ]; then
+        echo "      update the game titles and PlaySation game manuals to your selected language."
+        echo
+        echo "      If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
+    else
+        echo "      update the game titles to your selected language."
+    fi
     echo
     echo "    ===================================================================================================="
     echo
-    read -n 1 -s -r -p "                                Press any key to return to the menu..." </dev/tty
+    read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
     
 }
 
@@ -1016,7 +1043,8 @@ cat /etc/*-release >> "${LOG_FILE}" 2>&1
 
 EXTRAS_SPLASH
 detect_drive || exit 1
-CHECK_PARTITIONS
+HDL_TOC || exit 1
+CHECK_PARTITIONS || exit 1
 
 if ! sudo rm -rf "${STORAGE_DIR}"; then
     error_msg "Failed to remove $STORAGE_DIR folder."
