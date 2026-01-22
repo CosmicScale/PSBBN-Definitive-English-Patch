@@ -560,6 +560,7 @@ Performs a fresh install **[HOSDMenu](#hosdmenu)**.
 6. [Optional Extras](#optional-extras)  
    1. [Install PS2 Linux](#ps2-linux)
    2. [Reassign Cross and Circle Buttons](#reassign-cross-and-circle-buttons) 
+   3. [Change Language](#change-language)
 
 ## Install PSBBN and HOSDMenu
 Installs both **PSBBN** and [HOSDMenu](#hosdmenu). Requires and official Sony Network Adapter:
@@ -579,9 +580,9 @@ Selecting this option checks online for the latest versions of the **PSBBN Syste
 Installs [HOSDMenu](#hosdmenu) without PSBBN. Compatible with 3rd party HDD adapters:
 - Formats the drive for a clean installation
 - Installs [OSDMenu MBR](#osdmenu-mbr) and [HOSDMenu](#hosdmenu)
-- Creates a partition for [POPS](#popstarter-and-virtual-memory-cards) (to store PS1 games) with user-defined size on the first 128 GB of the drive.
-- Reserves space for 800 **Launcher partitions**, used to launch games and apps.
-- Runs [APA-Jail](#apa-jail), creating an exFAT partition using all remaining disk space (up to 2 TB) for the storage of PS2 games and apps
+- Creates a partition for [POPS](#popstarter-and-virtual-memory-cards) (to store PS1 games) with a user-defined size up to 130 GB
+- Reserves space for 800 **Launcher partitions**, used to launch games and apps
+- Runs [APA-Jail](#apa-jail), creating an exFAT partition using all remaining disk space (up to 2 TB) for the storage of PS2 games and homebrew apps
 
 ## Game and App Installer
 Fully automates the installation of PS1 and PS2 games, as well as homebrew apps:
@@ -639,8 +640,10 @@ Erases all music data from **PSBBN** and resets the music database. Use this opt
 Select **Optional Extras** from the main menu and you will be presented with the following option:
 1. [Install PS2 Linux](#ps2-linux)
 2. [Reassign Cross and Circle Buttons](#reassign-cross-and-circle-buttons)
+3. [Change Language](#change-language)
 
 ### PS2 Linux
+**NOTE: This feature is for PSBBN only.**  
 PlayStation 2 Linux is an official kit from Sony that turned the PS2 into a Linux-based personal computer.  
 The **Install PS2 Linux** option allows you to install or reinstall PS2 Linux. To install PS2 Linux, you must be running **PSBBN Definitive Project version 4.0.0 or later**.
 
@@ -658,7 +661,17 @@ When reinstalling Linux:
 - Launching the **Dillo** web browser will open a mirror of the old official PS2 Linux website, where you can find a wide range of software to download and try.  
 
 ### Reassign Cross and Circle Buttons
+**NOTE: This feature is for PSBBN only.**  
 This option lets you swap the functions of the **×** and **○** buttons on your controller. You can choose between the standard layout (**×** = enter, **○** = back) or the alternate layout (**○** = enter, **×** = back), depending on your preference.
+
+### Change Language
+When **PSBBN** is installed, this option changes the system language of PSBBN. For Japanese users, it also downloads and installs the Japanese versions of the [Online Game Channels](#game-channel).
+
+For both **PSBBN** and [HOSDMenu](#hosdmenu) users, this option also updates the [POPS](#popstarter-and-virtual-memory-cards) IGR message and the language preference used by the [Game Installer](#game-and-app-installer).
+
+After changing the language, it is recommended that you rerun the [Game Installer](#game-and-app-installer) and select *Add Additional Games and Apps* to update game titles to your selected language. For PSBBN users, this will also update PlayStation game manuals.
+
+PSBBN users who previously swapped the **×** and **○** buttons using the [Reassign Cross and Circle Buttons](#reassign-cross-and-circle-buttons) option should run it again after changing the language.
 
 # Notes
 
@@ -795,6 +808,17 @@ You must also download the [External HDD Drivers](https://israpps.github.io/Free
 
 # Troubleshooting
 
+## Problems Running the Script
+If you encounter errors while installing PSBBN, installing games, or performing other tasks, try the following:
+1. Make sure you are running the latest version of your operating system and that it is fully updated
+2. Use a recommended OS. The **PSBBN Definitive Project** has been fully tested on:
+- Linux Mint
+- Raspberry Pi OS
+- Windows 10 Home Edition
+- Windows 11 Home Edition
+3. Try installing to a different HDD or SSD
+4. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection, or use a different USB adapter
+
 ## Problems Launching PSBBN and HOSDMenu
 When you connect the drive to your PS2 console and power it on, **PSBBN** or **[HOSDMenu](#hosdmenu)** should automatically launch.
 
@@ -805,7 +829,7 @@ If your console boots to the regular OSD or freezes, it means that your drive ha
 2. Check that the connectors on the console and network/HDD adapter are clean and free of dust/debris
 3. Ensure the network/HDD adapter and drive are securely connected to the console
 4. If using a SATA mod, make sure it has been installed correctly
-5. Try using a different HDD/SSD
+5. Try installing to a different HDD or SSD
 6. Try using a different IDE converter/SATA mod
 7. Try using a different official Sony Network Adapter or 3rd-party HDD adapter
 8. Try a different PS2 console
@@ -819,7 +843,7 @@ If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL
 4. Ensure the network/HDD adapter and drive are securely connected to the console
 5. If using a SATA mod, make sure it has been installed correctly
 6. Re-run the [Game Installer](#game-and-app-installer) and select the alternative game launcher ([OPL](#open-ps2-loader-opl)/[Neutrino](#neutrino-and-nhddl))
-7. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or a different USB adapter, then reinstall [PSBBN](#install-psbbn-and-hosdmenu) or [HOSDMenu](#install-hosdmenu-only)
+7. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection or use a different USB adapter, then reinstall [PSBBN](#install-psbbn-and-hosdmenu) or [HOSDMenu](#install-hosdmenu-only)
 8. Try using a different HDD/SSD and then reinstall [PSBBN](#install-psbbn-and-hosdmenu) or [HOSDMenu](#install-hosdmenu-only)
 9. Try using a different IDE converter/SATA mod on your console
 10. Try a different PS2 console
