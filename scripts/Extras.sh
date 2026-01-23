@@ -857,6 +857,7 @@ option_three() {
                                1) English
                                2) Japanese
                                3) German
+                               4) Italian
 
 EOF
         read -rp "                               Select an option: " choice
@@ -875,6 +876,11 @@ EOF
             3)
                 LANG="ger"
                 LANG_DISPLAY="German"
+                break
+                ;;
+            4)
+                LANG="ita"
+                LANG_DISPLAY="Italian"
                 break
                 ;;
             *)

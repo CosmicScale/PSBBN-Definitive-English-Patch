@@ -25,7 +25,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 # Features
 - A full translation of the stock Japanese BB Navigator version 0.32 — All binaries, XML files, textures, and pictures have been translated[*](#known-issues)
-- Available in English, German and the original Japanese
+- Available in English, German, Italian, and the original Japanese
 - Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#early-scph-1000018000-and-slim-scph-700xx-consoles) or similar hardware mod, regardless of region
 - DNAS authorization checks bypassed to enable access the online channels
 - English translations of the [online game channels](#game-channel) from Sony, Hudson, EA, Konami, Capcom, Namco, KOEI, and Bandai hosted by vitas155 at [psbbn.ru](https://psbbn.ru/) (work in progress)
@@ -60,7 +60,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 The PSBBN Definitive English Patch started life in 2023 as an English language patch for PSBBN, this work has steadily expanded well beyond its original scope. Going forward, it will now collectively be called the **PSBBN Definitive Project**.
 
-PSBBN is now available in English, German and the original Japanese, with French and Italian translations coming soon. You will be given a choice of languages when installing PSBBN. The language can also be changed later in the **[Extras Menu](#optional-extras)**.
+PSBBN is now available in English, German, Italian, and the original Japanese, with a French translation coming soon. You will be given a choice of languages when installing PSBBN. The language can also be changed later in the **[Extras Menu](#optional-extras)**.
 
 When the language is set to Japanese, titles of Japanese-region games are displayed in Japanese and sorted in “gojūon” (五十音) order in both the **[PSBBN Game Collection](#game-collection)** and the **[HOSDMenu Browser](#hosdmenu)**. In addition, the original Japanese online channels are also accessible from the **[Game Channel](#game-channel)**.
 
@@ -575,6 +575,7 @@ Selecting this option checks online for the latest versions of the **PSBBN Syste
 ## Install HOSDMenu only
 Installs [HOSDMenu](#hosdmenu) without PSBBN. Compatible with 3rd party HDD adapters:
 - Formats the drive for a clean installation
+- Prompts you to select a language
 - Installs [OSDMenu MBR](#osdmenu-mbr) and [HOSDMenu](#hosdmenu)
 - Creates a partition for [POPS](#popstarter-and-virtual-memory-cards) (to store PS1 games) with a user-defined size up to 130 GB
 - Reserves space for 800 **Launcher partitions**, used to launch games and apps
@@ -661,7 +662,7 @@ When reinstalling Linux:
 This option lets you swap the functions of the **×** and **○** buttons on your controller. You can choose between the standard layout (**×** = enter, **○** = back) or the alternate layout (**○** = enter, **×** = back), depending on your preference.
 
 ### Change Language
-When **PSBBN** is installed, this option changes the system language of PSBBN. For Japanese users, it also downloads and installs the Japanese versions of the [Online Game Channels](#game-channel).
+When **PSBBN** is installed, this option changes the system language of PSBBN. Select from English, German, Italian, and the original Japanese. More languages will be added with future updates. For Japanese users, it also downloads and installs the Japanese versions of the [Online Game Channels](#game-channel).
 
 For both **PSBBN** and [HOSDMenu](#hosdmenu) users, this option also updates the [POPS](#popstarter-and-virtual-memory-cards) IGR message and the language preference used by the [Game Installer](#game-and-app-installer).
 
@@ -1001,6 +1002,7 @@ Disable DNAS Authentication:
 - PSBBN Definitive Project project by [CosmicScale](https://github.com/CosmicScale)
 - PSBBN English translation by [CosmicScale](https://github.com/CosmicScale)
 - PSBBN German translation by [Argo707](https://github.com/Argo707) 
+- PSBBN Italian translation by [lcipria](https://github.com/lcipria) 
 - `PSBBN-Definitive-Patch.sh`, `Setup.sh`, `PSBBN-Installer.sh`, `HOSDMenu-Installer.sh`, `Game-Installer.sh`, `Media-Installer.sh`, `music-installer.py`, `Extras.sh`, `art_downloader.py`, `list-sorter.py`, `txt_to_icon_sys.py`, `AppDB.csv`, `vmc_groups.list` written by [CosmicScale](https://github.com/CosmicScale)
 - `ps2iconmaker.sh` written by [Sakitoshi](https://github.com/Sakitoshi) and [CosmicScale](https://github.com/CosmicScale)
 - `PSBBN-Launcher-For-Windows.ps1` written by Yornn

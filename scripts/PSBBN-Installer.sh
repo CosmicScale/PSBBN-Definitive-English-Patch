@@ -610,6 +610,7 @@ if [ "$MODE" = "install" ]; then
     echo "1) English"
     echo "2) Japanese"
     echo "3) German"
+    echo "4) Italian"
     echo
     read -p "Enter the number for your chosen language: " choice
 
@@ -626,6 +627,10 @@ if [ "$MODE" = "install" ]; then
         3)
             LANG="ger"
             LANG_DISPLAY="German"
+            ;;
+        4)
+            LANG="ita"
+            LANG_DISPLAY="Italian"
             ;;
         *)
             echo
@@ -759,24 +764,24 @@ if [ "$PSBBN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
     if [ "$MODE" = "update" ]; then
         UPDATE_SPLASH
     fi
-    echo "================================== PSBBN Definitive Patch v$LATEST_VERSION ==================================="
+    echo "====================================== PSBBN Definitive Patch v$LATEST_VERSION ======================================="
     if [ "$LATEST_VERSION" = "4.1.0" ]; then
         echo
-        echo "        NEW! Multilingual Support:"
-        echo "        - The PSBBN Definitive Patch now supports English, Japanese and German"
-        echo "        - Select your preferred language during PSBBN installation"
-        echo "        - The language can also be changed later from the Extras menu"
-        echo "        - When the language is set to Japanese, Japan-region games will be displayed in the"
-        echo "          Game Collection on HOSDMenu using their Japanese titles."
-        echo "        - When the language is set to Japanese, the original Japanese online Game Channels"
-        echo "          can be accessed from the Game Channel."
+        echo "            NEW! Multilingual Support:"
+        echo "            - The PSBBN Definitive Patch now supports English, Japanese, German and Italian"
+        echo "            - Select your preferred language during PSBBN installation"
+        echo "            - The language can also be changed later from the Extras menu"
+        echo "            - When the language is set to Japanese, Japan-region games will be displayed in the"
+        echo "              Game Collection on HOSDMenu using their Japanese titles."
+        echo "            - When the language is set to Japanese, the original Japanese online Game Channels"
+        echo "              can be accessed from the Game Channel."
         echo
-        echo "    Full Release notes on GitHub: https://github.com/CosmicScale/PSBBN-Definitive-English-Patch"  
+        echo "        Full Release notes on GitHub: https://github.com/CosmicScale/PSBBN-Definitive-English-Patch"  
         echo
-        echo "    Watch the latest video covering this update: https://youtu.be/dvCt_ExHwro"
+        echo "        Watch the latest video covering this update: https://youtu.be/dvCt_ExHwro"
     fi
     echo
-    echo "===================================================================================================="
+    echo "============================================================================================================"
     echo
     read -n 1 -s -r -p "                               Press any key to return to continue..." </dev/tty
     echo
@@ -823,7 +828,7 @@ if [ "$MODE" = "install" ]; then
     # Prompt user for partition size for POPS, Music and Contents, validate input, and keep asking until valid input is provided
     while true; do
         INSTALL_SPLASH
-        echo "====================================== Partitioning the Drive ======================================"
+        echo "========================================== Partitioning the Drive =========================================="
         echo | tee -a "${LOG_FILE}"
         echo "Partitioning the first 128 GB of the drive."
         echo "Remaining space: $free_space GB" | tee -a "${LOG_FILE}"
@@ -1303,7 +1308,7 @@ if [ "$MODE" = "install" ]; then
     echo "[✓] PSBBN Successfully Installed!" | tee -a "${LOG_FILE}"
 else
     UPDATE_SPLASH
-    echo "    ================================== [✓] PSBBN Successfully Updated =================================" | tee -a "${LOG_FILE}"
+    echo "====================================== [✓] PSBBN Successfully Updated =====================================" | tee -a "${LOG_FILE}"
     echo
     if [ "$PSBBN_UPDATE" != "no" ]; then
         echo "      PSBBN System Software updated to version: $LATEST_VERSION"
@@ -1332,7 +1337,7 @@ else
         echo "      If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
         echo
     fi
-    echo "    ===================================================================================================="
+    echo "============================================================================================================"
 fi
 echo
 read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
