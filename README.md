@@ -528,7 +528,7 @@ Simply right-click on `PSBBN-Launcher-For-Windows.ps1` and select **Run with Pow
 **NOTE:**  
 It is normal for the selected drive to be unmounted in Windows while running the script. Always exit the **[PSBBN Definitive Project Main Menu](main-menu)** by pressing `q`. This ensures the drive is safely unmounted from WSL and returned to Windows. For USB drives, remember to also eject them from the Windows system tray before unplugging them.
 
-If you experience any issues while running the PSBBN Launcher for Windows, see **[troubleshooting](#troubleshooting)**.
+If you experience any issues while running the PSBBN Launcher for Windows, see **[troubleshooting](#problems-running-the-script)**.
 
 ## Main Menu
 `PSBBN-Definitive-Patch.sh` is your gateway to the **PSBBN Definitive Project**. Running this script launches the main menu.  
@@ -729,7 +729,7 @@ Game and VMC icons are downloaded from, and contributed to, the [HDD-OSD Icon Da
 ## Open PS2 Loader (OPL)
 [Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) is a 100% open source game and application loader for the PS2. If you selected OPL as your game launcher, per-game settings assigned in OPL are reflected when launching games from the [PSBBN Game Collection](#game-collection) and [HOSDMenu](#hosdmenu).
 
-If you have problems saving OPL settings or if games do not appear in the games list, see [troubleshooting](#troubleshooting).
+If you have problems saving OPL settings or if games do not appear in the games list, see [troubleshooting](#problems-launching-games).
 
 ## Neutrino and NHDDL
 [Neutrino](https://github.com/rickgaiser/neutrino) is a lightweight device emulator for PS2. [NHDDL](https://github.com/pcm720/nhddl) is a frontend for Neutrino. If you selected Neutrino as your game launcher, per-game settings assigned in NHDDL are reflected when launching games from the [PSBBN Game Collection](#game-collection) and [HOSDMenu](#hosdmenu)  
