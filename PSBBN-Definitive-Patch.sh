@@ -333,6 +333,8 @@ display_menu() {
 EOF
 }
 
+check_required_files
+
 if [ "$wsl" = "false" ]; then
         git_update
 fi
@@ -391,8 +393,6 @@ rm -rf "${TOOLKIT_PATH}/"{storage,node_modules,venv,gamepath.cfg} >/dev/null 2>&
 rm -rf "${TOOLKIT_PATH}/scripts/"{node_modules,package.json,package-lock.json} >/dev/null 2>&1
 rm -rf "${TOOLKIT_PATH}/scripts/assets/"psbbn-definitive-image* >/dev/null 2>&1
 rmdir "${TOOLKIT_PATH}/OPL" >/dev/null 2>&1
-
-check_required_files
 
 if ! check_dep; then
     if ! "${TOOLKIT_PATH}/scripts/Setup.sh"; then
