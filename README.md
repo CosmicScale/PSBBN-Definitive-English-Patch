@@ -658,15 +658,16 @@ When reinstalling Linux:
 - Launching the **Dillo** web browser will open a mirror of the old official PS2 Linux website, where you can find a wide range of software to download and try.  
 
 ### Reassign Cross and Circle Buttons
-**NOTE: This feature is for PSBBN only.**  
-This option lets you swap the functions of the **×** and **○** buttons on your controller. You can choose between the standard layout (**×** = enter, **○** = back) or the alternate layout (**○** = enter, **×** = back), depending on your preference.
+This option lets you swap the functions of the **×** and **○** buttons on your controller. You can choose between the standard layout (**×** = enter, **○** = back) or the alternate layout (**○** = enter, **×** = back), depending on your preference.  
+
+**NOTE: This feature applies to PSBBN only. It does not swap the button layout for the POPS in-game reset dialog when exiting a PS1 game.**  
 
 ### Change Language
 When **PSBBN** is installed, this option changes the system language of PSBBN. Select from English, German, Italian, and the original Japanese. More languages will be added with future updates. For Japanese users, it also downloads and installs the Japanese versions of the [Online Game Channels](#game-channel).
 
 For both **PSBBN** and [HOSDMenu](#hosdmenu) users, this option also updates the [POPS](#popstarter-and-virtual-memory-cards) IGR message and the language preference used by the [Game Installer](#game-and-app-installer).
 
-After changing the language, it is recommended that you rerun the [Game Installer](#game-and-app-installer) and select *Add Additional Games and Apps* to update game titles to your selected language. For PSBBN users, this will also update PlayStation game manuals.
+After changing the language, it is recommended that you rerun the [Game Installer](#game-and-app-installer) and select *Add Additional Games and Apps* to update game titles to your selected language. For PSBBN users, this will also update the PlayStation game manuals.
 
 PSBBN users who previously swapped the **×** and **○** buttons using the [Reassign Cross and Circle Buttons](#reassign-cross-and-circle-buttons) option should run it again after changing the language.
 
@@ -801,7 +802,7 @@ You must also download the [External HDD Drivers](https://israpps.github.io/Free
 ⚠️ **Known issue**: Installing on **Fedora** is currently problematic. It is recommended to use a Debian-based distribution or the [PSBBN Launcher for Windows](#installing-on-windows).
 
 ## Problems Running the Script
-If you encounter errors while installing PSBBN, installing games, or performing other tasks, try the following:
+If you encounter errors while running the setup, installing PSBBN, installing games, or performing other tasks, try the following:
 1. Make sure you are running the latest version of your operating system and that it is fully updated
 2. Use a recommended OS. The **PSBBN Definitive Project** has been fully tested on:
 - Linux Mint
@@ -1002,7 +1003,7 @@ Disable DNAS Authentication:
 - PSBBN Definitive Project project by [CosmicScale](https://github.com/CosmicScale)
 - PSBBN English translation by [CosmicScale](https://github.com/CosmicScale)
 - PSBBN German translation by [Argo707](https://github.com/Argo707) 
-- PSBBN Italian translation by [lcipria](https://github.com/lcipria) 
+- PSBBN Italian translation by [plamadika](https://github.com/plamadika) & [lcipria](https://github.com/lcipria) 
 - `PSBBN-Definitive-Patch.sh`, `Setup.sh`, `PSBBN-Installer.sh`, `HOSDMenu-Installer.sh`, `Game-Installer.sh`, `Media-Installer.sh`, `music-installer.py`, `Extras.sh`, `art_downloader.py`, `list-sorter.py`, `txt_to_icon_sys.py`, `AppDB.csv`, `vmc_groups.list` written by [CosmicScale](https://github.com/CosmicScale)
 - `ps2iconmaker.sh` written by [Sakitoshi](https://github.com/Sakitoshi) and [CosmicScale](https://github.com/CosmicScale)
 - `PSBBN-Launcher-For-Windows.ps1` written by Yornn
