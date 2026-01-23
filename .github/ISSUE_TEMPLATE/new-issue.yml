@@ -27,6 +27,15 @@ body:
         3. Try installing to a **different HDD or SSD**
         4. Connect the PS2 HDD/SSD **directly to your PC via internal SATA**, or try a different USB adapter
 
+        If you are using the PSBBN Launcher for Windows script and experience issues:
+        1. Open PowerShell as an administrator and run the following command:
+        ```
+        wsl --unregister PSBBN
+        ```
+        2. Dowload the latest version of the `PSBBN-Launcher-For-Windows.ps1` script [here](https://raw.githubusercontent.com/CosmicScale/PSBBN-Definitive-English-Patch/refs/heads/main/scripts/PSBBN-Launcher-For-Windows.ps1) (Right-click and select **Save link as**).
+        3. Make sure you have an active internet connection. If you are using a VPN, try disabling it
+        4. Run the `PSBBN-Launcher-For-Windows.ps1` script again
+
         ---
 
         ## Problems Launching PSBBN or HOSDMenu
@@ -47,8 +56,16 @@ body:
         ---
 
         ## Problems Launching Games
-        If games do not appear or fail to launch in NHDDL, OPL, Browser 2.0, or the PSBBN Game Collection:
+        If OPL freezes at startup, delete any existing OPL configuration files from your PS2 Memory Cards or connected USB devices.  
+        To display the games list in OPL, make sure a regular PS2 Memory Card is inserted into your console (if you are using either the MemCard Pro 2 or SD2PSX, remove it), launch OPL and adjust the following settings:
+        1. Settings > HDD (APA) Start Mode: Off
+        2. Settings > BDM Start Mode: Auto
+        3. Settings > BDM Devices > HDD (GPT/MBR): On
+        4. Settings > Save Changes
 
+        These settings will be saved to your PS2 Memory Card. You can keep this card in Slot 2 and use your MemCard Pro 2 or SD2PSX in Slot 1.
+
+        If games do not appear in the games list in NHDDL or OPL (after modifying the OPL settings as described above), or fail to launch from the PSBBN Game Collection and HOSDMenu, try the following:
         1. If you have a **mod chip**, disable it
         2. Remove **all PS2 Memory Cards**
         3. Check that the connectors on the console and network/HDD adapter are clean and free of dust/debris

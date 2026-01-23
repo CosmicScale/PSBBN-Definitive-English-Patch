@@ -68,7 +68,7 @@ When the language is set to Japanese, titles of Japanese-region games are displa
 
 - **NEW!** PSBBN German translation by [Argo707](https://github.com/Argo707)  
 - Improved English translation  
-- Original Japanse online channels restored
+- Original Japanese online channels restored
 
 **[PSBBN Installer:](#install-psbbn-and-hosdmenu)**
 - Added an option to select a language when installing PSBBN
@@ -370,7 +370,7 @@ New in Definitive Project v2.11:
 - Added support for HDD-OSD to the `03-Game-Installer.sh` script. 3D icons are now downloaded from the [HDD-OSD Icon Database](https://github.com/cosmicscale/hdd-osd-icon-database)
 - New script: [04-Extras.sh](#optional-extras). Added ability to install HDD-OSD and [PlayStation 2 Basic Boot Loader (PS2BBL)](#playstation-2-basic-boot-loader-ps2bbl)
 - Make your own HDD-OSD icons with the [HDD-OSD Icon Templates](https://github.com/CosmicScale/HDD-OSD-Icon-Database/releases/download/v1.0.0/HDD-OSD-Icon-Templates.zip)
-- Translate PSBBN using the [Translation Pack](https://mega.nz/file/iBUh2SaT#TrbFtoj6rjONfaiYnfyCxLPms01iJclva_gr6bJAFd0) to localize the software into different languages.
+- Translate PSBBN using the [Translation Pack](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch/issues/299) to localize the software into different languages.
 
 </details>
 
@@ -526,13 +526,9 @@ The script will:
 Simply right-click on `PSBBN-Launcher-For-Windows.ps1` and select **Run with PowerShell**
 
 **NOTE:**  
-It is normal for the drive to disconnect in Windows while running the script. Always exit the **[PSBBN Definitive Project Main Menu](main-menu)** by pressing `q`. This ensures the drive is unmounted from WSL and safely returned to Windows. For USB drives, remember to also eject them from the Windows system tray before unplugging them.
+It is normal for the selected drive to be unmounted in Windows while running the script. Always exit the **[PSBBN Definitive Project Main Menu](main-menu)** by pressing `q`. This ensures the drive is safely unmounted from WSL and returned to Windows. For USB drives, remember to also eject them from the Windows system tray before unplugging them.
 
-If you experience any issues, open PowerShell as an administrator and run the following command:
-```
-wsl --unregister PSBBN
-```
-Then, run the `PSBBN-Launcher-For-Windows.ps1` script again.
+If you experience any issues will running the PSBBN Launcher for Windows, see **[troubleshooting](#troubleshooting)**.
 
 ## Main Menu
 `PSBBN-Definitive-Patch.sh` is your gateway to the **PSBBN Definitive Project**. Running this script launches the main menu.  
@@ -731,21 +727,14 @@ Apps installed with the [Game Installer](#game-and-app-installer) will appear in
 Game and VMC icons are downloaded from, and contributed to, the [HDD-OSD Icon Database](https://github.com/CosmicScale/HDD-OSD-Icon-Database).  
 
 ## Open PS2 Loader (OPL)
-[Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) is a 100% open source game and application loader for the PS2.
-- If you selected OPL as your game launcher, per-game settings assigned in OPL are reflected when launching games from the [PSBBN Game Collection](#game-collection) and [HOSDMenu](#hosdmenu)
-- If OPL freezes at startup, delete any existing OPL configuration files from your PS2 Memory Cards or connected USB devices.
-- To display the games list in OPL, make sure a regular PS2 Memory Card inserted into your console (if you are using either the MemCard Pro 2 or SD2PSX, remove it), launch OPL and adjust the following settings:
-1. Settings > HDD (APA) Start Mode: Off
-2. Settings > BDM Start Mode: Auto
-3. Settings > BDM Devices > HDD (GPT/MBR): On
-4. Settings > Save Changes
+[Open PS2 Loader (OPL)](https://github.com/ps2homebrew/Open-PS2-Loader) is a 100% open source game and application loader for the PS2. If you selected OPL as your game launcher, per-game settings assigned in OPL are reflected when launching games from the [PSBBN Game Collection](#game-collection) and [HOSDMenu](#hosdmenu).
 
-These settings will be saved to your PS2 Memory Card. You can keep this card in Slot 2 and use your MemCard Pro 2 or SD2PSX in Slot 1.
+If you have problems saving OPL settings or if games do not appear in the games list, see [troubleshooting](#troubleshooting).
 
 ## Neutrino and NHDDL
-[Neutrino](https://github.com/rickgaiser/neutrino) is a lightweight device emulator for PS2. [NHDDL](https://github.com/pcm720/nhddl) is a frontend for Neutrino.
-- If you selected Neutrino as your game launcher, per-game settings assigned in NHDDL are reflected when launching games from the [PSBBN Game Collection](#game-collection) and [HOSDMenu](#hosdmenu)
-- Neutrino does not support compressed `ZSO` files. If `ZSO` files are found in your `games` folder or on the PS2 drive, they will be automatically decompressed to `ISO` files by the [Game Installer](#game-and-app-installer).
+[Neutrino](https://github.com/rickgaiser/neutrino) is a lightweight device emulator for PS2. [NHDDL](https://github.com/pcm720/nhddl) is a frontend for Neutrino. If you selected Neutrino as your game launcher, per-game settings assigned in NHDDL are reflected when launching games from the [PSBBN Game Collection](#game-collection) and [HOSDMenu](#hosdmenu)  
+
+Neutrino does not support compressed `ZSO` files. If `ZSO` files are found in your `games` folder or on the PS2 drive, they will be automatically decompressed to `ISO` files by the [Game Installer](#game-and-app-installer).
 
 ## Exiting Games
 - To quit PS1 games, press `L1 + SELECT + START`
@@ -808,6 +797,8 @@ You must also download the [External HDD Drivers](https://israpps.github.io/Free
 
 # Troubleshooting
 
+⚠️ **Known issue**: Installing on **Fedora** is currently problematic. It is recommended to use a Debian-based distribution or the [PSBBN Launcher for Windows](#installing-on-windows).
+
 ## Problems Running the Script
 If you encounter errors while installing PSBBN, installing games, or performing other tasks, try the following:
 1. Make sure you are running the latest version of your operating system and that it is fully updated
@@ -819,10 +810,17 @@ If you encounter errors while installing PSBBN, installing games, or performing 
 3. Try installing to a different HDD or SSD
 4. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection, or use a different USB adapter
 
+If you are using the [PSBBN Launcher for Windows](#installing-on-windows) script and experience issues:
+1. Open PowerShell as an administrator and run the following command:
+```
+wsl --unregister PSBBN
+```
+2. Dowload the latest version of the `PSBBN-Launcher-For-Windows.ps1` script [here](https://raw.githubusercontent.com/CosmicScale/PSBBN-Definitive-English-Patch/refs/heads/main/scripts/PSBBN-Launcher-For-Windows.ps1) (Right-click and select **Save link as**).
+3. Make sure you have an active internet connection. If you are using a VPN, try disabling it
+4. Run the `PSBBN-Launcher-For-Windows.ps1` script again
+
 ## Problems Launching PSBBN and HOSDMenu
 When you connect the drive to your PS2 console and power it on, **PSBBN** or **[HOSDMenu](#hosdmenu)** should automatically launch.
-
-**NOTE: There is currently a known issue when installing on Fedora. It is recommended to use a Debian-based distribution or the [PSBBN Launcher for Windows](#installing-on-windows) instead.**
 
 If your console boots to the regular OSD or freezes, it means that your drive has not been recognised and you are experiencing a hardware issue. You should check the following:
 1. If using **PSBBN**, make sure you are using an **official Sony Network Adapter**; 3rd-party adapters are not supported
@@ -835,7 +833,17 @@ If your console boots to the regular OSD or freezes, it means that your drive ha
 8. Try a different PS2 console
 
 ## Problems Launching Games
-If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL](#open-ps2-loader-opl) (after modifying the OPL settings as described [above](#open-ps2-loader-opl)), or fail to launch from the [PSBBN Game Collection](#game-collection), try the following:
+
+If OPL freezes at startup, delete any existing OPL configuration files from your PS2 Memory Cards or connected USB devices.  
+To display the games list in OPL, make sure a regular PS2 Memory Card is inserted into your console (if you are using either the MemCard Pro 2 or SD2PSX, remove it), launch OPL and adjust the following settings:
+1. Settings > HDD (APA) Start Mode: Off
+2. Settings > BDM Start Mode: Auto
+3. Settings > BDM Devices > HDD (GPT/MBR): On
+4. Settings > Save Changes
+
+These settings will be saved to your PS2 Memory Card. You can keep this card in Slot 2 and use your MemCard Pro 2 or SD2PSX in Slot 1.
+
+If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL](#open-ps2-loader-opl) (after modifying the OPL settings as described above), or fail to launch from the [PSBBN Game Collection](#game-collection) and [HOSDMenu](#HOSDMenu), try the following:
 
 1. If you have a [mod chip](#known-issues), disable it
 2. Remove all PS2 Memory Cards from your console
