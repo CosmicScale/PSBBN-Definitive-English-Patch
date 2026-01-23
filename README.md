@@ -528,7 +528,7 @@ Simply right-click on `PSBBN-Launcher-For-Windows.ps1` and select **Run with Pow
 **NOTE:**  
 It is normal for the selected drive to be unmounted in Windows while running the script. Always exit the **[PSBBN Definitive Project Main Menu](main-menu)** by pressing `q`. This ensures the drive is safely unmounted from WSL and returned to Windows. For USB drives, remember to also eject them from the Windows system tray before unplugging them.
 
-If you experience any issues will running the PSBBN Launcher for Windows, see **[troubleshooting](#troubleshooting)**.
+If you experience any issues while running the PSBBN Launcher for Windows, see **[troubleshooting](#troubleshooting)**.
 
 ## Main Menu
 `PSBBN-Definitive-Patch.sh` is your gateway to the **PSBBN Definitive Project**. Running this script launches the main menu.  
