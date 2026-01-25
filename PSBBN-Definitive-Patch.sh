@@ -15,8 +15,11 @@ TOOLKIT_PATH="$(pwd)"
 SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
 HELPER_DIR="${SCRIPTS_DIR}/helper"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
+OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/setup.log"
 arch="$(uname -m)"
+
+URL="https://archive.org/download/psbbn-definitive-patch-v4.1"
 
 if [[ "$arch" = "x86_64" ]]; then
     # x86-64
@@ -274,6 +277,108 @@ check_dep(){
     fi
 }
 
+get_latest_file() {
+    local prefix="$1"        # e.g., "psbbn-eng" or "psbbn-definitive-patch"
+    local display="$2"       # e.g., "English language pack"
+    local remote_list remote_versions remote_version
+
+    # Reset globals
+    LATEST_FILE=""
+
+    # Extract .gz filenames from the HTML
+    remote_list=$(grep -oP "${prefix}-v[0-9]+\.[0-9]+\.[0-9]+\.tar\.gz" "$HTML_FILE" 2>/dev/null)
+
+    if [[ -n "$remote_list" ]]; then
+    # Extract version numbers and sort them
+        remote_versions=$(echo "$remote_list" | \
+            grep -oP 'v[0-9]+\.[0-9]+\.[0-9]+' | \
+            sed 's/v//' | \
+            sort -V)
+        remote_version=$(echo "$remote_versions" | tail -n1)
+        echo "Found $display version $remote_version" >> "${LOG_FILE}"
+
+        LATEST_FILE="${prefix}-v${remote_version}.tar.gz"
+
+        if [[ "$prefix" == "psbbn-definitive-patch" ]]; then
+            LATEST_VERSION="$remote_version"
+        elif [[ "$prefix" == "language-pak-$LANG" ]]; then
+            LATEST_LANG="$remote_version"
+        elif [[ "$prefix" == "channels-$LANG" ]]; then
+            LATEST_CHAN="$remote_version"
+        fi
+    else
+        echo "Could not find the latest version of the $display." >> "${LOG_FILE}"
+    fi
+}
+
+UNMOUNT_ALL() {
+    # Find all mounted volumes associated with the device
+    mounted_volumes=$(lsblk -ln -o MOUNTPOINT "$DEVICE" | grep -v "^$")
+
+    # Iterate through each mounted volume and unmount it
+    for mount_point in $mounted_volumes; do
+        sudo umount "$mount_point" 2>&1
+    done
+
+    submounts=$(findmnt -nr -o TARGET | grep "^${STORAGE_DIR}/" | sort -r)
+
+    if [ -n "$submounts" ]; then
+        while read -r mnt; do
+            [ -z "$mnt" ] && continue
+            sudo umount "$mnt" 2>&1
+        done <<< "$submounts"
+    fi
+
+    # Get the device basename
+    DEVICE_CUT=$(basename "$DEVICE")
+
+    # List all existing maps for this device
+    existing_maps=$(sudo dmsetup ls 2>/dev/null | awk -v dev="$DEVICE_CUT" '$1 ~ "^"dev"-" {print $1}')
+
+    # Force-remove each existing map
+    for map_name in $existing_maps; do
+        sudo dmsetup remove -f "$map_name" 2>/dev/null
+    done
+}
+
+MOUNT_OPL() {
+    mkdir -p "${OPL}" 2>>"${LOG_FILE}" || error_msg "Failed to create ${OPL}."
+
+    sudo mount -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
+
+    # Handle possibility host system's `mount` is using Fuse
+    if [ $? -ne 0 ] && hash mount.exfat-fuse; then
+        sudo mount.exfat-fuse -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" 2>&1
+    fi
+}
+
+UNMOUNT_OPL() {
+    sync
+    sudo umount -l "${OPL}" >> "${LOG_FILE}" 2>&1
+}
+
+flash_update() {
+    local on=$1
+
+    # Only flash if UPDATE is "YES"
+    [[ "$UPDATE" != "YES" ]] && return
+
+    # Save current cursor (so user can type)
+    tput sc
+    # Move cursor up 8 lines from prompt to option 2
+    tput cuu 8
+    tput cuf 7
+
+    if (( on )); then
+        printf "**UPDATE AVAILABLE!**"
+    else
+        printf "                     "
+    fi
+
+    # Restore cursor so input stays at prompt
+    tput rc
+}
+
 option_one() {
     "${SCRIPTS_DIR}/PSBBN-Installer.sh" -install $serialnumber "$path_arg"
 }
@@ -327,10 +432,12 @@ display_menu() {
                    4) Install Games and Apps
                    5) Install Media
                    6) Optional Extras
-                                     
+
                    q) Quit
 
 EOF
+    # Print prompt without newline so cursor is ready
+    printf "                   Select an option: "
 }
 
 check_required_files
@@ -402,39 +509,92 @@ if ! check_dep; then
     fi
 fi
 
+DEVICE=$(sudo blkid -t TYPE=exfat | grep OPL | awk -F: '{print $1}' | sed 's/[0-9]*$//')
+
+if [[ -z "$DEVICE" ]]; then
+    UPDATE="NO"
+else
+    UNMOUNT_ALL
+    MOUNT_OPL
+    psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
+    LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
+
+    if [[ "$LANG" != "jpn" && "$LANG" != "ger" && "$LANG" != "ita" ]]; then
+        LANG="eng"
+    fi
+
+    LANG_VER=$(awk -F' *= *' '$1=="LANG_VER"{print $2}' "${OPL}/version.txt")
+    CHAN_VER=$(awk -F' *= *' '$1=="CHAN_VER"{print $2}' "${OPL}/version.txt")
+
+    echo "psbbn_version = $psbbn_version" >> "${LOG_FILE}"
+    echo "LANG = $LANG" >> "${LOG_FILE}"
+    echo "LANG_VER = $LANG_VER" >> "${LOG_FILE}"
+    echo "CHAN_VER = $CHAN_VER" >> "${LOG_FILE}"
+
+
+    UNMOUNT_OPL
+
+    if [[ -n "$psbbn_version" || -n "$LANG_VER" || -n "$CHAN_VER" ]]; then
+
+        HTML_FILE=$(mktemp)
+        timeout 20 wget -O "$HTML_FILE" "$URL" -o - >> "$LOG_FILE" 2>&1
+
+        if [[ -n "$psbbn_version" ]]; then
+            echo "Did this run?"
+            get_latest_file "psbbn-definitive-patch" "PSBBN Definitive English patch"
+
+            if [ "$(printf '%s\n' "$LATEST_VERSION" "$psbbn_version" | sort -V | tail -n1)" != "$psbbn_version" ]; then
+                PSBBN_UPDATE="YES"
+            fi
+        fi
+
+        if [[ -n "$LANG_VER" ]]; then
+            get_latest_file "language-pak-$LANG" "$LANG_DISPLAY language pack"
+
+            if [ "$(printf '%s\n' "$LATEST_LANG" "$LANG_VER" | sort -V | tail -n1)" != "$LANG_VER" ]; then
+                LANG_UPDATE="YES"
+            fi
+        fi
+
+        if [[ -n "$CHAN_VER" ]]; then
+            get_latest_file "channels-$LANG" "$LANG_DISPLAY channels"
+
+            if [ "$(printf '%s\n' "$LATEST_CHAN" "$CHAN_VER" | sort -V | tail -n1)" != "$CHAN_VER" ]; then
+                CHAN_UPDATE="YES"
+            fi
+        fi
+
+        if [ "$PSBBN_UPDATE" == "YES" ] || [ "$LANG_UPDATE" == "YES" ] || [ "$CHAN_UPDATE" == "YES" ]; then
+            UPDATE="YES"
+        else
+            UPDATE="NO"
+        fi
+    fi
+fi
+
+echo "UPDATE: $UPDATE" >> "$LOG_FILE"
+
+clear
+display_menu
+
 # Main loop
-
 while true; do
-    display_menu
-    read -p "                   Select an option: " choice
+    flash_update $flash
+    flash=$((2 - flash))
 
-    case $choice in
-        1)
-            option_one
-            ;;
-        2)
-            option_two
-            ;;
-        3)
-            option_three
-            ;;
-        4)
-            option_four
-            ;;
-        5)
-            option_five
-            ;;
-        6)
-            option_six
-            ;;
-        q|Q)
-            clear
-            break
-            ;;
-        *)
-            echo
-            echo -n "                   Invalid option, please try again."
-            sleep 2
-            ;;
-    esac
+    # Non-blocking read with 1s timeout
+    if read -r -t 1 choice; then
+        echo
+        case $choice in
+            1) option_one; display_menu ;;  # redraw menu once after script finishes
+            2) option_two; UPDATE="NO"; display_menu ;;
+            3) option_three; display_menu ;;
+            4) option_four; display_menu ;;
+            5) option_five; display_menu ;;
+            6) option_six; display_menu ;;
+            q|Q) clear; break ;;
+            *) echo "                   Invalid option, please try again."
+               sleep 2 ;;
+        esac
+    fi
 done
