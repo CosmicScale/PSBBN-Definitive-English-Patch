@@ -668,7 +668,7 @@ else
     fi
 
     LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
-    if [[ "$LANG" != "jpn" && "$LANG" != "ger" ]]; then
+    if [[ "$LANG" != "jpn" && "$LANG" != "ger" && "$LANG" != "ita" ]]; then
         LANG="eng"
     fi
 
