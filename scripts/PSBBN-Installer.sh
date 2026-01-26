@@ -202,7 +202,6 @@ get_latest_file() {
             LATEST_FILE=$(basename "$local_file")
             echo "Newer local file found: ${LATEST_FILE}" | tee -a "${LOG_FILE}"
 
-            # Only set LATEST_VERSION for the patch prefix
             if [[ "$prefix" == "psbbn-definitive-patch" ]]; then
                 LATEST_VERSION="$local_version"
             elif [[ "$prefix" == "language-pak-$LANG" ]]; then
@@ -218,7 +217,6 @@ get_latest_file() {
     if [[ -n "$remote_version" ]]; then
         LATEST_FILE="${prefix}-v${remote_version}.tar.gz"
 
-        # Only set LATEST_VERSION for the patch prefix
         if [[ "$prefix" == "psbbn-definitive-patch" ]]; then
             LATEST_VERSION="$remote_version"
         elif [[ "$prefix" == "language-pak-$LANG" ]]; then
@@ -308,7 +306,9 @@ mount_cfs() {
         if [ -e "${MAPPER}${PARTITION_NAME}" ]; then
             if [[ "$PARTITION_NAME" = "__linux.9" ]] && ! version_le "${psbbn_version:-0}" "4.1.0"; then
                 echo "Skipping mke2fs for __linux.9" >>"${LOG_FILE}"
-            elif [[ "$PARTITION_NAME" =~ ^__linux\.(1|4|5|7)$ ]] && [ "$MODE" = "update" ] && ! version_le "${psbbn_version:-0}" "4.0.0"; then
+            elif [[ "$PARTITION_NAME" = "__linux.7" ]] && [ "$MODE" = "update" ]; then
+                echo "Skipping mke2fs for __linux.7" >>"${LOG_FILE}"
+            elif [[ "$PARTITION_NAME" =~ ^__linux\.(1|4|5)$ ]] && [ "$MODE" = "update" ] && ! version_le "${psbbn_version:-0}" "4.0.0"; then
                 echo "Skipping mke2fs for $PARTITION_NAME" >>"${LOG_FILE}"
             elif [[ "$PARTITION_NAME" = "__linux.8" ]]; then
                 if ! sudo mkfs.vfat -F 32 "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then

@@ -2701,6 +2701,7 @@ if [ "$OS" = "PSBBN" ]; then
     echo -n "Updating shortcuts in Navigator Menu..." | tee -a "${LOG_FILE}"
     echo >> "${LOG_FILE}"
 
+    sudo mkdir -p "${STORAGE_DIR}/__linux.7/bn/sysconf"
     sudo cp "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0" "${SCRIPTS_DIR}/tmp" >> "${LOG_FILE}" 2>&1
 
     TARGET="${SCRIPTS_DIR}/tmp/shortcut_0"
