@@ -1133,7 +1133,7 @@ create_system_cnf() {
 
 APP_ART() {
     title_id="${title_id//[^A-Za-z0-9_-]/}"
-    title_id="${title_id:0:11}"
+    title_id="${title_id:0:12}"
     title_id="${title_id%-}"
     png_file="${ARTWORK_DIR}/${title_id}.png"
     # Copy the matching PNG file from ART_DIR, or default to APP.png
