@@ -280,14 +280,29 @@ UNMOUNT_OPL() {
 }
 
 download_linux() {
-# Check for HDD-OSD files
-    if [ -f "${ASSETS_DIR}/PS2Linux.tar.gz" ]; then
+    TARGET_MD5="a16eeabf87c97d4112f73f4c3df52091"
+
+    # Check if file exists
+    if [[ -f "${ASSETS_DIR}/PS2Linux.tar.gz" ]]; then
+        # Get md5 checksum
+        FILE_MD5=$(md5sum "${ASSETS_DIR}/PS2Linux.tar.gz" | awk '{print $1}')
+
+        # Compare and delete if matches
+        if [[ "$FILE_MD5" == "$TARGET_MD5" ]]; then
+            rm -f "${ASSETS_DIR}/PS2Linux.tar.gz"
+            echo "Deleted ${ASSETS_DIR}/PS2Linux.tar.gz (MD5 matched)" >> "${LOG_FILE}"
+        else
+            echo "MD5 of ${ASSETS_DIR}/PS2Linux.tar.gz does not match, file not deleted." >> "${LOG_FILE}"
+        fi
+    fi
+
+    if [ -f "${ASSETS_DIR}/PS2Linux.tar.gz" ] && [ ! -f "${ASSETS_DIR}/PS2Linux.tar.gz.st" ]; then
         echo | tee -a "${LOG_FILE}"
         echo "All required files are present. Skipping download" | tee -a "${LOG_FILE}"
     else
         echo | tee -a "${LOG_FILE}"
         echo "Downloading required files..." | tee -a "${LOG_FILE}"
-        if axel -a https://archive.org/download/psbbn-definitive-patch-v3/PS2Linux.tar.gz -o "${ASSETS_DIR}"; then
+        if axel -a https://archive.org/download/psbbn-definitive-patch-v4.1/PS2Linux.tar.gz -o "${ASSETS_DIR}"; then
             echo "[✓] Download completed successfully." | tee -a "${LOG_FILE}"
         else
             error_msg "[X] Error: Download failed." "Please check the status of archive.org. You may need to use a VPN depending on your location."
@@ -668,11 +683,6 @@ option_one() {
     clean_up   && \
     mapper_probe || return 1
 
-    if ! sudo mke2fs -t ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}__linux.3" >>"${LOG_FILE}" 2>&1; then
-        error_msg "[X] Error: Failed to create filesystem __linux.3."
-        return 1
-    fi
-
     mount_cfs    && \
     mount_pfs    || return 1
 
@@ -701,19 +711,19 @@ option_one() {
     clean_up || return 1
 
     LINUX_SPLASH
-    echo "=============================== [✓] PS2 Linux Successfully Installed ==============================" | tee -a "${LOG_FILE}"
+    echo "    =============================== [✓] PS2 Linux Successfully Installed ==============================" | tee -a "${LOG_FILE}"
     cat << "EOF"
 
-    To launch PS2 Linux, power on your PS2 console and hold the CIRCLE button on the controller.
+        To launch PS2 Linux, power on your PS2 console and hold the CIRCLE button on the controller.
 
-    PS2 Linux requires a USB keyboard; a mouse is optional but recommended.
+        PS2 Linux requires a USB keyboard; a mouse is optional but recommended.
 
-    Default "root" password: password
-    Default password for "ps2" user account: password
+        Default "root" password: password
+        Default password for "ps2" user account: password
 
-    To launch a graphical interface type: startx
+        To launch a graphical interface type: startx
 
-====================================================================================================
+    ====================================================================================================
 
 EOF
     read -n 1 -s -r -p "                                   Press any key to return to the menu..." </dev/tty
@@ -922,7 +932,6 @@ EOF
 
         clean_up   && \
         mapper_probe || return 1
-        sudo mke2fs -t ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}__linux.9" >> "${LOG_FILE}" 2>&1 || { error_msg "[X] Error: Failed to initialise channels filesystem." "See ${LOG_FILE} for details."; return 1; }
         mount_cfs    && \
         mount_pfs    || return 1
 

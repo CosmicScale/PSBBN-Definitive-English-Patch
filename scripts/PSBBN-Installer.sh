@@ -6,7 +6,19 @@ if [[ "$LAUNCHED_BY_MAIN" != "1" ]]; then
 fi
 
 # Set paths
+
 version_check="2.10"
+
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    case " $ID $ID_LIKE " in
+        #*" fedora "*)
+        *" debian "*)
+            version_check="3.00"
+            ;;
+    esac
+fi
+
 TOOLKIT_PATH="$(pwd)"
 SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
 ASSETS_DIR="${SCRIPTS_DIR}/assets"
@@ -304,26 +316,31 @@ mount_cfs() {
     for PARTITION_NAME in "${LINUX_PARTITIONS[@]}"; do
         MOUNT_PATH="${STORAGE_DIR}/${PARTITION_NAME}"
         if [ -e "${MAPPER}${PARTITION_NAME}" ]; then
-            if [[ "$PARTITION_NAME" = "__linux.9" ]] && ! version_le "${psbbn_version:-0}" "4.1.0"; then
-                echo "Skipping mke2fs for __linux.9" >>"${LOG_FILE}"
-            elif [[ "$PARTITION_NAME" = "__linux.7" ]] && [ "$MODE" = "update" ]; then
-                echo "Skipping mke2fs for __linux.7" >>"${LOG_FILE}"
-            elif [[ "$PARTITION_NAME" =~ ^__linux\.(1|4|5)$ ]] && [ "$MODE" = "update" ] && ! version_le "${psbbn_version:-0}" "4.0.0"; then
-                echo "Skipping mke2fs for $PARTITION_NAME" >>"${LOG_FILE}"
-            elif [[ "$PARTITION_NAME" = "__linux.8" ]]; then
-                if ! sudo mkfs.vfat -F 32 "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
-                    error_msg "Failed to create filesystem ${PARTITION_NAME}."
-                fi            
-            else
-                if ! sudo mke2fs -t ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
-                    error_msg "Failed to create filesystem ${PARTITION_NAME}."
+            if [ "$MODE" = "update" ]; then
+                if [[ "$PARTITION_NAME" =~ ^__linux\.(6|7|9)$ ]]; then
+                    echo "Skipping mke2fs for $PARTITION_NAME" >>"${LOG_FILE}"
+                elif [[ "$PARTITION_NAME" =~ ^__linux\.(1|4|5)$ ]] && ! version_le "${psbbn_version:-0}" "3.00"; then
+                    echo "Skipping mke2fs for $PARTITION_NAME" >>"${LOG_FILE}"
+                else
+                    echo "Formatting $PARTITION_NAME" >>"${LOG_FILE}"
+                    if ! sudo mke2fs -t ext2 -b 4096 -I 128 -O ^large_file,^dir_index,^extent,^huge_file,^flex_bg,^has_journal,^ext_attr,^resize_inode "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
+                        error_msg "Failed to create filesystem ${PARTITION_NAME}."
+                    fi
                 fi
             fi
 
+            if [[ "$PARTITION_NAME" = "__linux.8" ]]; then
+                echo "Formatting $PARTITION_NAME" >>"${LOG_FILE}"
+                if ! sudo mkfs.vfat -F 32 "${MAPPER}${PARTITION_NAME}" >>"${LOG_FILE}" 2>&1; then
+                    error_msg "Failed to create filesystem ${PARTITION_NAME}."
+                fi
+            fi
+            
             [ -d "${MOUNT_PATH}" ] || mkdir -p "${MOUNT_PATH}"
                 if [[ "$PARTITION_NAME" = "__linux.7" ]] && [ "$MODE" = "update" ]; then
                     echo echo "Skipping mount for __linux.7" >>"${LOG_FILE}"
                 else
+                    echo "Mounting $PARTITION_NAME" >>"${LOG_FILE}"
                     if ! sudo mount "${MAPPER}${PARTITION_NAME}" "${MOUNT_PATH}" >>"${LOG_FILE}" 2>&1; then
                         error_msg "Failed to mount ${PARTITION_NAME} partition."
                     fi
@@ -332,12 +349,6 @@ mount_cfs() {
             error_msg "Partition ${PARTITION_NAME} not found on disk."
         fi
     done
-    
-    if [ "$MODE" = "install" ]; then
-        if ! sudo mkswap "${MAPPER}__linux.2" >>"${LOG_FILE}" 2>&1; then
-            error_msg "Failed to create swap filesystem."
-        fi
-    fi
 }
 
 mount_pfs() {
@@ -1013,10 +1024,12 @@ if [ "$MODE" = "update" ]; then
 
     if version_le "${psbbn_version:-0}" "4.1.0"; then
         COMMANDS="device ${DEVICE}\n"
+        COMMANDS+="rmpart __linux.6\n"
+        COMMANDS+="mkpart __linux.6 128M EXT2\n"
         COMMANDS+="rmpart __linux.9\n"
         COMMANDS+="mkpart __linux.9 2048M EXT2\n"
         COMMANDS+="exit"
-        echo "Deleting and recreating __linux.9..." >>"${LOG_FILE}"
+        echo "Deleting and recreating __linux.6 and __linux.9..." >>"${LOG_FILE}"
         PFS_COMMANDS
     fi
 else
