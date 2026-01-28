@@ -486,8 +486,8 @@ if grep -qi microsoft /proc/version; then
     # Detect distro
     if [ -f /etc/os-release ]; then
         . /etc/os-release
-        case "$ID" in
-            fedora|arch)
+        case " $ID $ID_LIKE " in
+            *" fedora "*|*" arch "*)
                 echo "Unsupported distro under WSL: $NAME. Please use Debian instead."
                 exit 1
                 ;;
