@@ -12,8 +12,7 @@ version_check="2.10"
 if [ -f /etc/os-release ]; then
     . /etc/os-release
     case " $ID $ID_LIKE " in
-        #*" fedora "*)
-        *" debian "*)
+        *" fedora "*)
             version_check="3.00"
             ;;
     esac
