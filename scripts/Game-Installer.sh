@@ -1113,6 +1113,7 @@ create_system_cnf() {
     title_id="${title_id//[^A-Za-z0-9-]/}"
     title_id="${title_id:0:11}"
     title_id="${title_id%-}"
+    title_id="${title_id^^}"
 
     {
         echo "BOOT2 = PATINFO"
@@ -1135,7 +1136,33 @@ APP_ART() {
     title_id="${title_id//[^A-Za-z0-9_-]/}"
     title_id="${title_id:0:12}"
     title_id="${title_id%-}"
-    png_file="${ARTWORK_DIR}/${title_id}.png"
+    title_id="${title_id^^}"
+
+    case "$title_id" in
+    OPL*)
+        APP_ID="OPENPS2LOAD"
+        ;;
+    ULE*)
+        APP_ID="APP_ULE"
+        ;;
+    LAUNCHELF*|WLAUNCHELF*)
+        APP_ID="LAUNCHELF"
+        ;;
+    FREEMCBOOT*|FMC*)
+        APP_ID="FREEMCBOOT"
+        ;;
+    GSM*)
+        APP_ID="GSM"
+        ;;
+    ESR*)
+        APP_ID="ESR"
+        ;;
+    *)
+        APP_ID="$title_id"
+        ;;
+    esac
+
+    png_file="${ARTWORK_DIR}/${APP_ID}.png"
     # Copy the matching PNG file from ART_DIR, or default to APP.png
     if [ -f "$png_file" ]; then
         if [ "$OS" = "PSBBN" ]; then
@@ -1145,9 +1172,9 @@ APP_ART() {
         cp "$png_file" "${GAMES_PATH}/ART/${elf}_COV.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create ${GAMES_PATH}/ART/${elf}_COV.png. See ${LOG_FILE} for details."
         echo "Created: ${GAMES_PATH}/ART/${elf}_COV.png"  | tee -a "${LOG_FILE}"
     else
-        echo "Artwork not found locally for $title_id. Attempting to download from the PSBBN art database..." | tee -a "${LOG_FILE}"
+        echo "Artwork not found locally for $APP_ID. Attempting to download from the PSBBN art database..." | tee -a "${LOG_FILE}"
         wget --quiet --timeout=10 --tries=3 --output-document="$png_file" \
-        "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/apps/${title_id}.png"
+        "https://raw.githubusercontent.com/CosmicScale/psbbn-art-database/main/apps/${APP_ID}.png"
         
         if [[ -s "$png_file" ]]; then
             echo "[✓] Successfully downloaded artwork for $title_id" | tee -a "${LOG_FILE}"
@@ -1163,7 +1190,7 @@ APP_ART() {
                 cp "$ARTWORK_DIR/APP.png" "$dir/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/jkt_001.png. See ${LOG_FILE} for details."
                 echo "Created: $dir/jkt_001.png using default image."  | tee -a "${LOG_FILE}"
             fi
-            echo "$title_id,$title,$elf" >> "${MISSING_APP_ART}"
+            echo "$title_id,$APP_ID,$elf" >> "${MISSING_APP_ART}"
         fi
     fi
 }
