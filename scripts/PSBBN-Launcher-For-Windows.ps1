@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.1.0"
+$version = "1.2.0"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the
 # machine created by this script and not some pre-existing Debian the user had.
@@ -36,6 +36,9 @@ $pathFilename = "path.cfg"
 # the minimum disk size allowed to be picked, in gigabytes
 $minimumDiskSize = 31
 
+# where the network drive chosen by the user will be mounted in wsl
+$networkDriveMountpoint = "/mnt/PSBBN-network-drive"
+
 # --- DO NOT MODIFY THE VARIABLES BELOW ---
 
 # in case $gitBranch no longer exists on the remote, use this as fallback
@@ -49,13 +52,16 @@ $e = [char] 27
 $env:WSL_UTF8 = 1
 
 # flag potentially raised when enabling features, signaling a reboot is necessary to finish the install
-$global:IsRestartRequired = $false
+$global:isRestartRequired = $false
 
 # stores Get-Disk's result to avoid multiple calls
 $global:diskList = $null
 
 # stores the disk number (obtained with Get-Disk) that was selected via diskPicker
 $global:selectedDisk = -1
+
+# keeps track of if a drive was manually mounted (for example a network drive)
+$global:isDriveMounted = $false
 
 function main {
   # set the console size so it matches the other scripts
@@ -180,16 +186,23 @@ function main {
   mountDisk
 
   # give the user the opportunity to put games/homebrew in the PSBBN folder
-  $path = getTargetFolder
+  $path = getTargetPath
+  $wslPath = prepareWslPath($path)
+  
+  explorer $path
+  pause
   clear
 
   # run PSBBN regular steps
   wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- `
-    ./PSBBN-Definitive-Patch.sh -wsl $global:diskList[$selectedDisk].SerialNumber $path
+    ./PSBBN-Definitive-Patch.sh -wsl $global:diskList[$selectedDisk].SerialNumber $wslPath
 
   # clear the terminal to get rid of the wsl-run scripts
   clear
   printTitle
+
+  # unmount the target path if needed (in case of network drive)
+  unmountTargetPath
 
   # unmount the disk before exiting
   unmountDisk
@@ -228,7 +241,7 @@ function checkAndEnableFeature ($featureName) {
     Write-Host "  └ Enabling" $feature.DisplayName "..." -NoNewline;
     $enabled = Enable-WindowsOptionalFeature -Online -FeatureName $feature.FeatureName -All -NoRestart -WarningAction:SilentlyContinue
     if ($enabled.RestartNeeded) {
-      $global:IsRestartRequired = $true
+      $global:isRestartRequired = $true
       printRestartRequired
     } else {
       printOK
@@ -408,8 +421,8 @@ function restartAsAdminIfNeeded {
   Exit
 }
 
-# handles the folder picker and return a wsl compatible path as a string
-function getTargetFolder {
+# handles the path picker and return a valid windows path as a string
+function getTargetPath {
   # if a previously used path exists, use that in the folder picker, otherwise use "Desktop"
   $desktopDirectory = [Environment]::GetFolderPath('Desktop')
   $initialDirectory = $desktopDirectory
@@ -437,8 +450,7 @@ function getTargetFolder {
 
     if ($keyPressed -eq 'y') {
       preventsPickingWslPath($initialDirectory)
-      explorer $initialDirectory
-      return convertPathToWsl($initialDirectory)
+      return $initialDirectory
     }
   }
 
@@ -449,20 +461,20 @@ function getTargetFolder {
 
   # prepare and then open the folder picker
   Add-Type -AssemblyName System.Windows.Forms
-  $folderselection = New-Object System.Windows.Forms.OpenFileDialog -Property @{
+  $pathSelection = New-Object System.Windows.Forms.OpenFileDialog -Property @{
     InitialDirectory = $initialDirectory
     CheckFileExists = 0
     ValidateNames = 0
     FileName = "Choose Folder"
   }
-  $result = $folderselection.ShowDialog()
+  $result = $pathSelection.ShowDialog()
 
   if($result -ne "OK") {
     Write-Host "No folder was picked, you will have to do it manually later." -ForegroundColor Yellow
     return ""
   }
 
-  $pickedPath = Split-Path -Parent $folderselection.FileName
+  $pickedPath = Split-Path -Parent $pathSelection.FileName
 
   preventsPickingWslPath($pickedPath)
 
@@ -488,11 +500,7 @@ https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
   # store the selected path to re-use next time the script is ran
   New-Item -Path "." -Name $pathFilename -ItemType "file" -Value $pickedPath -Force | Out-Null
 
-  explorer $pickedPath
-
-  pause
-
-  return convertPathToWsl($pickedPath)
+  return $pickedPath
 }
 
 # clears $count lines with spaces and move the cursor back
@@ -542,14 +550,41 @@ function isTooSmall ($item) {
   return ($item.Size / 1GB) -lt $minimumDiskSize
 }
 
-function convertPathToWsl ($windowsPath) {
+function prepareWslPath ($windowsPath) {
+  $wslPath = ''
+  
+  # covers basic drive letters
   if ($windowsPath -match '(?<driveLetter>.):\\(?<path>.+)') {
     $driveLetter = $Matches.driveLetter.ToLower()
     $path = $Matches.path.Replace("\", "/")
-    return "/mnt/$driveLetter/$path"
+    $wslPath = "/mnt/$driveLetter/$path"
+  }
+  # covers network paths (e.g. samba drives)
+  elseif ($windowsPath -match '\\\\(?<host>[0-9a-z\.]+)\\(?<path>.+)') {
+    $wslPath = $networkDriveMountpoint
+    
+    # network drives are not mounted by default, so manually mount the selected path
+    Write-Host "A network drive location was selected, so it needs to be mounted. You will be asked for your linux password." -ForegroundColor Yellow
+    wsl -d $wslLabel --cd "~" -- mountpoint -q $networkDriveMountpoint `|`| `( `
+      sudo mkdir $networkDriveMountpoint `&`> /dev/null `; `
+      sudo mount -t drvfs `'$windowsPath`' $networkDriveMountpoint `
+    `)
+    $global:isDriveMounted = $true
+    Write-Host "Network drive mounted.`t`t" -NoNewLine
+    printOK
   }
 
-  return ""
+  return $wslPath
+}
+
+function unmountTargetPath {
+  if ($global:isDriveMounted) {
+    Write-Host "The network drive location needs to be unmounted. You will be asked for your linux password." -ForegroundColor Yellow
+    wsl -d $wslLabel --cd "~" -- sudo umount $networkDriveMountpoint
+    $global:isDriveMounted = $false
+    Write-Host "Network drive unmounted.`t`t" -NoNewLine
+    printOK
+  }
 }
 
 # prevents the user from picking a wsl filesystem location
