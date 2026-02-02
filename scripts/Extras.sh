@@ -13,6 +13,7 @@ ASSETS_DIR="${SCRIPTS_DIR}/assets"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
 OPL="${SCRIPTS_DIR}/OPL"
 OSDMBR_CNF="${SCRIPTS_DIR}/tmp/OSDMBR.CNF"
+SYSCONF_XML="${SCRIPTS_DIR}/tmp/sysconf.xml"
 LOG_FILE="${TOOLKIT_PATH}/logs/extras.log"
 
 path_arg="$1"
@@ -527,6 +528,36 @@ cat << "EOF"
 EOF
 }
 
+SCREEN_SPLASH(){
+    clear
+cat << "EOF"
+          _____                            _____ _           _____      _   _   _                 
+         /  ___|                          /  ___(_)         /  ___|    | | | | (_)
+         \ `--.  ___ _ __ ___  ___ _ __   \ `--. _ _______  \ `--.  ___| |_| |_ _ _ __   __ _ ___ 
+          `--. \/ __| '__/ _ \/ _ \ '_ \   `--. \ |_  / _ \  `--. \/ _ \ __| __| | '_ \ / _` / __|
+         /\__/ / (__| | |  __/  __/ | | | /\__/ / |/ /  __/ /\__/ /  __/ |_| |_| | | | | (_| \__ \
+         \____/ \___|_|  \___|\___|_| |_| \____/|_/___\___| \____/ \___|\__|\__|_|_| |_|\__, |___/
+                                                                                         __/ |
+                                                                                        |___/
+
+
+EOF
+}
+
+CACHE_SPLASH(){
+    clear
+cat << "EOF"
+   _____ _                    ___       _              _____                  _____            _
+  /  __ \ |                  / _ \     | |     ___    |_   _|                /  __ \          | |
+  | /  \/ | ___  __ _ _ __  / /_\ \_ __| |_   ( _ )     | |  ___ ___  _ __   | /  \/ __ _  ___| |__   ___ 
+  | |   | |/ _ \/ _` | '__| |  _  | '__| __|  / _ \/\   | | / __/ _ \| '_ \  | |    / _` |/ __| '_ \ / _ \
+  | \__/\ |  __/ (_| | |    | | | | |  | |_  | (_>  <  _| || (_| (_) | | | | | \__/\ (_| | (__| | | |  __/
+   \____/_|\___|\__,_|_|    \_| |_/_|   \__|  \___/\/  \___/\___\___/|_| |_|  \____/\__,_|\___|_| |_|\___|
+
+
+EOF
+}
+
 # Function for Option 1 - Install PS2 Linux
 option_one() {
     echo "########################################################################################################" >> "${LOG_FILE}"
@@ -537,6 +568,7 @@ option_one() {
         return 1
     fi
 
+    clean_up
     MOUNT_OPL || return 1
     
     psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
@@ -736,6 +768,7 @@ option_two() {
     echo "Reassign Buttons:" >> "${LOG_FILE}"
     SWAP_SPLASH
 
+    clean_up
     if [ "$OS" = "HOSD" ]; then
         error_msg "[X] Error: PSBBN is not installed. Please install PSBBN to use this feature."
         return 1
@@ -745,31 +778,18 @@ option_two() {
     
     psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
     
-    UNMOUNT_OPL || return 1
-
     if [[ "$(printf '%s\n' "$psbbn_version" "2.10" | sort -V | head -n1)" != "2.10" ]]; then
         # $psbbn_version < 2.10
         error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 3.00." "To update, please select 'Install PSBBN' from the main menu and try again."
-        exit 1
+        UNMOUNT_OPL
+        return 1
     elif [[ "$(printf '%s\n' "$psbbn_version" "3.00" | sort -V | head -n1)" = "$psbbn_version" ]] \
         && [[ "$psbbn_version" != "3.00" ]]; then
         error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 3.00." "To update, please select “Update PSBBN Software” from the main menu and try again."
-        exit 1
+        UNMOUNT_OPL
+        return 1
     fi
 
-    LINUX_PARTITIONS=("__linux.4" )
-    APA_PARTITIONS=("__system" )
-
-    clean_up   && \
-    mapper_probe && \
-    mount_cfs    && \
-    mount_pfs    || return 1
-
-
-    ls -l /dev/mapper >> "${LOG_FILE}"
-    df >> "${LOG_FILE}"
-
-    
     choice=""
     while :; do
         SWAP_SPLASH
@@ -783,52 +803,88 @@ option_two() {
 
 EOF
         read -rp "                                      Select an option: " choice
-        case "$choice" in
-            1)
-                echo "Western layout selected." >> "${LOG_FILE}"
-                if sudo cp -f "${ASSETS_DIR}/kernel/vmlinux" "${STORAGE_DIR}/__system/p2lboot/vmlinux" >> "${LOG_FILE}" 2>&1 \
-                    && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_r.tm2" >> "${LOG_FILE}" 2>&1 \
-                    && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1
-                then
-                    SWAP_SPLASH
-                    echo "    ================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
-                    echo
-                    read -n 1 -s -r -p "                                Press any key to return to the menu..." </dev/tty
-                else
-                    SWAP_SPLASH
-                    error_msg "[X] Error: Failed to swap buttons. See log for details."
-                    return 1
-                fi
-                break
-                ;;
 
-                
-            2)
-                echo "Japanese layout selected." >> "${LOG_FILE}"
-                if sudo cp -f "${ASSETS_DIR}/kernel/vmlinux_jpn" "${STORAGE_DIR}/__system/p2lboot/vmlinux" >> "${LOG_FILE}" 2>&1 \
-                    && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_r.tm2" >> "${LOG_FILE}" 2>&1 \
-                    && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1
-                then
-                    SWAP_SPLASH
-                    echo "    ================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
-                    echo
-                    read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
-                else
-                    SWAP_SPLASH
-                    error_msg "[X] Error: Failed to swap buttons. See log for details."
-                    return 1
-                fi
-                break
-                ;;
-            b|B)
+            case "$choice" in
+            1|2|b|B)
                 break
                 ;;
             *)
-                echo -n "                                      Invalid choice, please enter 1, 2, or b."
+                echo "                                      Invalid choice, please enter 1, 2, or b."
                 sleep 3
-            ;;
+                ;;
         esac
     done
+
+    if [[ "$choice" == "1" ]]; then
+        BUTTON="X"
+    else
+        BUTTON="O"
+    fi
+
+    if grep -q '^ENTER =' "$OPL/version.txt"; then
+        sed -i "s/^ENTER =.*/ENTER = $BUTTON/" "$OPL/version.txt" || {
+            error_msg "[X] Error: Failed to update button config in version.txt."
+            UNMOUNT_OPL
+            return 1
+        }
+    else
+        echo "ENTER = $BUTTON" >> "$OPL/version.txt" || {
+            error_msg "[X] Error: Failed to add button config to version.txt."
+            UNMOUNT_OPL
+            return 1
+        }
+    fi
+
+    UNMOUNT_OPL || return 1
+
+    LINUX_PARTITIONS=("__linux.4" )
+    APA_PARTITIONS=("__system" )
+
+    mapper_probe && \
+    mount_cfs    && \
+    mount_pfs    || return 1
+
+    ls -l /dev/mapper >> "${LOG_FILE}"
+    df >> "${LOG_FILE}"
+
+    case "$choice" in
+        1)
+            echo "Western layout selected." >> "${LOG_FILE}"
+            if sudo cp -f "${ASSETS_DIR}/kernel/vmlinux" "${STORAGE_DIR}/__system/p2lboot/vmlinux" >> "${LOG_FILE}" 2>&1 \
+                && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_r.tm2" >> "${LOG_FILE}" 2>&1 \
+                && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1
+            then
+                SWAP_SPLASH
+                echo "    ================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
+                echo
+                read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
+            else
+                SWAP_SPLASH
+                error_msg "[X] Error: Failed to swap buttons. See log for details."
+                return 1
+            fi
+            ;;
+
+                
+        2)
+            echo "Japanese layout selected." >> "${LOG_FILE}"
+            if sudo cp -f "${ASSETS_DIR}/kernel/vmlinux_jpn" "${STORAGE_DIR}/__system/p2lboot/vmlinux" >> "${LOG_FILE}" 2>&1 \
+                && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_r.tm2" >> "${LOG_FILE}" 2>&1 \
+                && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1
+            then
+                SWAP_SPLASH
+                echo "    ================================= [✓] Buttons Swapped Successfully =================================" | tee -a "${LOG_FILE}"
+                echo
+                read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
+            else
+                SWAP_SPLASH
+                error_msg "[X] Error: Failed to swap buttons. See log for details."
+                return 1
+            fi
+            ;;
+        b|B)
+            ;;
+    esac
 
     clean_up || return 1
     echo clean up afterwards: >> "${LOG_FILE}"
@@ -843,19 +899,36 @@ option_three() {
     
     LANGUAGE_SPLASH
 
+    clean_up
     MOUNT_OPL   || return 1
     
     if [ "$OS" = "PSBBN" ]; then
         psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
-    
+        ENTER=$(awk -F' *= *' '$1=="ENTER"{print $2}' "${OPL}/version.txt")
+        SCREEN=$(awk -F' *= *' '$1=="SCREEN"{print $2}' "${OPL}/version.txt")
+
+        if [[ -z "$ENTER" ]]; then
+            if [[ "$LANG" == "jpn" ]]; then
+                echo "ENTER = O" >> "$OPL/version.txt"
+            else
+                echo "ENTER = X" >> "$OPL/version.txt"
+            fi
+        fi
+
+        if [[ -z "$SCREEN" ]]; then
+            echo "SCREEN = 4:3" >> "$OPL/version.txt"
+        fi
+
         if [[ "$(printf '%s\n' "$psbbn_version" "2.10" | sort -V | head -n1)" != "2.10" ]]; then
             # $psbbn_version < 2.10
             error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.1.0." "To update, please select 'Install PSBBN' from the main menu and try again."
-            exit 1
+            UNMOUNT_OPL
+            return 1
         elif [[ "$(printf '%s\n' "$psbbn_version" "4.1.0" | sort -V | head -n1)" = "$psbbn_version" ]] \
             && [[ "$psbbn_version" != "4.1.0" ]]; then
             error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.1.0." "To update, please select “Update PSBBN Software” from the main menu and try again."
-            exit 1
+            UNMOUNT_OPL
+            return 1
         fi
     fi
 
@@ -868,6 +941,8 @@ option_three() {
                                2) Japanese
                                3) German
                                4) Italian
+
+                               b) Back
 
 EOF
         read -rp "                               Select an option: " choice
@@ -893,9 +968,13 @@ EOF
                 LANG_DISPLAY="Italian"
                 break
                 ;;
+            b|B)
+                UNMOUNT_OPL
+                return 0
+                ;;
             *)
                 echo
-                echo -n "                               Invalid choice, enter a number between 1 and 3."
+                echo -n "                               Invalid choice, enter a number between 1 and 4."
                 sleep 3
                 ;;
         esac
@@ -903,7 +982,6 @@ EOF
 
     echo "Language selected: $LANG_DISPLAY" >> "${LOG_FILE}"
     LANGUAGE_SPLASH
-
 
     if [ "$OS" = "PSBBN" ]; then
         # Download the HTML of the page
@@ -953,6 +1031,56 @@ EOF
         cp "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to copy OSDMBR.CNF."; return 1; }
         sed -i "s/^osd_language =.*/osd_language = $LANG/" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to update language in OSDMBR.CNF."; return 1; }
         cp -f "${OSDMBR_CNF}" "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" || { error_msg "[X] Error: Failed to replace OSDMBR.CNF."; return 1; }
+        
+        # Update buttons
+        if [[ "$ENTER" == "O" ]] || { [[ -z "$ENTER" ]] && [[ "$LANG" == "jpn" ]]; }; then
+            if sudo cp -f "${ASSETS_DIR}/kernel/vmlinux_jpn" "${STORAGE_DIR}/__system/p2lboot/vmlinux" >> "${LOG_FILE}" 2>&1 \
+                && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_r.tm2" >> "${LOG_FILE}" 2>&1 \
+                && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1 ; then
+                echo "Enter button swapped to O" >> "${LOG_FILE}"
+            else
+                error_msg "Failed to swap enter button. See log for details."
+            fi
+        elif [[ "$ENTER" == "X" ]] || { [[ -z "$ENTER" ]] && [[ "$LANG" != "jpn" ]]; }; then
+            if sudo cp -f "${ASSETS_DIR}/kernel/vmlinux" "${STORAGE_DIR}/__system/p2lboot/vmlinux" >> "${LOG_FILE}" 2>&1 \
+                && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_r.tm2" >> "${LOG_FILE}" 2>&1 \
+                && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1 ; then
+                echo "Enter button swapped to X" >> "${LOG_FILE}"
+            else
+                error_msg "Failed to swap enter button. See log for details."
+            fi
+        fi
+
+        if [[ "$SCREEN" == "full" ]]; then
+            case "$LANG" in
+                eng) SIZE_NAME="Full" ;;
+                fre) SIZE_NAME="Plein écran" ;;
+                spa) SIZE_NAME="Pantalla Completa" ;;
+                ger) SIZE_NAME="Ganzer Bildschirm" ;;
+                ita) SIZE_NAME="Schermo Intero" ;;
+                dut) SIZE_NAME="Volledig" ;;
+                por) SIZE_NAME="Completo" ;;
+            esac
+        elif [[ "$SCREEN" == "16:9" ]]; then
+            SIZE_NAME="16:9"
+        else
+            SIZE_NAME="4:3"
+        fi
+
+        mkdir -p "${SCRIPTS_DIR}/tmp"
+        sudo cp "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" "${SYSCONF_XML}" || error_msg "Failed to copy sysconf.xml"
+
+        sed -i "/<menu id=\"sysconf_value_2_0\">/,/<\/menu>/ {
+            /<item value=/ {
+                s|<item value=.*|<item value=\"$SIZE_NAME\"/>|
+                :done
+                n
+                b done
+            }
+        }" "$SYSCONF_XML" ||
+        error_msg "Failed to update $SYSCONF_XML";
+
+        sudo cp -f "${SYSCONF_XML}" "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" || error_msg "Failed to replace sysconf.xml."
     else
         sed -i "s/^LANG =.*/LANG = $LANG/" "$OPL/version.txt" || { error_msg "[X] Error: Failed to update language in version.txt."; return 1; }
         APA_PARTITIONS=("__common")
@@ -994,8 +1122,10 @@ EOF
     echo "      It is recommended to rerun the Game Installer and choose \"Add Additional Games and Apps\" to"
     if [ "$OS" = "PSBBN" ]; then
         echo "      update the game titles and PlaySation game manuals to your selected language."
-        echo
-        echo "      If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
+        if [[ -z "$ENTER" ]]; then
+            echo
+            echo "      If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
+        fi
     else
         echo "      update the game titles to your selected language."
     fi
@@ -1004,6 +1134,209 @@ EOF
     echo
     read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
     
+}
+
+option_four() {
+    echo "########################################################################################################" >> "${LOG_FILE}"
+    echo "Change Screen Size:" >> "${LOG_FILE}"
+
+    SCREEN_SPLASH
+
+    clean_up
+
+    if [ "$OS" = "HOSD" ]; then
+        error_msg "[X] Error: PSBBN is not installed. Please install PSBBN to use this feature."
+        return 1
+    fi
+
+    MOUNT_OPL   || return 1
+
+    psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
+    
+    if [[ "$(printf '%s\n' "$psbbn_version" "2.10" | sort -V | head -n1)" != "2.10" ]]; then
+        # $psbbn_version < 2.10
+        error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.0.0." "To update, please select 'Install PSBBN' from the main menu and try again."
+        return 1
+    elif [[ "$(printf '%s\n' "$psbbn_version" "4.0.0" | sort -V | head -n1)" = "$psbbn_version" ]] \
+        && [[ "$psbbn_version" != "4.0.0" ]]; then
+        error_msg "[X] Error: PSBBN Definitive Patch version is lower than the required version of 4.0.0." "To update, please select “Update PSBBN Software” from the main menu and try again."
+        return 1
+    fi
+
+    LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
+    echo "Language: $LANG" >> "${LOG_FILE}"
+
+        while :; do
+        SCREEN_SPLASH
+        cat << "EOF"
+                              Please select a screen size from the list below:
+
+                              1) 4:3
+                              2) Full
+                              3) 16:9
+
+                              b) Back
+
+EOF
+        read -rp "                              Select an option: " choice
+
+        case "$choice" in
+            1)
+                SCREEN_SIZE="4:3"
+                SIZE_NAME="4:3"
+                break
+                ;;
+            2)
+                SCREEN_SIZE="full"
+                case "$LANG" in
+                    eng) SIZE_NAME="Full" ;;
+                    fre) SIZE_NAME="Plein écran" ;;
+                    spa) SIZE_NAME="Pantalla Completa" ;;
+                    ger) SIZE_NAME="Ganzer Bildschirm" ;;
+                    ita) SIZE_NAME="Schermo Intero" ;;
+                    dut) SIZE_NAME="Volledig" ;;
+                    por) SIZE_NAME="Completo" ;;
+                esac
+                break
+                ;;
+            3)
+                SCREEN_SIZE="16:9"
+                SIZE_NAME="16:9"
+                break
+                ;;
+            b|B)
+                UNMOUNT_OPL
+                return 0
+                ;;
+            *)
+                echo
+                echo -n "                               Invalid choice, enter a number between 1 and 3."
+                sleep 3
+                ;;
+        esac
+    done
+
+    echo "Screen size selected: $SCREEN_SIZE" >> "${LOG_FILE}"
+    echo "Screen size name: $SIZE_NAME" >> "${LOG_FILE}"
+
+    if grep -q '^SCREEN =' "$OPL/version.txt"; then
+        sed -i "s/^SCREEN =.*/SCREEN = $SCREEN_SIZE/" "$OPL/version.txt" || {
+            error_msg "[X] Error: Failed to update screen size in version.txt."
+            return 1
+        }
+    else
+        echo "SCREEN = $SCREEN_SIZE" >> "$OPL/version.txt" || {
+            error_msg "[X] Error: Failed to add screen size to version.txt."
+            return 1
+        }
+    fi
+
+    LINUX_PARTITIONS=("__linux.4")
+    APA_PARTITIONS=("__sysconf")
+
+    clean_up   && \
+    mapper_probe || return 1
+    mount_cfs    && \
+    mount_pfs    || return 1
+
+    ls -l /dev/mapper >> "${LOG_FILE}"
+    df >> "${LOG_FILE}"
+
+    mkdir -p "${SCRIPTS_DIR}/tmp"
+    cp "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" "${OSDMBR_CNF}" || { error_msg "[X] Error: Failed to copy OSDMBR.CNF."; return 1; }
+
+    # OSDMBR.CNF - Update osd_screentype if exists, otherwise append it
+    if grep -q '^osd_screentype =' "${OSDMBR_CNF}"; then
+        sed -i "s/^osd_screentype =.*/osd_screentype = $SCREEN_SIZE/" "${OSDMBR_CNF}" || {
+            error_msg "[X] Error: Failed to update osd_screentype in OSDMBR.CNF."; 
+            return 1; 
+        }
+    else
+        echo "osd_screentype = $SCREEN_SIZE" >> "${OSDMBR_CNF}" || {
+            error_msg "[X] Error: Failed to add osd_screentype in OSDMBR.CNF."; 
+            return 1; 
+        }
+    fi
+
+    cp -f "${OSDMBR_CNF}" "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" || { error_msg "[X] Error: Failed to replace OSDMBR.CNF."; return 1; }
+
+    # Update sysconf.xml
+    sudo cp "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" "${SYSCONF_XML}" || { error_msg "[X] Error: Failed to copy sysconf.xml"; return 1; }
+
+   # Use sed to replace the first <item value= inside the menu block
+    sed -i "/<menu id=\"sysconf_value_2_0\">/,/<\/menu>/ {
+        /<item value=/ {
+            s|<item value=.*|<item value=\"$SIZE_NAME\"/>|
+            :done
+            n
+            b done
+        }
+    }" "$SYSCONF_XML" || {
+        error_msg "[X] Error: Failed to update $SYSCONF_XML";
+        return 1;
+    }
+
+    sudo cp -f "${SYSCONF_XML}" "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" || { error_msg "[X] Error: Failed to replace sysconf.xml."; return 1; }
+
+    clean_up || return 1
+    echo clean up afterwards: >> "${LOG_FILE}"
+    ls -l /dev/mapper >> "${LOG_FILE}"
+    df >> "${LOG_FILE}"
+
+    SCREEN_SPLASH
+    echo "    =============================== [✓] Screen Size Successfully Changed ===============================" | tee -a "${LOG_FILE}"
+    echo
+    read -n 1 -s -r -p "                                   Press any key to return to the menu..." </dev/tty
+
+}
+
+option_five() {
+    CACHE_SPLASH
+
+    # === Delete files in ARTWORK_DIR ===
+    if ! find "$ARTWORK_DIR" -maxdepth 1 -type f ! \( \
+        -name "APP.png" -o \
+        -name "APP_WLE-ISR.png" -o \
+        -name "HOSDMENU.png" -o \
+        -name "NHDDL.png" -o \
+        -name "OPENPS2LOAD.png" -o \
+        -name "ps1.png" -o \
+        -name "ps2.png" \
+    \) -delete; then
+    error_msg "[X] Error: Some files in $ARTWORK_DIR could not be deleted."
+    return 1
+    fi
+
+    # === Delete files in ICO_DIR ===
+    if ! find "$ICO_DIR" -maxdepth 1 -type f ! \( \
+        -name "app-del.ico" -o \
+        -name "app.ico" -o \
+        -name "cd.ico" -o \
+        -name "dvd.ico" -o \
+        -name "nhddl-del.ico" -o \
+        -name "nhddl.ico" -o \
+        -name "opl-del.ico" -o \
+        -name "opl.ico" -o \
+        -name "ps1.ico" -o \
+        -name "psbbn-del.ico" -o \
+        -name "psbbn.ico" \
+    \) -delete; then
+        error_msg "[X] Error: Some files in $ICO_DIR could not be deleted."
+        return 1
+    fi
+
+    # === Delete files in VMC_ICON_DIR ===
+    if ! find "$VMC_ICON_DIR" -maxdepth 1 -type f ! \( \
+        -name "VMC.ico" -o \
+        -name "GP_*" \
+    \) -delete; then
+        error_msg "[X] Error: Some files in $VMC_ICON_DIR could not be deleted."
+        return 1
+    fi
+
+    echo "    ============================= [✓] Icon & Art Cache Cleared Successfully ============================"
+    echo
+    read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
 }
 
 EXTRAS_SPLASH() {
@@ -1027,6 +1360,8 @@ display_menu() {
                                     1) Install PS2 Linux
                                     2) Reassign Cross and Circle Buttons
                                     3) Change Language
+                                    4) Change Screen Settings
+                                    5) Clear Art & Icon Cache
 
                                     b) Back to Main Menu
 
@@ -1080,6 +1415,12 @@ while true; do
             ;;
         3)
             option_three
+            ;;
+        4)
+            option_four
+            ;;
+        5)
+            option_five
             ;;
         b|B)
             break

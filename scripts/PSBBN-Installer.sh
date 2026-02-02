@@ -23,6 +23,7 @@ SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
 ASSETS_DIR="${SCRIPTS_DIR}/assets"
 HELPER_DIR="${SCRIPTS_DIR}/helper"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
+SYSCONF_XML="${SCRIPTS_DIR}/tmp/sysconf.xml"
 OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/PSBBN-installer.log"
 arch="$(uname -m)"
@@ -684,6 +685,8 @@ else
 
     LANG_VER=$(awk -F' *= *' '$1=="LANG_VER"{print $2}' "${OPL}/version.txt")
     CHAN_VER=$(awk -F' *= *' '$1=="CHAN_VER"{print $2}' "${OPL}/version.txt")
+    ENTER=$(awk -F' *= *' '$1=="ENTER"{print $2}' "${OPL}/version.txt")
+    SCREEN=$(awk -F' *= *' '$1=="SCREEN"{print $2}' "${OPL}/version.txt")
 
     UNMOUNT_OPL
 fi
@@ -793,7 +796,7 @@ if [ "$PSBBN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
     echo
     echo "============================================================================================================"
     echo
-    read -n 1 -s -r -p "                               Press any key to return to continue..." </dev/tty
+    read -n 1 -s -r -p "                                   Press any key to return to continue..." </dev/tty
     echo
 fi
 
@@ -1179,6 +1182,57 @@ if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
         fi
 fi
 
+if [ "$MODE" = "update" ]; then
+    if [[ "$ENTER" == "O" ]] || { [[ -z "$ENTER" ]] && [[ "$LANG" == "jpn" ]]; }; then
+        if sudo cp -f "${ASSETS_DIR}/kernel/vmlinux_jpn" "${STORAGE_DIR}/__system/p2lboot/vmlinux" >> "${LOG_FILE}" 2>&1 \
+            && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_r.tm2" >> "${LOG_FILE}" 2>&1 \
+            && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1 ; then
+            echo "Enter button swapped to O" >> "${LOG_FILE}"
+        else
+            error_msg "Failed to swap enter button. See log for details."
+        fi
+    elif [[ "$ENTER" == "X" ]] || { [[ -z "$ENTER" ]] && [[ "$LANG" != "jpn" ]]; }; then
+        if sudo cp -f "${ASSETS_DIR}/kernel/vmlinux" "${STORAGE_DIR}/__system/p2lboot/vmlinux" >> "${LOG_FILE}" 2>&1 \
+            && sudo cp -f "${ASSETS_DIR}/kernel/x.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_r.tm2" >> "${LOG_FILE}" 2>&1 \
+            && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_d.tm2" >> "${LOG_FILE}" 2>&1 ; then
+            echo "Enter button swapped to X" >> "${LOG_FILE}"
+        else
+            error_msg "Failed to swap enter button. See log for details."
+        fi
+    fi
+
+    if [[ "$SCREEN" == "full" ]]; then
+        case "$LANG" in
+            eng) SIZE_NAME="Full" ;;
+            fre) SIZE_NAME="Plein écran" ;;
+            spa) SIZE_NAME="Pantalla Completa" ;;
+            ger) SIZE_NAME="Ganzer Bildschirm" ;;
+            ita) SIZE_NAME="Schermo Intero" ;;
+            dut) SIZE_NAME="Volledig" ;;
+            por) SIZE_NAME="Completo" ;;
+        esac
+    elif [[ "$SCREEN" == "16:9" ]]; then
+            SIZE_NAME="16:9"
+    else
+        SIZE_NAME="4:3"
+    fi
+
+    mkdir -p "${SCRIPTS_DIR}/tmp"
+    sudo cp "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" "${SYSCONF_XML}" || error_msg "Failed to copy sysconf.xml"
+
+    sed -i "/<menu id=\"sysconf_value_2_0\">/,/<\/menu>/ {
+        /<item value=/ {
+            s|<item value=.*|<item value=\"$SIZE_NAME\"/>|
+            :done
+            n
+            b done
+        }
+    }" "$SYSCONF_XML" ||
+    error_msg "Failed to update $SYSCONF_XML";
+
+    sudo cp -f "${SYSCONF_XML}" "${STORAGE_DIR}/__linux.4/bn/script/utility/sysconf.xml" || error_msg "Failed to replace sysconf.xml."
+fi
+
 UNMOUNT_ALL
 
 if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
@@ -1266,7 +1320,13 @@ if [ "$MODE" = "install" ]; then
     echo "LANG = $LANG" >> "${OPL}/version.txt"
     echo "LANG_VER = $LATEST_LANG" >> "${OPL}/version.txt"
     echo "CHAN_VER = $LATEST_CHAN" >> "${OPL}/version.txt"
-    
+    if [[ "$LANG" == "jpn" ]]; then
+        echo "ENTER = O" >> "$OPL/version.txt"
+    else
+        echo "ENTER = X" >> "$OPL/version.txt"
+    fi
+    echo "SCREEN = 4:3" >> "$OPL/version.txt"
+
 else
     if [[ -f "${OPL}/version.txt" ]]; then
         sed -i "1s|.*|$LATEST_VERSION|" "${OPL}/version.txt"
@@ -1295,6 +1355,19 @@ else
         else
             echo "CHAN_VER = $LATEST_CHAN" >> "${OPL}/version.txt"
         fi
+
+        if [[ -z "$ENTER" ]]; then
+            if [[ "$LANG" == "jpn" ]]; then
+                echo "ENTER = O" >> "$OPL/version.txt"
+            else
+                echo "ENTER = X" >> "$OPL/version.txt"
+            fi
+        fi
+
+        if [[ -z "$SCREEN" ]]; then
+            echo "SCREEN = 4:3" >> "$OPL/version.txt"
+        fi
+
     else
         error_msg "Error" "Failed to update version.txt."
     fi
@@ -1345,7 +1418,7 @@ else
         echo
     fi
 
-    if [ "$PSBBN_UPDATE" != "no" ] || [ "$LANG_UPDATE" != "no" ]; then
+    if [[ ( "$PSBBN_UPDATE" != "no" || "$LANG_UPDATE" != "no" ) && -z "$ENTER" ]]; then
         echo "      If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
         echo
     fi

@@ -528,7 +528,7 @@ Simply right-click on `PSBBN-Launcher-For-Windows.ps1` and select **Run with Pow
 **NOTE:**  
 It is normal for the selected drive to be unmounted in Windows while running the script. Always exit the **[PSBBN Definitive Project Main Menu](main-menu)** by pressing `q`. This ensures the drive is safely unmounted from WSL and returned to Windows. For USB drives, remember to also eject them from the Windows system tray before unplugging them.
 
-If you experience any issues while running the PSBBN Launcher for Windows, see **[troubleshooting](#problems-running-the-script)**.
+If you experience any issues while running the **PSBBN Launcher for Windows**, see **[troubleshooting](#problems-running-the-script)**.
 
 ## Main Menu
 `PSBBN-Definitive-Patch.sh` is your gateway to the **PSBBN Definitive Project**. Running this script launches the main menu.  
@@ -557,6 +557,8 @@ Performs a fresh install **[HOSDMenu](#hosdmenu)**.
    1. [Install PS2 Linux](#ps2-linux)
    2. [Reassign Cross and Circle Buttons](#reassign-cross-and-circle-buttons) 
    3. [Change Language](#change-language)
+   4. [Change Screen Settings](#change-screen-settings)
+   5. [Clear Art & Icon Cache](#clear-art--icon-cache)
 
 ## Install PSBBN and HOSDMenu
 Installs both **PSBBN** and [HOSDMenu](#hosdmenu). Requires and official Sony Network Adapter:
@@ -638,6 +640,8 @@ Select **Optional Extras** from the main menu and you will be presented with the
 1. [Install PS2 Linux](#ps2-linux)
 2. [Reassign Cross and Circle Buttons](#reassign-cross-and-circle-buttons)
 3. [Change Language](#change-language)
+4. [Change Screen Settings](#change-screen-settings)
+5. [Clear Art & Icon Cache](#clear-art--icon-cache)
 
 ### PS2 Linux
 **NOTE: This feature is for PSBBN only.**  
@@ -670,6 +674,17 @@ For both **PSBBN** and [HOSDMenu](#hosdmenu) users, this option also updates the
 After changing the language, it is recommended that you rerun the [Game Installer](#game-and-app-installer) and select *Add Additional Games and Apps* to update game titles to your selected language. For PSBBN users, this will also update the PlayStation game manuals.
 
 PSBBN users who previously swapped the **×** and **○** buttons using the [Reassign Cross and Circle Buttons](#reassign-cross-and-circle-buttons) option should run it again after changing the language.
+
+### Change Screen Settings
+**NOTE: This feature is for PSBBN only.**  
+**PSBBN** normally locks the screen system settings to **4:3**. This option allows you to change the screen setting. You can choose between **4:3**, **Full**, and **16:9**.
+
+This setting is used by some games and [HOSDMenu](#hosdmenu). It does not change the aspect ratio of PSBBN itself.
+
+### Clear Art & Icon Cache
+This option removes all game artwork and icons that are stored locally on your PC. When you next run the game installer, it will scan your game collection, then download and apply fresh copies of the required artwork and icons.  
+
+You might want to clear the cache if games display incorrect or low-quality artwork, as updated artwork may now be available.
 
 # Notes
 
@@ -869,8 +884,8 @@ If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL
 - PSBBN will freeze at the "PlayStation 2" logo when booting, if a 3rd party, unofficial HDD adapter is used. **An official Sony Network Adapter is required**.
 - exFAT partition cannot exceed 2 TB. When using a drive larger, remaining space beyond that will be unusable.
 - **wLaunchELF** and other native PS2 apps cannot create APA partitions on the PS2 drive. New partitions should only be created using the version of **PFS Shell** included with this project.
-- APA partitions should not be created beyond the allocated space for APA set while installing PSBBN/HOSDMenu or it will corrupt the drive.
-- OPL cannot read settings saved on the exFAT partition of the internal drive. Settings should be saved to a PS2 memory card. If you have a MemCard Pro 2 or SD2PSX, it is recommended that you save your OPL settings to a standard PS2 memory card inserted in slot 2.
+- APA partitions must not be created beyond the space allocated for APA during PSBBN/HOSDMenu installation. Doing so will overwrite data on the exFAT partition.
+- OPL cannot read settings saved on the exFAT partition of the internal drive. Settings should be saved to a PS2 memory card. For details see the **[troubleshooting](#problems-launching-games)** section for details.
 
 # Legacy versions of the PSBBN Definitive English Patch
 <details>
@@ -885,7 +900,7 @@ If games do not appear in the games list in [NHDDL](#neutrino-and-nhddl) or [OPL
 - "Audio Player" feature re-added to the Music Channel from an earlier release of PSBBN, allowing compatibility with NetMD MiniDisc Recorders
 - Associated manual pages and troubleshooting regarding the "Audio Player" feature translated and re-added to the user guide
 - Japanese QWERTY on-screen keyboard replaced with US English on-screen keyboard**
-- Storage capacity limited to 128 GB
+- Storage capacity limited to 130 GB
 - Legacy versions of the **PSBBN Definitive Project** are **not** compatible with the [PSBBN installer](#install-psbbn-and-hosdmenu), [PSBBN Software Updater](#update-psbbn-software), [Game Installer](#game-and-app-installer), [Media Installer](#media-installer), or [Extras](#optional-extras)
 
 **Version History**  
@@ -1016,9 +1031,9 @@ Disable DNAS Authentication:
 - `cue2pops` from [pops2cue](https://github.com/bucanero/pops2cue) by [Bucanero](https://github.com/Bucanero)
 - `icon_sys_to_txt.py` written by [NathanNeurotic (Ripto)](https://github.com/NathanNeurotic)
 - [OSDMenu MBR and HOSDMenu](https://github.com/pcm720/OSDMenu) written by [pcm720](https://github.com/pcm720)
-- [PFS Shell](https://github.com/AKuHAK/pfsshell/tree/8Mb) and [HDL Dump](https://github.com/AKuHAK/hdl-dump/tree/8M) with 8MB APA partition modifications by [AKuHAK](https://github.com/AKuHAK)
-- [PFS Fuse](https://github.com/ps2homebrew/pfsshell) by [PS2 Homebrew Projects](https://github.com/ps2homebrew)
-- [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) by [PS2 Homebrew Projects](https://github.com/ps2homebrew) with BDM contributions from [KrahJohlito](https://github.com/KrahJohlito) and Auto Launch modifications by [CosmicScale](https://github.com/CosmicScale)
+- [PFS Shell](https://github.com/AKuHAK/pfsshell/tree/ext2) and [HDL Dump](https://github.com/AKuHAK/hdl-dump/tree/8M) with 8MB APA partition and EXT2 modifications by [AKuHAK](https://github.com/AKuHAK)
+- [PFS Fuse](https://github.com/ps2homebrew/pfsshell) from [PS2 Homebrew Projects](https://github.com/ps2homebrew)
+- [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) from [PS2 Homebrew Projects](https://github.com/ps2homebrew) with BDM contributions from [KrahJohlito](https://github.com/KrahJohlito) and Auto Launch modifications by [CosmicScale](https://github.com/CosmicScale)
 - [Neutrino](https://github.com/rickgaiser/neutrino) by [Rick Gaiser](https://github.com/rickgaiser)
 - [NHDDL](https://github.com/pcm720/nhddl) written by [pcm720](https://github.com/pcm720)
 - [POPStarter](https://www.psx-place.com/threads/popstarter.19139/) written by [KrHACKen](https://www.psx-place.com/members/krhacken.98/)
