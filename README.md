@@ -1,5 +1,5 @@
 # PSBBN Definitive Project
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch/blob/main/LICENSE)  
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch/blob/main/LICENSE)  
 This is the Definitive Project for Sony's "PlayStation Broadband Navigator" software (also known as BB Navigator or PSBBN) for the "PlayStation 2" (PS2) video game console.
 
 PSBBN is official Sony software for the PlayStation 2, released exclusively in Japan. Introduced in 2002 as a replacement for the PS2’s OSD, it required both a hard drive and a network adapter to function. It added many new features:
@@ -1015,7 +1015,7 @@ Disable DNAS Authentication:
 
 # Credits
 **PS2 Homebrew Community:**
-- PSBBN Definitive Project project by [CosmicScale](https://github.com/CosmicScale)
+- PSBBN Definitive Project © [CosmicScale](https://github.com/CosmicScale)
 - PSBBN English translation by [CosmicScale](https://github.com/CosmicScale)
 - PSBBN German translation by [Argo707](https://github.com/Argo707) 
 - PSBBN Italian translation by [plamadika](https://github.com/plamadika) & [lcipria](https://github.com/lcipria) 
