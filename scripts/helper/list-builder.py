@@ -197,7 +197,7 @@ def process_files(folder, extensions):
                             # Only fix if underscore or dot are in the wrong positions
                             if string[4] != '_' or string[8] != '.':
                                 # Remove any existing underscore or dot
-                                cleaned = string.replace('_', '').replace('.', '')
+                                cleaned = string.replace('_', '').replace('.', '').replace('-', '')
                                 # Rebuild with underscore at index 4 and dot at index 8
                                 string = cleaned[:4] + '_' + cleaned[4:7] + '.' + cleaned[7:]
                         break
