@@ -1145,7 +1145,7 @@ APP_ART() {
     ULE*)
         APP_ID="APP_ULE"
         ;;
-    LAUNCHELF*|WLAUNCHELF*)
+    LAUNCHELF*|WLAUNCH*|WLE*)
         APP_ID="LAUNCHELF"
         ;;
     FREEMCBOOT*|FMC*)
