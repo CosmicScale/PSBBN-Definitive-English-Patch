@@ -194,6 +194,10 @@ def process_files(folder, extensions):
                         string = raw_bytes.decode('utf-8', errors='ignore').upper()
 
                         if len(string) == 11:
+                            # If it starts with SLUSP, remove the trailing 'P'
+                            if string.startswith("SLUSP"):
+                                string = "SLUS" + string[5:]
+                                
                             # Only fix if underscore or dot are in the wrong positions
                             if string[4] != '_' or string[8] != '.':
                                 # Remove any existing underscore or dot
