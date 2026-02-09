@@ -1142,7 +1142,7 @@ APP_ART() {
     OPL*)
         APP_ID="OPENPS2LOAD"
         ;;
-    ULE*)
+    ULE*|ULAUNCH*)
         APP_ID="APP_ULE"
         ;;
     LAUNCHELF*|WLAUNCH*|WLE*)
