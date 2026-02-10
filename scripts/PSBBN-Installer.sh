@@ -1,4 +1,24 @@
 #!/usr/bin/env bash
+#
+#    PSBBN Installer form the PSBBN Definitive Project
+#    Copyright (C) 2004-2026 CosmicScale
+#
+#    <https://github.com/CosmicScale/PSBBN-Definitive-English-Patch>
+#
+#    SPDX-License-Identifier: GPL-3.0-or-later
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 if [[ "$LAUNCHED_BY_MAIN" != "1" ]]; then
     echo "This script should not be run directly. Please run: PSBBN-Definitive-Patch.sh"
@@ -578,6 +598,9 @@ if [ "$MODE" = "install" ]; then
     # Check the size of the chosen device
     SIZE_CHECK=$(lsblk -o NAME,SIZE -b | grep -w $(basename $DEVICE) | awk '{print $2}')
 
+    # Convert size to MiB
+    SIZE_MB=$(( SIZE_CHECK / 1024 / 1024 ))
+
     # Convert size to GB (1 GB = 1,000,000,000 bytes)
     size_gb=$(echo "$SIZE_CHECK / 1000000000" | bc)
         
@@ -830,7 +853,12 @@ if [ "$MODE" = "install" ]; then
 
     # Extract the "used" value, remove "MB" and any commas
     used=$(echo "$output" | awk '/used:/ {print $6}' | sed 's/,//; s/MB//')
-    capacity=131072
+
+    if (( SIZE_MB >= 132128 )); then
+        capacity=131072
+    else
+        capacity=$(( SIZE_MB - 1056 ))
+    fi
 
     # Calculate available space (capacity - used)
     available=$((capacity - used - 6400 - 128))
@@ -842,9 +870,8 @@ if [ "$MODE" = "install" ]; then
     while true; do
         INSTALL_SPLASH
         echo "========================================== Partitioning the Drive =========================================="
-        echo | tee -a "${LOG_FILE}"
-        echo "Partitioning the first 128 GB of the drive."
-        echo "Remaining space: $free_space GB" | tee -a "${LOG_FILE}"
+        echo
+        echo "Space available for APA partitions: $free_space GB" | tee -a "${LOG_FILE}"
         echo
         echo "What size would you like the \"POPS\" partition to be?"
         echo "This partition is used to store PS1 games."
@@ -962,7 +989,6 @@ if [ "$MODE" = "install" ]; then
         fi
 
         allocated_mb=$(( (music_gb + pops_gb + contents_gb + reserve_gb) * 1024 ))
-        SIZE_MB=$(( SIZE_CHECK / 1024 / 1024 ))
         APA_MiB=$(( allocated_mb + used + 6400 +128 ))
         DIFF_MB=$(( SIZE_MB - APA_MiB - 32 ))
 
@@ -1000,13 +1026,18 @@ if [ "$MODE" = "install" ]; then
 
     echo >> "${LOG_FILE}"
     echo "##########################################################################" >> "${LOG_FILE}"
-    echo "Music partition size: $music_partition" >> "${LOG_FILE}"
-    echo "POPS partition size: $pops_partition" >> "${LOG_FILE}"
-    echo "Contents partition size: $contents_partition" >> "${LOG_FILE}"
-    echo "Reserved space: $reserved_space MB" >> "${LOG_FILE}"
+    echo "Disk size: $SIZE_MB MB" >> "${LOG_FILE}"
+    echo "Used: $used MB" >> "${LOG_FILE}"
+    echo "Music partition size: $music_partition MB" >> "${LOG_FILE}"
+    echo "POPS partition size: $pops_partition MB" >> "${LOG_FILE}"
+    echo "Contents partition size: $contents_partition MB" >> "${LOG_FILE}"
+    echo "Reserved user space: $reserved_space MB" >> "${LOG_FILE}"
+    echo "Reserved for launcher partitions: 6528 MB" >> "${LOG_FILE}"
+    echo "Recovery partition: 32 MB" >> "${LOG_FILE}"
     echo "Total APA size: $APA_MiB MB" >> "${LOG_FILE}"
     echo "OPL partition size: $DIFF_MB MB" >> "${LOG_FILE}"
     echo "##########################################################################"  >> "${LOG_FILE}"
+    echo >> "${LOG_FILE}"
 
     COMMANDS="device ${DEVICE}\n"
     COMMANDS+="mkpart __linux.8 ${music_partition}M EXT2\n"
