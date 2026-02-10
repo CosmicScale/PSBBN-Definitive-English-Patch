@@ -1014,37 +1014,37 @@ Disable DNAS Authentication:
 </details>
 
 # Credits
-**PS2 Homebrew Community:**
-- PSBBN Definitive Project © [CosmicScale](https://github.com/CosmicScale)
-- PSBBN English translation by [CosmicScale](https://github.com/CosmicScale)
-- PSBBN German translation by [Argo707](https://github.com/Argo707) 
-- PSBBN Italian translation by [plamadika](https://github.com/plamadika) & [lcipria](https://github.com/lcipria) 
-- `PSBBN-Definitive-Patch.sh`, `Setup.sh`, `PSBBN-Installer.sh`, `HOSDMenu-Installer.sh`, `Game-Installer.sh`, `Media-Installer.sh`, `music-installer.py`, `Extras.sh`, `art_downloader.py`, `list-sorter.py`, `txt_to_icon_sys.py`, `AppDB.csv`, `vmc_groups.list` written by [CosmicScale](https://github.com/CosmicScale)
-- `ps2iconmaker.sh` written by [Sakitoshi](https://github.com/Sakitoshi) and [CosmicScale](https://github.com/CosmicScale)
+- PSBBN Definitive Project - Copyright © 2024-2026 by [CosmicScale](https://github.com/CosmicScale)
+- `PSBBN-Definitive-Patch.sh`, `Setup.sh`, `PSBBN-Installer.sh`, `HOSDMenu-Installer.sh`, `Game-Installer.sh`, `Media-Installer.sh`, `music-installer.py`, `Extras.sh`, `art_downloader.py`, `list-builder.py`, `list-sorter.py`, `txt_to_icon_sys.py`, `AppDB.csv`, `TitlesDB_PS1.csv`, `TitlesDB_PS2.csv`, `vmc_groups.list` written by [CosmicScale](https://github.com/CosmicScale)
 - `PSBBN-Launcher-For-Windows.ps1` written by Yornn
-- Contains code from `list_builder.py` from [XEB+ neutrino Launcher Plugin](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin) by [sync-on-luma](https://github.com/sync-on-luma), modified by [CosmicScale](https://github.com/CosmicScale)
-- Contains data from `TitlesDB_PS1_English.txt` and `TitlesDB_PS2_English.txt` from the [PFS-BatchKit-Manager](https://github.com/GDX-X/PFS-BatchKit-Manager) by [GDX-X](https://github.com/GDX-X), modified by [CosmicScale](https://github.com/CosmicScale)
-- Uses APA-Jail code from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) by [Berion](https://www.psx-place.com/members/berion.1431/)
-- [APA Partition Header Checksumer](https://www.psx-place.com/resources/apa-partition-header-checksumer.1057/) by [Pink1](https://www.psx-place.com/members/pink1.1907/) and [Berion](https://www.psx-place.com/members/berion.1431/). [Linux port](https://github.com/bucanero/save-decrypters/tree/master/ps2-apa-header-checksum) by [Bucanero](https://github.com/Bucanero)
-- [PSU Extractor](https://github.com/bucanero/psv-save-converter) written by [Bucanero](https://github.com/Bucanero) from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) project
-- `ziso.py` from [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) written by Virtuous Flame
-- `cue2pops` from [pops2cue](https://github.com/bucanero/pops2cue) by [Bucanero](https://github.com/Bucanero)
+- `ps2iconmaker.sh` written by [Sakitoshi](https://github.com/Sakitoshi) and [CosmicScale](https://github.com/CosmicScale)
 - `icon_sys_to_txt.py` written by [NathanNeurotic (Ripto)](https://github.com/NathanNeurotic)
+- VMC and PSBBN 3D icons designed by Yornn
+- PSBBN English translation by [CosmicScale](https://github.com/CosmicScale)
+- PSBBN German translation by [Argo707](https://github.com/Argo707)
+- PSBBN Italian translation by [plamadika](https://github.com/plamadika) & [lcipria](https://github.com/lcipria)
+- Uses APA-Jail code from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) by [Berion](https://www.psx-place.com/members/berion.1431/)
+- Contains code from [`list_builder.py`](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin/blob/main/List%20Builder/list_builder.py) from [XEB+ neutrino Launcher Plugin](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin) by [sync-on-luma](https://github.com/sync-on-luma)
+- Contains data from [`TitlesDB_PS1_English.txt`](https://github.com/GDX-X/PFS-BatchKit-Manager/blob/main/PFS-BatchKit-Manager/BAT/TitlesDB/TitlesDB_PS1_English.txt) and [`TitlesDB_PS2_English.txt`](https://github.com/GDX-X/PFS-BatchKit-Manager/blob/main/PFS-BatchKit-Manager/BAT/TitlesDB/TitlesDB_PS2_English.txt) from the [PFS-BatchKit-Manager](https://github.com/GDX-X/PFS-BatchKit-Manager) by [GDX-X](https://github.com/GDX-X)
+- [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database) created and maintained by [CosmicScale](https://github.com/CosmicScale)
+- [HDD-OSD Icon Database](https://github.com/CosmicScale/HDD-OSD-Icon-Database) created and maintained by [CosmicScale](https://github.com/CosmicScale)
+
+**PS2 Homebrew Community:**
 - [OSDMenu MBR and HOSDMenu](https://github.com/pcm720/OSDMenu) written by [pcm720](https://github.com/pcm720)
+- [APA Partition Header Checksumer](https://github.com/pink1stools/APA-Partition-Header-Checksumer/) by [Pink1](https://github.com/pink1stools) and [Berion](https://www.psx-place.com/members/berion.1431/). [Linux port](https://github.com/bucanero/save-decrypters/tree/master/ps2-apa-header-checksum) by [Bucanero](https://github.com/Bucanero)
 - [PFS Shell](https://github.com/AKuHAK/pfsshell/tree/ext2) and [HDL Dump](https://github.com/AKuHAK/hdl-dump/tree/8M) with 8MB APA partition and EXT2 modifications by [AKuHAK](https://github.com/AKuHAK)
+- [PSU Extractor](https://github.com/bucanero/psv-save-converter) written by [Bucanero](https://github.com/Bucanero)
+- [`ziso.py`](https://github.com/ps2homebrew/Open-PS2-Loader/blob/master/pc/ziso.py) written by Virtuous Flame
+- `cue2pops` from [pops2cue](https://github.com/bucanero/pops2cue) by [Bucanero](https://github.com/Bucanero)
 - [PFS Fuse](https://github.com/ps2homebrew/pfsshell) from [PS2 Homebrew Projects](https://github.com/ps2homebrew)
 - [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) from [PS2 Homebrew Projects](https://github.com/ps2homebrew) with BDM contributions from [KrahJohlito](https://github.com/KrahJohlito) and Auto Launch modifications by [CosmicScale](https://github.com/CosmicScale)
 - [Neutrino](https://github.com/rickgaiser/neutrino) by [Rick Gaiser](https://github.com/rickgaiser)
 - [NHDDL](https://github.com/pcm720/nhddl) written by [pcm720](https://github.com/pcm720)
 - [POPStarter](https://www.psx-place.com/threads/popstarter.19139/) written by [KrHACKen](https://www.psx-place.com/members/krhacken.98/)
 - [wLaunchELF_ISR](https://israpps.github.io/projects/wlaunchelf-isr) by [Matías Israelson (israpps)](https://github.com/israpps)
-- Online channels translated to English and hosted by vitas155 at [psbbn.ru](https://psbbn.ru/)
-- PlayStation Now! and Konami online channels translated to English by [CosmicScale](https://github.com/CosmicScale)
-- [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database) created and maintained by [CosmicScale](https://github.com/CosmicScale)
-- [HDD-OSD Icon Database](https://github.com/CosmicScale/HDD-OSD-Icon-Database) created and maintained by [CosmicScale](https://github.com/CosmicScale)
 - Uses PS2 cover art from the [OPL Manager Art DB backups](https://oplmanager.com/site/index.php?backups)
 - Uses App icons from [OPL B-APPS Cover Pack](https://www.psx-place.com/resources/opl-b-apps-cover-pack.1440/) and [OPL Discs & Boxes Pack](https://www.psx-place.com/resources/opl-discs-boxes-pack.1439/) courtesy of [Berion](https://www.psx-place.com/resources/authors/berion.1431/)
-- VMC and PSBBN 3D icons designed by Yornn
+- Online channels translated to English and hosted by vitas155 at [psbbn.ru](https://psbbn.ru/). PlayStation Now! and Konami online channels translated to English by [CosmicScale](https://github.com/CosmicScale)
 - Thanks to [Bucanero](https://github.com/Bucanero) for compiling the ARM64 binaries
 - Thanks to everyone on the [SAS/UMCS Team](https://ps2homebrewstore.com/thanks/) for their ongoing work on the [PS2 Homebrew Store](https://ps2homebrewstore.com/)
 - Special thanks to [pcm720](https://github.com/pcm720) for patching `osdboot.elf` to bypass the CRC security check
