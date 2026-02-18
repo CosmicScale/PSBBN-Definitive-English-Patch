@@ -814,27 +814,29 @@ You must also download the [External HDD Drivers](https://israpps.github.io/Free
 
 # Troubleshooting
 
+## Problems Running the Script
 ⚠️ **Known issue**: Installing on **Fedora** is currently problematic. It is recommended to use a Debian-based distribution or the [PSBBN Launcher for Windows](#installing-on-windows).
 
-## Problems Running the Script
-If you encounter errors while running the setup, installing PSBBN, installing games, or performing other tasks, try the following:
+If you encounter problems running the **PSBBN Definitive Project** on your PC:
 1. Make sure you are running the latest version of your operating system and that it is fully updated
 2. Use a recommended OS. The **PSBBN Definitive Project** has been fully tested on:
 - Linux Mint
 - Raspberry Pi OS
 - Windows 10 Home Edition
 - Windows 11 Home Edition
-3. Try installing to a different HDD or SSD
-4. Connect the PS2 HDD/SSD directly to your PC using an internal SATA connection, or use a different USB adapter
 
 If you are using the [PSBBN Launcher for Windows](#installing-on-windows) script and experience issues:
 1. Open PowerShell as an administrator and run the following command:
 ```
 wsl --unregister PSBBN
 ```
-2. Dowload the latest version of the `PSBBN-Launcher-For-Windows.ps1` script [here](https://raw.githubusercontent.com/CosmicScale/PSBBN-Definitive-English-Patch/refs/heads/main/scripts/PSBBN-Launcher-For-Windows.ps1) (Right-click and select **Save link as**).
+2. Download the latest version of the `PSBBN-Launcher-For-Windows.ps1` script [here](https://raw.githubusercontent.com/CosmicScale/PSBBN-Definitive-English-Patch/refs/heads/main/scripts/PSBBN-Launcher-For-Windows.ps1) (Right-click and select **Save link as**).
 3. Make sure you have an active internet connection. If you are using a VPN, try disabling it
 4. Run the `PSBBN-Launcher-For-Windows.ps1` script again
+
+If you still encounter errors:
+1. Connect the PS2 HDD or SSD directly to your PC using an internal SATA connection, or a USB port directly on the motherboard
+2. Try installing to a different HDD or SSD, or try a different SATA to USB adapter
 
 ## Problems Launching PSBBN and HOSDMenu
 When you connect the drive to your PS2 console and power it on, **PSBBN** or **[HOSDMenu](#hosdmenu)** should automatically launch.
@@ -842,10 +844,10 @@ When you connect the drive to your PS2 console and power it on, **PSBBN** or **[
 If your console boots to the regular OSD or freezes, it means that your drive has not been recognised and you are experiencing a hardware issue. You should check the following:
 1. If using **PSBBN**, make sure you are using an **official Sony Network Adapter**; 3rd-party adapters are not supported
 2. Check that the connectors on the console and network/HDD adapter are clean and free of dust/debris
-3. Ensure the network/HDD adapter and drive are securely connected to the console
+3. Ensure the network or HDD adapter and drive are securely connected to the console
 4. If using a SATA mod, make sure it has been installed correctly
 5. Try installing to a different HDD or SSD
-6. Try using a different IDE converter/SATA mod
+6. Try using a different IDE converter or SATA mod
 7. Try using a different official Sony Network Adapter or 3rd-party HDD adapter
 8. Try a different PS2 console
 
@@ -1026,28 +1028,25 @@ Disable DNAS Authentication:
 - Uses APA-Jail code from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) by [Berion](https://www.psx-place.com/members/berion.1431/)
 - Contains code from [`list_builder.py`](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin/blob/main/List%20Builder/list_builder.py) from [XEB+ neutrino Launcher Plugin](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin) by [sync-on-luma](https://github.com/sync-on-luma)
 - Contains data from [`TitlesDB_PS1_English.txt`](https://github.com/GDX-X/PFS-BatchKit-Manager/blob/main/PFS-BatchKit-Manager/BAT/TitlesDB/TitlesDB_PS1_English.txt) and [`TitlesDB_PS2_English.txt`](https://github.com/GDX-X/PFS-BatchKit-Manager/blob/main/PFS-BatchKit-Manager/BAT/TitlesDB/TitlesDB_PS2_English.txt) from the [PFS-BatchKit-Manager](https://github.com/GDX-X/PFS-BatchKit-Manager) by [GDX-X](https://github.com/GDX-X)
+
+**This software uses the following PS2 homebrew projects:**
 - [PSBBN Art Database](https://github.com/CosmicScale/psbbn-art-database) created and maintained by [CosmicScale](https://github.com/CosmicScale)
 - [HDD-OSD Icon Database](https://github.com/CosmicScale/HDD-OSD-Icon-Database) created and maintained by [CosmicScale](https://github.com/CosmicScale)
-
-**PS2 Homebrew Community:**
-- [OSDMenu MBR and HOSDMenu](https://github.com/pcm720/OSDMenu) written by [pcm720](https://github.com/pcm720)
+- [OSDMenu](https://github.com/pcm720/OSDMenu) by [pcm720](https://github.com/pcm720)
 - [APA Partition Header Checksumer](https://github.com/pink1stools/APA-Partition-Header-Checksumer/) by [Pink1](https://github.com/pink1stools) and [Berion](https://www.psx-place.com/members/berion.1431/). [Linux port](https://github.com/bucanero/save-decrypters/tree/master/ps2-apa-header-checksum) by [Bucanero](https://github.com/Bucanero)
 - [PFS Shell](https://github.com/AKuHAK/pfsshell/tree/ext2) and [HDL Dump](https://github.com/AKuHAK/hdl-dump/tree/8M) with 8MB APA partition and EXT2 modifications by [AKuHAK](https://github.com/AKuHAK)
 - PFS Fuse from [PFS Shell](https://github.com/ps2homebrew/pfsshell) by [PS2 Homebrew Projects](https://github.com/ps2homebrew)
 - PSU Extractor from [PSV Save Converter](https://github.com/bucanero/psv-save-converter) by [Bucanero](https://github.com/Bucanero)
-- [ziso.py](https://github.com/ps2homebrew/Open-PS2-Loader/blob/master/pc/ziso.py) written by Virtuous Flame
+- [ziso.py](https://github.com/ps2homebrew/Open-PS2-Loader/blob/master/pc/ziso.py) by Virtuous Flame
 - cue2pops from [pops2cue](https://github.com/bucanero/pops2cue) by [Bucanero](https://github.com/Bucanero)
 - [Open PS2 Loader](https://github.com/ps2homebrew/Open-PS2-Loader) from [PS2 Homebrew Projects](https://github.com/ps2homebrew) with BDM contributions from [KrahJohlito](https://github.com/KrahJohlito) and Auto Launch modifications by [CosmicScale](https://github.com/CosmicScale)
 - [Neutrino](https://github.com/rickgaiser/neutrino) by [Rick Gaiser](https://github.com/rickgaiser)
-- [NHDDL](https://github.com/pcm720/nhddl) written by [pcm720](https://github.com/pcm720)
-- [POPStarter](https://www.psx-place.com/resources/popstarter.683/) written by [KrHACKen](https://www.psx-place.com/members/krhacken.98/)
+- [NHDDL](https://github.com/pcm720/nhddl) by [pcm720](https://github.com/pcm720)
+- [POPStarter](https://www.psx-place.com/resources/popstarter.683/) by [KrHACKen](https://www.psx-place.com/members/krhacken.98/)
 - [wLaunchELF_ISR](https://israpps.github.io/projects/wlaunchelf-isr) by [Matías Israelson (israpps)](https://github.com/israpps)
-- Uses PS2 cover art from the [OPL Manager Art DB backups](https://oplmanager.com/site/index.php?backups)
-- Uses App icons from [OPL B-APPS Cover Pack](https://www.psx-place.com/resources/opl-b-apps-cover-pack.1440/) and [OPL Discs & Boxes Pack](https://www.psx-place.com/resources/opl-discs-boxes-pack.1439/) courtesy of [Berion](https://www.psx-place.com/resources/authors/berion.1431/)
-- Online channels translated to English and hosted by vitas155 at [psbbn.ru](https://psbbn.ru/). PlayStation Now! and Konami online channels translated to English by [CosmicScale](https://github.com/CosmicScale)
-- Thanks to [Bucanero](https://github.com/Bucanero) for compiling the ARM64 binaries
-- Thanks to everyone on the [SAS/UMCS Team](https://ps2homebrewstore.com/thanks/) for their ongoing work on the [PS2 Homebrew Store](https://ps2homebrewstore.com/)
-- Special thanks to [pcm720](https://github.com/pcm720) for patching `osdboot.elf` to bypass the CRC security check
+- PS2 cover art from the [OPL Manager Art DB backups](https://oplmanager.com/site/index.php?backups)
+- App icons from [OPL B-APPS Cover Pack](https://www.psx-place.com/resources/opl-b-apps-cover-pack.1440/) and [OPL Discs & Boxes Pack](https://www.psx-place.com/resources/opl-discs-boxes-pack.1439/) courtesy of [Berion](https://www.psx-place.com/resources/authors/berion.1431/)
+- Online channels hosted and translated into English by vitas155 at [psbbn.ru](https://psbbn.ru/), with the exception of the PlayStation Now! and Konami Channel, translated into English by [CosmicScale](https://github.com/CosmicScale)
 
 **Third-Party Libraries & Binaries:**  
 - `vmlinux` **BB Navigator kernel (Linux 2.4.17)** – Source code available [here](https://github.com/CosmicScale/PSBBN-Definitive-Patch-Kernel)
@@ -1055,4 +1054,9 @@ Disable DNAS Authentication:
 - **mkfs.exfat (exfatprogs 1.2.2)** from [exfatprogs](https://github.com/exfatprogs/exfatprogs)
 - `binmerge.py` from [binmerge](https://github.com/putnam/binmerge)
 
-All libraries and utilities are open-source and used in accordance with their respective licenses.
+**All libraries and utilities are open-source and used in accordance with their respective licenses.**
+
+**Thanks:**
+- [Bucanero](https://github.com/Bucanero) for compiling the ARM64 binaries
+- Everyone on the [SAS/UMCS Team](https://ps2homebrewstore.com/thanks/) for their ongoing work on the [PS2 Homebrew Store](https://ps2homebrewstore.com/)
+- Special thanks to [pcm720](https://github.com/pcm720) for patching `osdboot.elf` to bypass the CRC security check
