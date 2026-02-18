@@ -9,44 +9,45 @@ body:
         Please go through the relevant section **before opening an issue**.
         Many common problems are resolved by these steps.
 
+        ---
+
+        ## Problems Running the Script
+
         ⚠️ **Known issue**  
         Installing on **Fedora** is currently problematic.  
         Use a **Debian-based distribution** or the **PSBBN Launcher for Windows** instead.
 
-        ---
-
-        ## Problems Running the Script
-        If you encounter errors while running the setup, installing PSBBN, installing games, or performing other tasks:
-
+        **If you encounter problems running the PSBBN Definitive Project on your PC:**
         1. Make sure you are running the latest version of your operating system and it is **fully updated**
         2. Use a **recommended OS**. The **PSBBN Definitive Project** has been fully tested on:
            - Linux Mint  
            - Raspberry Pi OS  
            - Windows 10 Home Edition  
            - Windows 11 Home Edition
-        3. Try installing to a **different HDD or SSD**
-        4. Connect the PS2 HDD/SSD **directly to your PC via internal SATA**, or try a different USB adapter
 
-        If you are using the PSBBN Launcher for Windows script and experience issues:
+        **If you are using the PSBBN Launcher for Windows script and experience issues:**
         1. Open PowerShell as an administrator and run the following command:
         ```
         wsl --unregister PSBBN
         ```
-        2. Dowload the latest version of the `PSBBN-Launcher-For-Windows.ps1` script [here](https://raw.githubusercontent.com/CosmicScale/PSBBN-Definitive-English-Patch/refs/heads/main/scripts/PSBBN-Launcher-For-Windows.ps1) (Right-click and select **Save link as**).
+        2. Download the latest version of the `PSBBN-Launcher-For-Windows.ps1` script [here](https://raw.githubusercontent.com/CosmicScale/PSBBN-Definitive-English-Patch/refs/heads/main/scripts/PSBBN-Launcher-For-Windows.ps1) (Right-click and select **Save link as**).
         3. Make sure you have an active internet connection. If you are using a VPN, try disabling it
         4. Run the `PSBBN-Launcher-For-Windows.ps1` script again
+
+        **If you still encounter errors:**
+        1. Connect the PS2 HDD or SSD directly to your PC using an internal SATA connection, or a USB port directly on the motherboard
+        2. Try installing to a different HDD or SSD, or try a different SATA to USB adapter
 
         ---
 
         ## Problems Launching PSBBN or HOSDMenu
         Your PS2 console should automatically launch **PSBBN** or **HOSDMenu**.
 
-        If the console boots to the regular OSD or freezes, the drive has not been recognised:
-
+        **If the console boots to the regular OSD or freezes, the drive has not been recognised:**
         1. If using **PSBBN**, confirm you are using an **official Sony Network Adapter**  
            *(3rd-party adapters are not supported)*
         2. Check that the connectors on the console and network/HDD adapter are clean and free of dust/debris
-        3. Ensure the network/HDD adapter and drive are securely connected to the console
+        3. Ensure the network or HDD adapter and drive are securely connected to the console
         4. If using a SATA mod, make sure it has been installed correctly
         5. Try a different HDD or SSD
         6. Try a different IDE converter or SATA mod
