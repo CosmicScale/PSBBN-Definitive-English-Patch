@@ -423,6 +423,8 @@ echo
 echo "1) English"
 echo "2) Japanese"
 echo "3) German"
+echo "4) Italian"
+echo "4) Portuguese (Brazil)"
 echo
 read -p "Enter the number for your chosen language: " choice
 
@@ -435,6 +437,12 @@ case "$choice" in
         ;;
     3)
         LANG="ger"
+        ;;
+    4)
+        LANG="ita"
+        ;;
+    5)
+        LANG="por"
         ;;
     *)
         echo
