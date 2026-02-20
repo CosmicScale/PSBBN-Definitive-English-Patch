@@ -539,7 +539,7 @@ else
     psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
     LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
 
-    if [[ "$LANG" != "jpn" && "$LANG" != "ger" && "$LANG" != "ita" ]]; then
+    if [[ "$LANG" != "jpn" && "$LANG" != "ger" && "$LANG" != "ita" && "$LANG" != "por" ]]; then
         LANG="eng"
     fi
 
