@@ -1025,6 +1025,7 @@ Disable DNAS Authentication:
 - PSBBN English translation by [CosmicScale](https://github.com/CosmicScale)
 - PSBBN German translation by [Argo707](https://github.com/Argo707)
 - PSBBN Italian translation by [plamadika](https://github.com/plamadika) & [lcipria](https://github.com/lcipria)
+- Portuguese (Brazil) translation by [Emerson Teles (Emertels)](https://github.com/Emertels)
 - Uses APA-Jail code from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) by [Berion](https://www.psx-place.com/members/berion.1431/)
 - Contains code from [`list_builder.py`](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin/blob/main/List%20Builder/list_builder.py) from [XEB+ neutrino Launcher Plugin](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin) by [sync-on-luma](https://github.com/sync-on-luma)
 - Contains data from [`TitlesDB_PS1_English.txt`](https://github.com/GDX-X/PFS-BatchKit-Manager/blob/main/PFS-BatchKit-Manager/BAT/TitlesDB/TitlesDB_PS1_English.txt) and [`TitlesDB_PS2_English.txt`](https://github.com/GDX-X/PFS-BatchKit-Manager/blob/main/PFS-BatchKit-Manager/BAT/TitlesDB/TitlesDB_PS2_English.txt) from the [PFS-BatchKit-Manager](https://github.com/GDX-X/PFS-BatchKit-Manager) by [GDX-X](https://github.com/GDX-X)

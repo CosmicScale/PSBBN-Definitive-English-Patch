@@ -645,6 +645,7 @@ if [ "$MODE" = "install" ]; then
     echo "2) Japanese"
     echo "3) German"
     echo "4) Italian"
+    echo "5) Portuguese (Brazil)"
     echo
     read -p "Enter the number for your chosen language: " choice
 
@@ -665,6 +666,10 @@ if [ "$MODE" = "install" ]; then
         4)
             LANG="ita"
             LANG_DISPLAY="Italian"
+            ;;
+        5)
+            LANG="por"
+            LANG_DISPLAY="Portuguese (Brazil)"
             ;;
         *)
             echo
@@ -702,7 +707,7 @@ else
     fi
 
     LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
-    if [[ "$LANG" != "jpn" && "$LANG" != "ger" && "$LANG" != "ita" ]]; then
+    if [[ "$LANG" != "jpn" && "$LANG" != "ger" && "$LANG" != "ita" && "$LANG" != "por" ]]; then
         LANG="eng"
     fi
 
