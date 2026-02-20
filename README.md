@@ -25,7 +25,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 # Features
 - A full translation of the stock Japanese BB Navigator version 0.32 — All binaries, XML files, textures, and pictures have been translated[*](#known-issues)
-- Available in English, German, Italian, and the original Japanese
+- Available in English, German, Italian, Portuguese (Brazil), and the original Japanese
 - Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#early-scph-1000018000-and-slim-scph-700xx-consoles) or similar hardware mod, regardless of region
 - DNAS authorization checks bypassed to enable access the online channels
 - English translations of the [online game channels](#game-channel) from Sony, Hudson, EA, Konami, Capcom, Namco, KOEI, and Bandai hosted by vitas155 at [psbbn.ru](https://psbbn.ru/) (work in progress)
@@ -667,13 +667,11 @@ This option lets you swap the functions of the **×** and **○** buttons on you
 **NOTE: This feature applies to PSBBN only. It does not swap the button layout for the POPS in-game reset dialog when exiting a PS1 game.**  
 
 ### Change Language
-When **PSBBN** is installed, this option changes the system language of PSBBN. Select from English, German, Italian, and the original Japanese. More languages will be added with future updates. For Japanese users, it also downloads and installs the Japanese versions of the [Online Game Channels](#game-channel).
+When **PSBBN** is installed, this option changes the system language of PSBBN. Select from English, German, Italian, Portuguese (Brazil), and the original Japanese. More languages will be added with future updates. For Japanese users, it also downloads and installs the Japanese versions of the [Online Game Channels](#game-channel).
 
 For both **PSBBN** and [HOSDMenu](#hosdmenu) users, this option also updates the [POPS](#popstarter-and-virtual-memory-cards) IGR message and the language preference used by the [Game Installer](#game-and-app-installer).
 
 After changing the language, it is recommended that you rerun the [Game Installer](#game-and-app-installer) and select *Add Additional Games and Apps* to update game titles to your selected language. For PSBBN users, this will also update the PlayStation game manuals.
-
-PSBBN users who previously swapped the **×** and **○** buttons using the [Reassign Cross and Circle Buttons](#reassign-cross-and-circle-buttons) option should run it again after changing the language.
 
 ### Change Screen Settings
 **NOTE: This feature is for PSBBN only.**  
