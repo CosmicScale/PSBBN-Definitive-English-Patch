@@ -25,7 +25,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 
 # Features
 - A full translation of the stock Japanese BB Navigator version 0.32 — All binaries, XML files, textures, and pictures have been translated[*](#known-issues)
-- Available in English, German, Italian, Portuguese (Brazil), and the original Japanese
+- Available in English, German, Italian, Portuguese (Brazil), Spanish, and the original Japanese
 - Compatible with any fat model PS2 console as well as PS2 Slim SCPH-700xx models with an [IDE Resurrector](#early-scph-1000018000-and-slim-scph-700xx-consoles) or similar hardware mod, regardless of region
 - DNAS authorization checks bypassed to enable access the online channels
 - English translations of the [online game channels](#game-channel) from Sony, Hudson, EA, Konami, Capcom, Namco, KOEI, and Bandai hosted by vitas155 at [psbbn.ru](https://psbbn.ru/) (work in progress)
@@ -667,7 +667,7 @@ This option lets you swap the functions of the **×** and **○** buttons on you
 **NOTE: This feature applies to PSBBN only. It does not swap the button layout for the POPS in-game reset dialog when exiting a PS1 game.**  
 
 ### Change Language
-When **PSBBN** is installed, this option changes the system language of PSBBN. Select from English, German, Italian, Portuguese (Brazil), and the original Japanese. More languages will be added with future updates. For Japanese users, it also downloads and installs the Japanese versions of the [Online Game Channels](#game-channel).
+When **PSBBN** is installed, this option changes the system language of PSBBN. Select from English, German, Italian, Portuguese (Brazil), Spanish, and the original Japanese. More languages will be added with future updates. For Japanese users, it also downloads and installs the Japanese versions of the [Online Game Channels](#game-channel).
 
 For both **PSBBN** and [HOSDMenu](#hosdmenu) users, this option also updates the [POPS](#popstarter-and-virtual-memory-cards) IGR message and the language preference used by the [Game Installer](#game-and-app-installer).
 
@@ -1024,6 +1024,7 @@ Disable DNAS Authentication:
 - PSBBN German translation by [Argo707](https://github.com/Argo707)
 - PSBBN Italian translation by [plamadika](https://github.com/plamadika) & [lcipria](https://github.com/lcipria)
 - Portuguese (Brazil) translation by [Emerson Teles (Emertels)](https://github.com/Emertels)
+- Spanish translation by [Ignacio Trillo (Nacheras)](https://github.com/Nacheras) & [ViZoRRetrogames](https://github.com/ViZoRRetrogames)
 - Uses APA-Jail code from the [PS2 HDD Decryption Helper](https://www.psx-place.com/resources/ps2-hdd-decryption-helper.1507/) by [Berion](https://www.psx-place.com/members/berion.1431/)
 - Contains code from [`list_builder.py`](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin/blob/main/List%20Builder/list_builder.py) from [XEB+ neutrino Launcher Plugin](https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin) by [sync-on-luma](https://github.com/sync-on-luma)
 - Contains data from [`TitlesDB_PS1_English.txt`](https://github.com/GDX-X/PFS-BatchKit-Manager/blob/main/PFS-BatchKit-Manager/BAT/TitlesDB/TitlesDB_PS1_English.txt) and [`TitlesDB_PS2_English.txt`](https://github.com/GDX-X/PFS-BatchKit-Manager/blob/main/PFS-BatchKit-Manager/BAT/TitlesDB/TitlesDB_PS2_English.txt) from the [PFS-BatchKit-Manager](https://github.com/GDX-X/PFS-BatchKit-Manager) by [GDX-X](https://github.com/GDX-X)

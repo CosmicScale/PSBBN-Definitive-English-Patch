@@ -946,6 +946,7 @@ option_three() {
                                3) German
                                4) Italian
                                5) Portuguese (Brazil)
+                               6) Spanish
 
                                b) Back
 
@@ -978,13 +979,18 @@ EOF
                 LANG_DISPLAY="Portuguese (Brazil)"
                 break
                 ;;
+            6)
+                LANG="spa"
+                LANG_DISPLAY="Spanish"
+                break
+                ;;
             b|B)
                 UNMOUNT_OPL
                 return 0
                 ;;
             *)
                 echo
-                echo -n "                               Invalid choice, enter a number between 1 and 5."
+                echo -n "                               Invalid choice, enter a number between 1 and 6."
                 sleep 3
                 ;;
         esac

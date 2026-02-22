@@ -646,6 +646,7 @@ if [ "$MODE" = "install" ]; then
     echo "3) German"
     echo "4) Italian"
     echo "5) Portuguese (Brazil)"
+    echo "6) Spanish"
     echo
     read -p "Enter the number for your chosen language: " choice
 
@@ -670,6 +671,10 @@ if [ "$MODE" = "install" ]; then
         5)
             LANG="por"
             LANG_DISPLAY="Portuguese (Brazil)"
+            ;;
+        6)
+            LANG="spa"
+            LANG_DISPLAY="Spanish"
             ;;
         *)
             echo
@@ -707,7 +712,7 @@ else
     fi
 
     LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
-    if [[ "$LANG" != "jpn" && "$LANG" != "ger" && "$LANG" != "ita" && "$LANG" != "por" ]]; then
+    if [[ "$LANG" != "jpn" && "$LANG" != "ger" && "$LANG" != "ita" && "$LANG" != "por" && "$LANG" != "spa"  ]]; then
         LANG="eng"
     fi
 
@@ -809,7 +814,8 @@ if [ "$PSBBN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
     if [ "$LATEST_VERSION" = "4.1.0" ]; then
         echo
         echo "            NEW! Multilingual Support:"
-        echo "            - The PSBBN Definitive Patch now supports English, Japanese, German and Italian"
+        echo "            - The PSBBN Definitive Patch now supports English, Japanese, German, Italian,"
+        echo "              Portuguese (Brazil), and Spanish"
         echo "            - Select your preferred language during PSBBN installation"
         echo "            - The language can also be changed later from the Extras menu"
         echo "            - When the language is set to Japanese, Japan-region games will be displayed in the"
