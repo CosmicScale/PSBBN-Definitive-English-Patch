@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Game installer form the PSBBN Definitive Project
+# Game Installer form the PSBBN Definitive Project
 # Copyright (C) 2024-2026 CosmicScale
 #
 # <https://github.com/CosmicScale/PSBBN-Definitive-English-Patch>
