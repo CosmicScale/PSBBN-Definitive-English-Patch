@@ -1,4 +1,24 @@
 #!/usr/bin/env bash
+#
+# Setup script form the PSBBN Definitive Project
+# Copyright (C) 2024-2026 CosmicScale
+#
+# <https://github.com/CosmicScale/PSBBN-Definitive-English-Patch>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 if [[ "$LAUNCHED_BY_MAIN" != "1" ]]; then
     echo "This script should not be run directly. Please run: PSBBN-Definitive-Patch.sh"
@@ -70,14 +90,14 @@ EOF
 
 # Detect package manager and install packages
 if [ -x "$(command -v apt-get)" ]; then
-    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 libfuse2 dosfstools e2fsprogs libc-bin exfatprogs exfat-fuse util-linux fdisk parted bchunk libicu-dev pkg-config 2>&1 | tee -a "${LOG_FILE}"
+    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 libfuse2 dosfstools e2fsprogs libc-bin exfatprogs exfat-fuse util-linux fdisk parted bchunk build-essential libicu-dev pkg-config ffmpegthumbnailer 2>&1 | tee -a "${LOG_FILE}"
 # Or if user is on Fedora-based system, do this instead
 elif [ -x "$(command -v dnf)" ]; then
     sudo dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm 2>&1 | tee -a "${LOG_FILE}"
-    sudo dnf install -y gcc axel ImageMagick xxd python3 python3-devel python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 fuse-libs dosfstools e2fsprogs glibc-common exfatprogs fuse-exfat util-linux parted bchunk libicu-devel pkgconf 2>&1 | tee -a "${LOG_FILE}"
+    sudo dnf install -y gcc-c++ axel ImageMagick xxd python3 python3-devel python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 fuse-libs dosfstools e2fsprogs glibc-common exfatprogs fuse-exfat util-linux parted bchunk libicu-devel pkgconf ffmpegthumbnailer 2>&1 | tee -a "${LOG_FILE}"
 # Or if user is on Arch-based system, do this instead
 elif [ -x "$(command -v pacman)" ]; then
-    sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip bc rsync curl zip unzip wget ffmpeg lvm2 fuse2 dosfstools e2fsprogs glibc exfatprogs util-linux parted bchunk icu pkgconf 2>&1 | tee -a "${LOG_FILE}"
+    sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip bc rsync curl zip unzip wget ffmpeg lvm2 fuse2 dosfstools e2fsprogs glibc exfatprogs util-linux parted bchunk base-devel icu pkgconf ffmpegthumbnailer 2>&1 | tee -a "${LOG_FILE}"
 elif [ -n "$IN_NIX_SHELL" ]; then
     error_msg "Running in Nix environment - packages should be provided by flake and setup should not be run."
 else
