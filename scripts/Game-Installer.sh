@@ -1787,6 +1787,7 @@ fi
 
 update_apps "Neutrino" "${NEUTRINO_DIR}/" "${OPL}/neutrino/" "-rut --progress --delete --exclude='.*'"
 UNMOUNT_OPL
+sleep 2
 mount_pfs
 
 update_apps "OPL" "${ASSETS_DIR}/OPL/OPNPS2LD.ELF" "${STORAGE_DIR}/__system/launcher/OPNPS2LD.ELF" "-ut --progress"
@@ -1797,6 +1798,7 @@ install_pops
 update_apps "OSDMenu" "${ASSETS_DIR}/osdmenu/hosdmenu.elf" "${STORAGE_DIR}/__system/osdmenu" "-ut --progress"
 
 unmount_apa
+sleep 2
 MOUNT_OPL
 
 ################################### Synchronize & Copy Apps ###################################
@@ -1831,6 +1833,7 @@ fi
 
 activate_python
 UNMOUNT_OPL
+sleep 2
 mount_pfs
 
 # Rename .vcd to .VCD
@@ -1883,6 +1886,7 @@ if find "${STORAGE_DIR}/__.POPS/" -maxdepth 1 -type f \( -iname "*.vcd" \) | gre
 fi
 
 unmount_apa
+sleep 2
 
 ################################### Synchronize & Copy PS2 Games ###################################
 
@@ -2731,8 +2735,8 @@ echo | tee -a "${LOG_FILE}"
 
 echo -n "Unmounting OPL partition..." | tee -a "${LOG_FILE}"
 UNMOUNT_OPL
+sleep 2
 echo | tee -a "${LOG_FILE}"
-
 mount_pfs
 
 if [ "$OS" = "PSBBN" ]; then
