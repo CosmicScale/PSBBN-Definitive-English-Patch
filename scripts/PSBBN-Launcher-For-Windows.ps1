@@ -282,7 +282,16 @@ function diskPicker {
 
   # list available disks and pick the one to be mounted
   Write-Host "`nList of available disks:"
-  $global:diskList = Get-Disk | Sort -Property Number
+  try {
+    $global:diskList = Get-Disk | Sort -Property Number
+  }
+  catch {
+    Write-Host "
+    ❌ The script failed to list the disks. This is often caused by corruption
+    in the WMI repository. WebSearch '0x80041031,Get-Disk' to find solutions.
+    " -ForegroundColor Red
+    Exit
+  }
   $disksExtras = detectDisksExtras
   $global:diskList | Format-Table -AutoSize -Property `
     Number, `
