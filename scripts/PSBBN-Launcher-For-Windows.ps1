@@ -10,7 +10,7 @@ param(
 )
 
 # the version of this script itself, useful to know if a user is running the latest version
-$version = "1.2.0"
+$version = "1.2.1"
 
 # the label of the WSL machine. Still based on Debian, but this label makes sure we get the
 # machine created by this script and not some pre-existing Debian the user had.
@@ -276,10 +276,22 @@ ______  _________________ _   _  ______      __ _       _ _   _            _____
 function diskPicker {
   # store the current cursor position to help clear the console upon refreshing the list of disks
   $lineStart = $Host.UI.RawUI.CursorPosition.Y
+  
+  # verify that winwmgt is working properly
+  winmgmt /verifyrepository
 
   # list available disks and pick the one to be mounted
   Write-Host "`nList of available disks:"
-  $global:diskList = Get-Disk | Sort -Property Number
+  try {
+    $global:diskList = Get-Disk | Sort -Property Number
+  }
+  catch {
+    Write-Host "
+    ❌ The script failed to list the disks. This is often caused by corruption
+    in the WMI repository. WebSearch '0x80041031,Get-Disk' to find solutions.
+    " -ForegroundColor Red
+    Exit
+  }
   $disksExtras = detectDisksExtras
   $global:diskList | Format-Table -AutoSize -Property `
     Number, `
@@ -560,7 +572,7 @@ function prepareWslPath ($windowsPath) {
     $wslPath = "/mnt/$driveLetter/$path"
   }
   # covers network paths (e.g. samba drives)
-  elseif ($windowsPath -match '\\\\(?<host>[0-9a-z\.]+)\\(?<path>.+)') {
+  elseif ($windowsPath -match '\\\\(?<host>[0-9a-zA-Z._-]+)\\(?<path>.+)') {
     $wslPath = $networkDriveMountpoint
     
     # network drives are not mounted by default, so manually mount the selected path
