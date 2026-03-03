@@ -44,6 +44,7 @@ MISSING_ART="${LOGS_DIR}/missing-art.log"
 MISSING_APP_ART="${LOGS_DIR}/missing-app-art.log"
 MISSING_ICON="${LOGS_DIR}/missing-icon.log"
 MISSING_VMC="${LOGS_DIR}/missing-vmc.log"
+PS2_VMC_GROUPS="${HELPER_DIR}/ps2_vmc_groups.list"
 GAMES_PATH="${TOOLKIT_PATH}/games"
 CONFIG_FILE="${SCRIPTS_DIR}/gamepath.cfg"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
@@ -547,6 +548,85 @@ CREATE_VMC() {
     exec 3<&-
 
     cp -rf "${POPS_DIR}/${VMC_FOLDER}/"* "${STORAGE_DIR}/__common/POPS"
+}
+
+CREATE_PS2_VMC() {
+    # Only run when Neutrino is selected and VMC_GROUPS is enabled in version.txt
+    if [[ "$VMC_GROUPS" != "enabled" ]]; then
+        return 0
+    fi
+
+    if [[ "$LAUNCHER" != "NEUTRINO" ]]; then
+        return 0
+    fi
+
+    if [[ ! -s "${PS2_LIST}" ]]; then
+        return 0
+    fi
+
+    echo | tee -a "${LOG_FILE}"
+    echo -n "Creating PS2 VMC files for Neutrino..." | tee -a "${LOG_FILE}"
+
+    # Build hash map: game_id -> XEBP group ID
+    declare -A ps2_vmc_by_id
+    local current_group=""
+
+    while IFS= read -r line; do
+        line="${line%%$'\r'}"  # strip CR
+        [[ -z "$line" || "$line" == \#* ]] && continue
+
+        if [[ "$line" =~ ^XEBP_ ]]; then
+            current_group="$line"
+        elif [[ -n "$current_group" ]]; then
+            local gid="${line%%|*}"
+            ps2_vmc_by_id["$gid"]="$current_group"
+        fi
+    done < "${PS2_VMC_GROUPS}"
+
+    mkdir -p "${GAMES_PATH}/VMC" 2>/dev/null
+    mkdir -p "${GAMES_PATH}/nhddl" 2>/dev/null
+
+    echo | tee -a "${LOG_FILE}"
+
+    while IFS='|' read -r title game_id publisher disc_type file_name jpn_title; do
+        # Determine VMC name: group ID if in a group, otherwise per-title ID
+        local vmc_name
+        if [[ -n "${ps2_vmc_by_id[$game_id]}" ]]; then
+            vmc_name="${ps2_vmc_by_id[$game_id]}"
+        else
+            vmc_name="$game_id"
+        fi
+
+        # Create 8MB blank VMC image if it does not already exist
+        local vmc_file="${GAMES_PATH}/VMC/${vmc_name}.bin"
+        if [[ ! -f "$vmc_file" ]]; then
+            echo -n "Creating ${vmc_name}.bin for $game_id..." | tee -a "${LOG_FILE}"
+            if dd if=/dev/zero of="$vmc_file" bs=1M count=8 >> "${LOG_FILE}" 2>&1; then
+                echo " [✓]" | tee -a "${LOG_FILE}"
+            else
+                echo " [X] Failed to create VMC" | tee -a "${LOG_FILE}"
+            fi
+        else
+            echo "VMC ${vmc_name}.bin already exists for $game_id, skipping." | tee -a "${LOG_FILE}"
+        fi
+
+        # Create or update the NHDDL YAML file for this game.
+        # NHDDL matches nhddl/<ISO name without extension>.yaml to the ISO at launch.
+        local yaml_base="${file_name%.*}"
+        local yaml_file="${GAMES_PATH}/nhddl/${yaml_base}.yaml"
+        if [[ ! -f "$yaml_file" ]]; then
+            printf 'mc0: /VMC/%s.bin\n' "$vmc_name" > "$yaml_file"
+            echo "Created NHDDL YAML: ${yaml_base}.yaml -> mc0: /VMC/${vmc_name}.bin" | tee -a "${LOG_FILE}"
+        elif ! grep -q '^mc0:' "$yaml_file"; then
+            printf 'mc0: /VMC/%s.bin\n' "$vmc_name" >> "$yaml_file"
+            echo "Updated NHDDL YAML: ${yaml_base}.yaml -> mc0: /VMC/${vmc_name}.bin" | tee -a "${LOG_FILE}"
+        else
+            echo "NHDDL YAML ${yaml_base}.yaml already has mc0, skipping." | tee -a "${LOG_FILE}"
+        fi
+    done < "${PS2_LIST}"
+
+    echo | tee -a "${LOG_FILE}"
+    echo "[✓] PS2 VMC files created." | tee -a "${LOG_FILE}"
 }
 
 POPS_SIZE_CKECK() {
@@ -1471,7 +1551,9 @@ fi
 
 APA_SIZE=$(awk -F' *= *' '$1=="APA_SIZE"{print $2}' "${OPL}/version.txt")
 LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
+VMC_GROUPS=$(awk -F' *= *' '$1=="VMC_GROUPS"{print $2}' "${OPL}/version.txt")
 echo "Language: $LANG" >> "${LOG_FILE}"
+echo "VMC_GROUPS: ${VMC_GROUPS:-disabled}" >> "${LOG_FILE}"
 
 if [ -z "$APA_SIZE" ] || [ -z "$LANG" ]; then
     error_msg "Error" "Missing required value(s) in ${OPL}/version.txt"
@@ -2697,6 +2779,7 @@ dirs=(
     "${GAMES_PATH}/LNG"
     "${GAMES_PATH}/THM"
     "${GAMES_PATH}/VMC"
+    "${GAMES_PATH}/nhddl"
 )
 
 # Flag to track if any files exist
@@ -2709,9 +2792,10 @@ for dir in "${dirs[@]}"; do
         # Create the subdirectory in the destination path using the directory name
         folder_name=$(basename "$dir")
         dest_dir="${OPL}/$folder_name"
+        mkdir -p "$dest_dir"
         
         # Copy non-hidden files to the corresponding destination subdirectory
-        if [ "$folder_name" == "CFG" ] || [ "$folder_name" == "VMC" ]; then
+        if [ "$folder_name" == "CFG" ] || [ "$folder_name" == "VMC" ] || [ "$folder_name" == "nhddl" ]; then
             echo "Copying OPL $folder_name files..." | tee -a "${LOG_FILE}"
             find "$dir" -type f ! -name '.*' -exec cp --update=none {} "$dest_dir" \; >> "${LOG_FILE}" 2>&1
         else
@@ -2746,6 +2830,10 @@ fi
 
 if [ -s "${PS1_LIST}" ]; then
     CREATE_VMC
+fi
+
+if [ -s "${PS2_LIST}" ]; then
+    CREATE_PS2_VMC
 fi
 
 if [ "$OS" = "PSBBN" ]; then
