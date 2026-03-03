@@ -2771,6 +2771,11 @@ else
     echo "No games to process." | tee -a "${LOG_FILE}"
 fi
 
+# Create PS2 VMC images and NHDDL YAML files before syncing to exFAT
+if [ -s "${PS2_LIST}" ]; then
+    CREATE_PS2_VMC
+fi
+
 # Copy OPL files
 dirs=(
     "${GAMES_PATH}/ART"
@@ -2830,10 +2835,6 @@ fi
 
 if [ -s "${PS1_LIST}" ]; then
     CREATE_VMC
-fi
-
-if [ -s "${PS2_LIST}" ]; then
-    CREATE_PS2_VMC
 fi
 
 if [ "$OS" = "PSBBN" ]; then
