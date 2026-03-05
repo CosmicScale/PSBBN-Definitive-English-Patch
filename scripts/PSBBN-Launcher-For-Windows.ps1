@@ -195,7 +195,7 @@ function main {
 
   # run PSBBN regular steps
   wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- `
-    ./PSBBN-Definitive-Patch.sh -wsl $global:diskList[$selectedDisk].SerialNumber $wslPath
+    sudo ./PSBBN-Definitive-Patch.sh -wsl $global:diskList[$selectedDisk].SerialNumber $wslPath
 
   # clear the terminal to get rid of the wsl-run scripts
   clear
@@ -301,7 +301,7 @@ function diskPicker {
     @{Label="";Expression={$disksExtras[$_.Number]}}
   
   if (($global:diskList | Where-Object -FilterScript {isTooSmall($_)}).Count -gt 0) {
-    Write-Host "ℹ️ PSBBN requires a disk with a minimum capacity of 200GB.`n" -ForegroundColor Yellow
+    Write-Host "ℹ️ PSBBN requires a disk with a minimum capacity of 32 GB.`n" -ForegroundColor Yellow
   }
 
   $selectedDisk = handleDiskSelection
@@ -467,7 +467,7 @@ function getTargetPath {
   }
 
   Write-Host "`nNext, you'll be prompted to select or create a folder on your PC (for example, C:\PSBBN)." -ForegroundColor Yellow
-  Write-Host "`nThis folder is for all the games and music files you plan to install." -ForegroundColor Yellow
+  Write-Host "`nThis folder is for all the games, music, videos, and image files you plan to install." -ForegroundColor Yellow
 
   pause
 
@@ -500,10 +500,13 @@ function getTargetPath {
   Write-Host "`nThe following path was chosen: $pickedPath" -ForegroundColor Green
   Write-Host "
 Before you continue, you can fill this folder with your games and other media:
-    - put PS2 games in /DVD or /CD (.iso or .zso files)
-    - put PS1 games in /POPS (must be .vcd files)
+    - put PS2 DVD games in /DVD (.iso or .zso files)
+    - put PS2 CD games in /CD (.bin & .cue, .iso or .zso files)
+    - put PS1 games in /POPS (.bin & .cue or .vcd files)
     - put homebrew in /APPS (.elf or SAS-compliant .psu files)
     - put music in /music (.mp3, .m4a, .flac, or .ogg files)
+    - put videos in /movie (.mp4, .m4v, .mkv, .vob, .mpg files, etc)
+    - put images in /photo (.jpg, .png, .tif, .gif, .bmp, .webp files, etc)
 
 You can refer to the PSBBN Readme to know more.
 https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
@@ -547,7 +550,7 @@ function detectDisksExtras {
       }
     }
 
-    # PSBBN requires disk with at least 200GB
+    # PSBBN requires disk with at least 32 GB
     if (isTooSmall($_)) {
       $message = "$e[91mInsufficient size$e[0m"
     }

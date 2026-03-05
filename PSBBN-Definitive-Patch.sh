@@ -33,6 +33,7 @@ export LAUNCHED_BY_MAIN=1
 export PATH="$PATH:/sbin:/usr/sbin"
 TOOLKIT_PATH="$(pwd)"
 SCRIPTS_DIR="${TOOLKIT_PATH}/scripts"
+ASSETS_DIR="${SCRIPTS_DIR}/assets"
 HELPER_DIR="${SCRIPTS_DIR}/helper"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
 OPL="${SCRIPTS_DIR}/OPL"
@@ -247,10 +248,15 @@ check_dep(){
     check_cmd partprobe
     check_cmd bchunk
     check_cmd pkg-config
+    check_cmd ffmpegthumbnailer
 
-    if ! pkg-config --exists icu-i18n; then
+    if ! pkg-config --exists icu-i18n 2>/dev/null; then
         echo "[X] libicu-dev not found." >> "$LOG_FILE"
         MISSING=1
+    fi
+
+    if [ "$wsl" = "true" ]; then
+        [[ -d /proc/sys/fs/binfmt_misc ]] && echo "binfmt support exists"  >> "$LOG_FILE" || MISSING=1
     fi
 
     echo >> "$LOG_FILE"
@@ -283,6 +289,7 @@ check_dep(){
         check_python_pkg tqdm
         check_python_pkg icu
         check_python_pkg pykakasi
+        check_python_pkg PIL
     fi
 
     if { ldconfig -p 2>/dev/null | grep -q "libfuse.so.2"; } || pkg-config --exists fuse 2>/dev/null; then
@@ -368,7 +375,7 @@ MOUNT_OPL() {
 
     # Handle possibility host system's `mount` is using Fuse
     if [ $? -ne 0 ] && hash mount.exfat-fuse; then
-        sudo mount.exfat-fuse -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" 2>&1
+        sudo mount.exfat-fuse -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
     fi
 }
 
@@ -385,9 +392,9 @@ flash_update() {
 
     # Save current cursor (so user can type)
     tput sc
-    # Move cursor up 8 lines from prompt to option 2
-    tput cuu 8
-    tput cuf 7
+    # Move cursor up 10 lines from prompt to option 3
+    tput cuu 10
+    tput cuf 12
 
     if (( on )); then
         printf "**UPDATE AVAILABLE!**"
@@ -404,11 +411,11 @@ option_one() {
 }
 
 option_two() {
-    "${SCRIPTS_DIR}/PSBBN-Installer.sh" -update
+    "${SCRIPTS_DIR}/HOSDMenu-Installer.sh" $serialnumber "$path_arg"
 }
 
 option_three() {
-    "${SCRIPTS_DIR}/HOSDMenu-Installer.sh" $serialnumber "$path_arg"
+    "${SCRIPTS_DIR}/PSBBN-Installer.sh" -update
 }
 
 option_four() {
@@ -416,7 +423,7 @@ option_four() {
 }
 
 option_five() {
-    "${SCRIPTS_DIR}/Media-Installer.sh" "$path_arg"
+    "${SCRIPTS_DIR}/Media-Installer.sh" "$wsl" "$path_arg"
 }
 
 option_six() {
@@ -447,10 +454,15 @@ display_menu() {
     SPLASH
     cat << "EOF"
                    1) Install PSBBN & HOSDMenu (Official Sony Network Adapter required)
-                   2) Update PSBBN Software
-                   3) Install HOSDMenu only (3rd-party HDD adapters supported)
+
+                   2) Install HOSDMenu only (3rd-party HDD adapters supported)
+
+                   3) Update PS2 System Software
+
                    4) Install Games and Apps
+
                    5) Install Media
+
                    6) Optional Extras
 
                    q) Quit
@@ -537,6 +549,12 @@ else
     UNMOUNT_ALL
     MOUNT_OPL
     psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
+    osdmenu_version=$(awk -F' *= *' '$1=="OSDMenu"{print $2}' "${OPL}/version.txt")
+
+    if [[ -z "$osdmenu_version" && "$(printf '%s\n' "4.0.0" "$psbbn_version" | sort -V | head -n1)" == "4.0.0" ]]; then
+        osdmenu_version="1.0.0"
+    fi
+
     LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
 
     if [[ "$LANG" != "jpn" && "$LANG" != "ger" && "$LANG" != "ita" && "$LANG" != "por" && "$LANG" != "spa" ]]; then
@@ -547,6 +565,7 @@ else
     CHAN_VER=$(awk -F' *= *' '$1=="CHAN_VER"{print $2}' "${OPL}/version.txt")
 
     echo "psbbn_version = $psbbn_version" >> "${LOG_FILE}"
+    echo "osdmenu_version = $osdmenu_version" >> "${LOG_FILE}"
     echo "LANG = $LANG" >> "${LOG_FILE}"
     echo "LANG_VER = $LANG_VER" >> "${LOG_FILE}"
     echo "CHAN_VER = $CHAN_VER" >> "${LOG_FILE}"
@@ -554,13 +573,12 @@ else
 
     UNMOUNT_OPL
 
-    if [[ -n "$psbbn_version" || -n "$LANG_VER" || -n "$CHAN_VER" ]]; then
+    if [[ -n "$psbbn_version" || -n $osdmenu_version || -n "$LANG_VER" || -n "$CHAN_VER" ]]; then
 
         HTML_FILE=$(mktemp)
         timeout 20 wget -O "$HTML_FILE" "$URL" -o - >> "$LOG_FILE" 2>&1
 
         if [[ -n "$psbbn_version" ]]; then
-            echo "Did this run?"
             get_latest_file "psbbn-definitive-patch" "PSBBN Definitive English patch"
 
             if [ "$(printf '%s\n' "$LATEST_VERSION" "$psbbn_version" | sort -V | tail -n1)" != "$psbbn_version" ]; then
@@ -584,7 +602,15 @@ else
             fi
         fi
 
-        if [ "$PSBBN_UPDATE" == "YES" ] || [ "$LANG_UPDATE" == "YES" ] || [ "$CHAN_UPDATE" == "YES" ]; then
+        if [[ -n "$osdmenu_version" ]]; then
+            LATEST_OSD=$(<"${ASSETS_DIR}/osdmenu/version.txt")
+            
+            if [ "$(printf '%s\n' "$LATEST_OSD" "$osdmenu_version" | sort -V | tail -n1)" != "$osdmenu_version" ]; then
+                OSD_UPDATE="YES"
+            fi
+        fi
+
+        if [ "$PSBBN_UPDATE" == "YES" ] || [ "$OSD_UPDATE" == "YES" ] || [ "$LANG_UPDATE" == "YES" ] || [ "$CHAN_UPDATE" == "YES" ]; then
             UPDATE="YES"
         else
             UPDATE="NO"
@@ -606,9 +632,9 @@ while true; do
     if read -r -t 1 choice; then
         echo
         case $choice in
-            1) option_one; display_menu ;;  # redraw menu once after script finishes
+            1) option_one; UPDATE="NO"; display_menu ;;  # redraw menu once after script finishes
             2) option_two; UPDATE="NO"; display_menu ;;
-            3) option_three; display_menu ;;
+            3) option_three; UPDATE="NO"; display_menu ;;
             4) option_four; display_menu ;;
             5) option_five; display_menu ;;
             6) option_six; display_menu ;;

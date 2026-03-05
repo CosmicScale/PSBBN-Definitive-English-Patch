@@ -85,7 +85,6 @@ fi
 PFS_PARTITIONS=("__common" "__system" "__sysconf" "__.POPS" )
 LINUX_PARTITIONS=("__linux.7" )
 
-
 path_arg="$1"
 
 prevent_sleep_start() {
@@ -242,7 +241,7 @@ MOUNT_OPL() {
 
     # Handle possibility host system's `mount` is using Fuse
     if [ $? -ne 0 ] && hash mount.exfat-fuse; then
-        echo "Attempting to use exfat.fuse..." | tee -a "${LOG_FILE}"
+        echo "Attempting to use exfat.fuse..." >> "${LOG_FILE}"
         sudo mount.exfat-fuse -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
     fi
 
@@ -621,31 +620,6 @@ ps2_rsync_check() {
     fi
 }
 
-BOOTSTRAP() {
-    if [ -f "${ASSETS_DIR}/osdmenu/OSDMBR.XLF" ]; then
-	    # BOOTSTRAP METADATA:
-	    BOOTSTRAP_ADDRESS_HEX_BE=0020
-	    BOOTSTRAP_SIZE=$(wc -c "${ASSETS_DIR}/osdmenu/OSDMBR.XLF" | cut -d' ' -f 1)
-	    BOOTSTRAP_SIZE_LBA=$(echo "$((${BOOTSTRAP_SIZE}/512))")
-	    BOOTSTRAP_SIZE_LBA_HEX_BE=$(printf "%04X" ${BOOTSTRAP_SIZE_LBA} | tac -rs .. | echo "$(tr -d '\n')")
-	    echo "${BOOTSTRAP_ADDRESS_HEX_BE}0000${BOOTSTRAP_SIZE_LBA_HEX_BE}0000" | xxd -r -p > /tmp/apa_header_boot.bin 2>> "${LOG_FILE}"
-
-	    # METADATA & BOOTSTRAP WRITING:
-	    # 130h = 304d
-	    sudo dd if=/tmp/apa_header_boot.bin of=${DEVICE} bs=1 seek=304 >> "${LOG_FILE}" 2>&1
-	    # 2000h * 200h = 8192d * 512d = 4194304d = 400000h
-	    sudo dd if="${ASSETS_DIR}/osdmenu/OSDMBR.XLF" of=${DEVICE} bs=1M count=1 seek=4 conv=notrunc >> "${LOG_FILE}" 2>&1
-    else
-	    error_msg "Error" "Failed to inject OSDMenu MBR."
-    fi
-}
-
-apa_checksum_fix() {
-	sudo dd if=${DEVICE} of=/tmp/apa_header_full.bin bs=512 count=2 >> "${LOG_FILE}" 2>&1
-	"${APA_FIXER}" /tmp/apa_header_full.bin | sed -n 8p | awk '{print $6}' | xxd -r -p > /tmp/apa_header_checksum.bin 2>> "${LOG_FILE}"
-	sudo dd if=/tmp/apa_header_checksum.bin of=${DEVICE} conv=notrunc >> "${LOG_FILE}" 2>&1
-}
-
 update_apps() {
     local name="$1"
     local source="$2"
@@ -686,17 +660,6 @@ update_apps() {
         if [[ "$(echo -e "$current_ver\n$latest_ver" | sort -V | tail -n 1)" != "$current_ver" ]]; then
             needs_update=true
         fi
-    elif [[ "$name" == "OSDMenu"  ]]; then
-        latest_ver=$(<"${ASSETS_DIR}/osdmenu/version.txt")
-        current_ver=$(<"${STORAGE_DIR}/__system/osdmenu/version.txt")
-        if [[ -n "$current_ver" ]]; then
-            echo "Current version is $current_ver" | tee -a "${LOG_FILE}"
-        fi
-
-        # Compare versions
-        if [[ "$(echo -e "$current_ver\n$latest_ver" | sort -V | tail -n 1)" != "$current_ver" ]]; then
-            needs_update=true
-        fi
     else
         local output
         output=$(rsync $options --dry-run "$source" "$destination")
@@ -707,17 +670,9 @@ update_apps() {
 
     if [ "$needs_update" = true ]; then
         echo "Updating $name..." | tee -a "${LOG_FILE}"
-        if [[ "$name" == "OSDMenu"  ]]; then
-            cp -rf "${ASSETS_DIR}/osdmenu/"{hosdmenu.elf,version.txt} "${STORAGE_DIR}/__system/osdmenu"
-            app_success_check "$name"
-            exit_code=$?
-            BOOTSTRAP
-            apa_checksum_fix
-        else
-            rsync $options "$source" "$destination" >>"${LOG_FILE}" 2>&1
-            exit_code=${PIPESTATUS[0]}
-            app_success_check "$name"
-        fi
+        rsync $options "$source" "$destination" >>"${LOG_FILE}" 2>&1
+        exit_code=${PIPESTATUS[0]}
+        app_success_check "$name"
     else
         echo "$name is already up-to-date." | tee -a "${LOG_FILE}"
     fi
@@ -1153,10 +1108,10 @@ create_system_cnf() {
 }
 
 APP_ART() {
-    title_id="${title_id//[^A-Za-z0-9_-]/}"
-    title_id="${title_id:0:12}"
-    title_id="${title_id%-}"
-    title_id="${title_id^^}"
+    local title_id="${title_id//[^A-Za-z0-9_-]/}"
+    local title_id="${title_id:0:12}"
+    local title_id="${title_id%-}"
+    local title_id="${title_id^^}"
 
     case "$title_id" in
     OPL*)
@@ -1477,6 +1432,8 @@ if [ -z "$APA_SIZE" ] || [ -z "$LANG" ]; then
     error_msg "Error" "Missing required value(s) in ${OPL}/version.txt"
 fi
 
+UNMOUNT_OPL
+
 # Check if the Python virtual environment exists
 if [ -f "./scripts/venv/bin/activate" ]; then
     echo "The Python virtual environment exists." >> "${LOG_FILE}"
@@ -1593,7 +1550,7 @@ if [[ "${GAMES_PATH}" != "${TOOLKIT_PATH}/games" ]]; then
         echo "File not found: $FILE" >> "${LOG_FILE}"
     fi
 
-    cp "${TOOLKIT_PATH}/games/APPS/APP_WLE-ISR-XF-MM.psu" "${GAMES_PATH}/APPS" >> "${LOG_FILE}" 2>&1
+    cp "${TOOLKIT_PATH}/games/APPS/"{APP_WLE-ISR-XF-MM.psu,SYS_OSDMENU-CONFIGURATOR.psu} "${GAMES_PATH}/APPS" >> "${LOG_FILE}" 2>&1
 else
     echo "Using default game path." >> "${LOG_FILE}"
 fi
@@ -1785,56 +1742,14 @@ else
     echo "No PP partitions to delete." | tee -a "${LOG_FILE}"
 fi
 
-update_apps "Neutrino" "${NEUTRINO_DIR}/" "${OPL}/neutrino/" "-rut --progress --delete --exclude='.*'"
-UNMOUNT_OPL
-sleep 2
 mount_pfs
-
 update_apps "OPL" "${ASSETS_DIR}/OPL/OPNPS2LD.ELF" "${STORAGE_DIR}/__system/launcher/OPNPS2LD.ELF" "-ut --progress"
 update_apps "NHDDL" "${ASSETS_DIR}/NHDDL/nhddl.elf" "${STORAGE_DIR}/__system/launcher/nhddl.elf" "-ut --progress"
-
 install_pops
-
-update_apps "OSDMenu" "${ASSETS_DIR}/osdmenu/hosdmenu.elf" "${STORAGE_DIR}/__system/osdmenu" "-ut --progress"
-
-unmount_apa
-sleep 2
-MOUNT_OPL
-
-################################### Synchronize & Copy Apps ###################################
-
-if [ "$INSTALL_TYPE" = "sync" ]; then
-    echo | tee -a "${LOG_FILE}"
-    echo "Preparing to sync apps..." | tee -a "${LOG_FILE}"
-
-    cd "${GAMES_PATH}/APPS/" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to ${GAMES_PATH}/APPS."
-    process_psu_files "${GAMES_PATH}/APPS/"
-
-    install_elf "${GAMES_PATH}"
-
-    rsync -rut --progress --delete --prune-empty-dirs --include='*/' --include='*/**' --exclude='.*' --exclude='*Zone.Identifier' --exclude='*' "${GAMES_PATH}/APPS/" "${OPL}/APPS/" >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed sync apps. See $LOG_FILE for details."
-
-elif [ "$INSTALL_TYPE" = "copy" ]; then
-    echo "Preparing to copy apps..." | tee -a "${LOG_FILE}"
-
-    cd "${OPL}/APPS/" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to ${OPL}/APPS."
-    process_psu_files "${GAMES_PATH}/APPS/"
-    process_psu_files "${OPL}/APPS/"
-    cd "${TOOLKIT_PATH}"
-
-    rm -rf "${OPL}/APPS/PSBBN"
-    install_elf "${GAMES_PATH}"
-    install_elf "${OPL}"
-
-    find "${GAMES_PATH}/APPS/" -mindepth 1 -maxdepth 1 -type d -exec cp -r {} "${OPL}/APPS/" \; || error_msg "Error" "Failed copy apps. See $LOG_FILE for details."
-fi
 
 ################################### Synchronize & Copy PS1 Games ###################################
 
 activate_python
-UNMOUNT_OPL
-sleep 2
-mount_pfs
 
 # Rename .vcd to .VCD
 for file in "${GAMES_PATH}/POPS"/*.vcd; do
@@ -1842,6 +1757,14 @@ for file in "${GAMES_PATH}/POPS"/*.vcd; do
     newfile="${file%.vcd}.VCD"
     mv -v -- "$file" "$newfile" >> "$LOG_FILE" 2>&1 || error_msg "Error" "Failed to rename $file."
 done
+
+echo  >> "${LOG_FILE}"
+echo "Local POPS folder contents:" >> "${LOG_FILE}"
+ls -l "${GAMES_PATH}/POPS/" >> "${LOG_FILE}"
+echo >> "${LOG_FILE}"
+echo "PS2 POPS partition contents:" >> "${LOG_FILE}"
+ls -l "${STORAGE_DIR}/__.POPS/" >> "${LOG_FILE}"
+echo >> "${LOG_FILE}"
 
 convert_vcd
 
@@ -1891,6 +1814,20 @@ sleep 2
 ################################### Synchronize & Copy PS2 Games ###################################
 
 MOUNT_OPL
+
+echo  >> "${LOG_FILE}"
+echo "Local CD folder contents:" >> "${LOG_FILE}"
+ls -l "${GAMES_PATH}/CD/" >> "${LOG_FILE}"
+echo  >> "${LOG_FILE}"
+echo "Local DVD folder contents:" >> "${LOG_FILE}"
+ls -l "${GAMES_PATH}/DVD/" >> "${LOG_FILE}"
+echo >> "${LOG_FILE}"
+echo "PS2 CD folder contents:" >> "${LOG_FILE}"
+ls -l "${OPL}/CD/" >> "${LOG_FILE}"
+echo >> "${LOG_FILE}"
+echo "PS2 DVD folder contents:" >> "${LOG_FILE}"
+ls -l "${OPL}/DVD/" >> "${LOG_FILE}"
+echo >> "${LOG_FILE}" 
 
 if [[ "$LAUNCHER" = "NEUTRINO" ]]; then
     convert_zso
@@ -2020,6 +1957,36 @@ echo "PS2 games on PS2 drive:" >> "${LOG_FILE}"
 ls -1 "${OPL}/CD/" >> "${LOG_FILE}" 2>&1
 ls -1 "${OPL}/DVD/" >> "${LOG_FILE}" 2>&1
 
+################################### Synchronize & Copy Apps ###################################
+
+update_apps "Neutrino" "${NEUTRINO_DIR}/" "${OPL}/neutrino/" "-rut --progress --delete --exclude='.*'"
+
+if [ "$INSTALL_TYPE" = "sync" ]; then
+    echo | tee -a "${LOG_FILE}"
+    echo "Preparing to sync apps..." | tee -a "${LOG_FILE}"
+
+    cd "${GAMES_PATH}/APPS/" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to ${GAMES_PATH}/APPS."
+    process_psu_files "${GAMES_PATH}/APPS/"
+
+    install_elf "${GAMES_PATH}"
+
+    rsync -rut --progress --delete --prune-empty-dirs --include='*/' --include='*/**' --exclude='.*' --exclude='*Zone.Identifier' --exclude='*' "${GAMES_PATH}/APPS/" "${OPL}/APPS/" >> "${LOG_FILE}" 2>&1 || error_msg "Error" "Failed sync apps. See $LOG_FILE for details."
+
+elif [ "$INSTALL_TYPE" = "copy" ]; then
+    echo "Preparing to copy apps..." | tee -a "${LOG_FILE}"
+
+    cd "${OPL}/APPS/" 2>>"${LOG_FILE}" || error_msg "Error" "Failed to navigate to ${OPL}/APPS."
+    process_psu_files "${GAMES_PATH}/APPS/"
+    process_psu_files "${OPL}/APPS/"
+    cd "${TOOLKIT_PATH}"
+
+    rm -rf "${OPL}/APPS/PSBBN"
+    install_elf "${GAMES_PATH}"
+    install_elf "${OPL}"
+
+    find "${GAMES_PATH}/APPS/" -mindepth 1 -maxdepth 1 -type d -exec cp -r {} "${OPL}/APPS/" \; || error_msg "Error" "Failed copy apps. See $LOG_FILE for details."
+fi
+
 ################################### Creating Assets ###################################
 
 echo
@@ -2137,6 +2104,10 @@ EOL
         create_info_sys "$title" "$title_id" "$publisher"
 
         APP_ART
+
+        if [ "$title_id" = "SYS_OSDMENU-CONFIGURATOR" ]; then
+            cp "$ARTWORK_DIR/OSDMENUCONF.png" "$dir/jkt_001.png" 2>> "${LOG_FILE}" || error_msg "Error" "Failed to create $dir/jkt_001.png. See ${LOG_FILE} for details."
+        fi
 
     done < <(find "${ICONS_DIR}/SAS" -mindepth 1 -maxdepth 1 -type d | sort)
     sort -t',' -k1,1 -f "${SAS_LIST}" -o "${SAS_LIST}"

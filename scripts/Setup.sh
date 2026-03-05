@@ -90,7 +90,7 @@ EOF
 
 # Detect package manager and install packages
 if [ -x "$(command -v apt-get)" ]; then
-    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 libfuse2 dosfstools e2fsprogs libc-bin exfatprogs exfat-fuse util-linux fdisk parted bchunk build-essential libicu-dev pkg-config ffmpegthumbnailer 2>&1 | tee -a "${LOG_FILE}"
+    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 libfuse2 dosfstools e2fsprogs libc-bin exfatprogs exfat-fuse util-linux fdisk parted bchunk build-essential libicu-dev pkg-config ffmpegthumbnailer binfmt-support 2>&1 | tee -a "${LOG_FILE}"
 # Or if user is on Fedora-based system, do this instead
 elif [ -x "$(command -v dnf)" ]; then
     sudo dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm 2>&1 | tee -a "${LOG_FILE}"
@@ -114,7 +114,7 @@ fi
 (
     python3 -m venv scripts/venv >> "${LOG_FILE}" 2>&1 || error_msg "Failed to create Python virtual environment."
     source scripts/venv/bin/activate || error_msg "Failed to activate the Python virtual environment."
-    pip install lz4 natsort mutagen tqdm PyICU pykakasi >> "${LOG_FILE}" || error_msg "Failed to install Python dependencies."
+    pip install lz4 natsort mutagen tqdm PyICU pykakasi pillow >> "${LOG_FILE}" || error_msg "Failed to install Python dependencies."
     deactivate
 ) &
 PID=$!

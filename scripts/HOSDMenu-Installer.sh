@@ -503,7 +503,8 @@ echo "    ====================================== Partitioning the Drive ========
 while true; do
     echo | tee -a "${LOG_FILE}"
     echo "What size would you like the \"POPS\" partition to be?"
-    echo "This partition is used to store PS1 games."
+    echo "This partition is used to store PS1 games. A typically game requires between 200 and 700 MB."
+    echo
     echo "Minimum 1 GB, maximum $max_pops GB"
     echo
     read -p "Enter partition size (in GB): " pops_gb
@@ -585,7 +586,7 @@ boot_cross =
 boot_circle =
 boot_square =
 boot_triangle =
-cdrom_skip_ps2logo = 1
+cdrom_skip_ps2logo = 0
 cdrom_disable_gameid = 0
 cdrom_use_dkwdrv = 0
 ps1drv_enable_fast = 0
@@ -616,8 +617,8 @@ OSDSYS_menu_top_delimiter =
 OSDSYS_menu_bottom_delimiter =
 OSDSYS_num_displayed_items = 5
 OSDSYS_Skip_Disc = 0
-OSDSYS_Skip_Logo = 1
-cdrom_skip_ps2logo = 1
+OSDSYS_Skip_Logo = 0
+cdrom_skip_ps2logo = 0
 cdrom_disable_gameid = 0
 cdrom_use_dkwdrv = 0
 ps1drv_enable_fast = 0

@@ -285,7 +285,7 @@ MOUNT_OPL() {
 
     # Handle possibility host system's `mount` is using Fuse
     if [ $? -ne 0 ] && hash mount.exfat-fuse; then
-        echo "Attempting to use exfat.fuse..." | tee -a "${LOG_FILE}"
+        echo "Attempting to use exfat.fuse..." >> "${LOG_FILE}"
         sudo mount.exfat-fuse -o uid=$UID,gid=$(id -g) ${DEVICE}3 "${OPL}" >> "${LOG_FILE}" 2>&1
     fi
 
@@ -548,7 +548,8 @@ cat << "EOF"
                                      __/ |                          __/ |             __/ |     
                                     |___/                          |___/             |___/      
 
-                                
+
+
 EOF
 }
 
@@ -565,6 +566,7 @@ cat << "EOF"
                                                                                         |___/
 
 
+
 EOF
 }
 
@@ -577,6 +579,7 @@ cat << "EOF"
   | |   | |/ _ \/ _` | '__| |  _  | '__| __|  / _ \/\   | | / __/ _ \| '_ \  | |    / _` |/ __| '_ \ / _ \
   | \__/\ |  __/ (_| | |    | | | | |  | |_  | (_>  <  _| || (_| (_) | | | | | \__/\ (_| | (__| | | |  __/
    \____/_|\___|\__,_|_|    \_| |_/_|   \__|  \___/\/  \___/\___\___/|_| |_|  \____/\__,_|\___|_| |_|\___|
+
 
 
 EOF
@@ -821,6 +824,7 @@ option_two() {
                                       Please select a button layout:
 
                                       1) Cross = Enter, Circle = Back
+
                                       2) Circle = Enter, Cross = Back
 
                                       b) Back
@@ -962,10 +966,15 @@ option_three() {
                                Please select a language from the list below:
 
                                1) English
+
                                2) Japanese
+
                                3) German
+
                                4) Italian
+
                                5) Portuguese (Brazil)
+
                                6) Spanish
 
                                b) Back
@@ -1208,7 +1217,9 @@ option_four() {
                               Please select a screen size from the list below:
 
                               1) 4:3
+
                               2) Full
+
                               3) 16:9
 
                               b) Back
@@ -1334,6 +1345,7 @@ option_five() {
         -name "APP.png" -o \
         -name "APP_WLE-ISR.png" -o \
         -name "HOSDMENU.png" -o \
+        -name "OSDMENUCONF.png" -o \
         -name "NHDDL.png" -o \
         -name "OPENPS2LOAD.png" -o \
         -name "ps1.png" -o \
@@ -1386,6 +1398,7 @@ clear
                                         \____/_/\_\\__|_|  \__,_|___/
 
 
+
 EOF
 }
 
@@ -1394,9 +1407,13 @@ display_menu() {
     EXTRAS_SPLASH
     cat << "EOF"
                                     1) Install PS2 Linux
+
                                     2) Reassign Cross and Circle Buttons
+
                                     3) Change Language
+
                                     4) Change Screen Settings
+
                                     5) Clear Art & Icon Cache
 
                                     b) Back to Main Menu

@@ -45,7 +45,6 @@ HELPER_DIR="${SCRIPTS_DIR}/helper"
 STORAGE_DIR="${SCRIPTS_DIR}/storage"
 SYSCONF_XML="${SCRIPTS_DIR}/tmp/sysconf.xml"
 OPL="${SCRIPTS_DIR}/OPL"
-LOG_FILE="${TOOLKIT_PATH}/logs/PSBBN-installer.log"
 arch="$(uname -m)"
 
 URL="https://archive.org/download/psbbn-definitive-patch-v4.1"
@@ -78,6 +77,7 @@ path_arg="$3"
 case "$1" in
   -install)
     MODE="install"
+    OS="PSBBN"
     ;;
   -update)
     MODE="update"
@@ -88,6 +88,12 @@ case "$1" in
     ;;
 esac
 
+if [ "$MODE" = "install" ]; then
+    LOG_FILE="${TOOLKIT_PATH}/logs/PSBBN-installer.log"
+else
+    LOG_FILE="${TOOLKIT_PATH}/logs/update.log"
+fi
+
 version_le() { # returns 0 (true) if $1 < $2
     [ "$1" = "$2" ] && return 1
     smallest=$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1)
@@ -97,9 +103,6 @@ version_le() { # returns 0 (true) if $1 < $2
 if [ "$MODE" = "install" ]; then
     LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.6" "__linux.7" "__linux.8" "__linux.9" )
     PFS_PARTITIONS=("__contents" "__system" "__sysconf" "__common" )
-else
-    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.6" "__linux.7" "__linux.9" )
-    PFS_PARTITIONS=("__system" "__sysconf" )
 fi
 
 error_msg() {
@@ -434,6 +437,42 @@ CHECK_PARTITIONS() {
     done
 }
 
+CHECK_OS() {
+
+    # only grab the partition name column from lines that begin with 0x0100 or 0x0001
+    mapfile -t names < <(grep -E '^0x0[01][0-9A-Fa-f]{2}' "${hdl_output}" | awk '{print $NF}')
+
+    has_all() {
+        local targets=("$@")
+        for t in "${targets[@]}"; do
+            local found=false
+            for n in "${names[@]}"; do
+                if [[ "$n" == "$t" ]]; then
+                    found=true
+                    break
+                fi
+            done
+            # If any required partition is missing, return failure immediately
+            $found || return 1
+        done
+        return 0  # all partitions found
+        }
+
+    psbbn_parts=(__linux.1 __linux.4 __linux.5 __linux.6 __linux.7 __linux.8 __linux.9 __contents)
+    hosd_parts=(__system __sysconf __.POPS __common)
+
+    if has_all "${psbbn_parts[@]}"; then
+        echo "PSBBN Detected" >> "${LOG_FILE}"
+        OS="PSBBN"
+    elif has_all "${hosd_parts[@]}"; then
+        echo "HOSDMenu Detected" >> "${LOG_FILE}"
+        OS="HOSD"
+    else
+        error_msg "Error" "Failed to detect PSBBN or HOSDMenu on ${DEVICE}."
+    fi
+
+}
+
 UNMOUNT_ALL() {
     # Find all mounted volumes associated with the device
     mounted_volumes=$(lsblk -ln -o MOUNTPOINT "$DEVICE" | grep -v "^$")
@@ -525,14 +564,15 @@ EOF
 UPDATE_SPLASH(){
     clear
     cat << "EOF"
-                   ______  _________________ _   _   _   _           _       _            
-                   | ___ \/  ___| ___ \ ___ \ \ | | | | | |         | |     | |           
-                   | |_/ /\ `--.| |_/ / |_/ /  \| | | | | |_ __   __| | __ _| |_ ___ _ __ 
-                   |  __/  `--. \ ___ \ ___ \ . ` | | | | | '_ \ / _` |/ _` | __/ _ \ '__|
-                   | |    /\__/ / |_/ / |_/ / |\  | | |_| | |_) | (_| | (_| | ||  __/ |   
-                   \_|    \____/\____/\____/\_| \_/  \___/| .__/ \__,_|\__,_|\__\___|_|   
-                                                          | |                             
-                                                          |_|                             
+                _____        __ _                            _   _           _       _       
+               /  ___|      / _| |                          | | | |         | |     | |      
+               \ `--.  ___ | |_| |___      ____ _ _ __ ___  | | | |_ __   __| | __ _| |_ ___ 
+                `--. \/ _ \|  _| __\ \ /\ / / _` | '__/ _ \ | | | | '_ \ / _` |/ _` | __/ _ \
+               /\__/ / (_) | | | |_ \ V  V / (_| | | |  __/ | |_| | |_) | (_| | (_| | ||  __/
+               \____/ \___/|_|  \__| \_/\_/ \__,_|_|  \___|  \___/| .__/ \__,_|\__,_|\__\___|
+                                                                  | |                        
+                                                                  |_|                        
+
 
 EOF
 }
@@ -700,26 +740,37 @@ else
     UNMOUNT_ALL
     clean_up
     HDL_TOC
-    CHECK_PARTITIONS
+    CHECK_OS
     MOUNT_OPL
 
-    psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
+    echo "OS Detected: $OS" >> "${LOG_FILE}"
 
-    # Compare using sort -V
-    if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
-        UNMOUNT_OPL
-        error_msg "The installed PSBBN Definitive Patch is older than version $version_check and cannot be updated" "directly. Please select 'Install PSBBN' from the main menu to perform a full installation."
+    if [ "$OS" = "PSBBN" ]; then
+        psbbn_version=$(head -n 1 "$OPL/version.txt" 2>/dev/null)
+
+        if [ "$(printf '%s\n' "$psbbn_version" "$version_check" | sort -V | head -n1)" != "$version_check" ]; then
+            UNMOUNT_OPL
+            error_msg "The installed PSBBN Definitive Patch is older than version $version_check and cannot be updated" "directly. Please select 'Install PSBBN' from the main menu to perform a full installation."
+        fi
+
+        LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
+        if [[ "$LANG" != "jpn" && "$LANG" != "ger" && "$LANG" != "ita" && "$LANG" != "por" && "$LANG" != "spa"  ]]; then
+            LANG="eng"
+        fi
+
+        LANG_VER=$(awk -F' *= *' '$1=="LANG_VER"{print $2}' "${OPL}/version.txt")
+        CHAN_VER=$(awk -F' *= *' '$1=="CHAN_VER"{print $2}' "${OPL}/version.txt")
+        ENTER=$(awk -F' *= *' '$1=="ENTER"{print $2}' "${OPL}/version.txt")
+        SCREEN=$(awk -F' *= *' '$1=="SCREEN"{print $2}' "${OPL}/version.txt")
     fi
 
-    LANG=$(awk -F' *= *' '$1=="LANG"{print $2}' "${OPL}/version.txt")
-    if [[ "$LANG" != "jpn" && "$LANG" != "ger" && "$LANG" != "ita" && "$LANG" != "por" && "$LANG" != "spa"  ]]; then
-        LANG="eng"
-    fi
+    if [ "$OS" = "PSBBN" ] || [ "$OS" = "HOSD" ]; then
+        osdmenu_version=$(awk -F' *= *' '$1=="OSDMenu"{print $2}' "${OPL}/version.txt")
 
-    LANG_VER=$(awk -F' *= *' '$1=="LANG_VER"{print $2}' "${OPL}/version.txt")
-    CHAN_VER=$(awk -F' *= *' '$1=="CHAN_VER"{print $2}' "${OPL}/version.txt")
-    ENTER=$(awk -F' *= *' '$1=="ENTER"{print $2}' "${OPL}/version.txt")
-    SCREEN=$(awk -F' *= *' '$1=="SCREEN"{print $2}' "${OPL}/version.txt")
+        if [[ -z "$osdmenu_version" && "$(printf '%s\n' "4.0.0" "$psbbn_version" | sort -V | head -n1)" == "4.0.0" ]]; then
+            osdmenu_version="1.0.0"
+        fi
+    fi
 
     UNMOUNT_OPL
 fi
@@ -730,70 +781,89 @@ if [ "$MODE" = "install" ]; then
     clean_up
 fi
 
-# Download the HTML of the page
-HTML_FILE=$(mktemp)
-timeout 20 wget -O "$HTML_FILE" "$URL" -o - >> "$LOG_FILE" 2>&1 &
-WGET_PID=$!
+if [ "$OS" = "PSBBN" ]; then
+    # Download the HTML of the page
+    HTML_FILE=$(mktemp)
+    timeout 20 wget -O "$HTML_FILE" "$URL" -o - >> "$LOG_FILE" 2>&1 &
+    WGET_PID=$!
 
-spinner $WGET_PID "Checking for latest version of the PSBBN Definitive Patch"
+    spinner $WGET_PID "Checking for latest version of the PSBBN Definitive Patch"
 
-get_latest_file "psbbn-definitive-patch" "PSBBN Definitive English patch"
+    get_latest_file "psbbn-definitive-patch" "PSBBN Definitive English patch"
 
-if [ "$MODE" = "update" ]; then
-    echo "Current version: $psbbn_version" | tee -a "${LOG_FILE}"
+    if [ "$MODE" = "update" ]; then
+        echo "Current version: $psbbn_version" | tee -a "${LOG_FILE}"
     
-    if [ "$(printf '%s\n' "$LATEST_VERSION" "$psbbn_version" | sort -V | tail -n1)" = "$psbbn_version" ]; then
-        echo
-        echo "You already have the latest PSBBN system software installed." | tee -a "${LOG_FILE}"
-        PSBBN_UPDATE="no"
-    fi
-fi
-
-if [ "$PSBBN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
-    if [[ "$(printf '%s\n' "$LATEST_VERSION" "4.0.0" | sort -V | head -n1)" != "4.0.0" ]]; then
-        error_msg "The latest version currently available is v$LATEST_VERSION." "The installer requires version v4.1.0 or higher. Please try again later."
+        if [ "$(printf '%s\n' "$LATEST_VERSION" "$psbbn_version" | sort -V | tail -n1)" = "$psbbn_version" ]; then
+            echo
+            echo "You already have the latest PSBBN system software installed." | tee -a "${LOG_FILE}"
+            PSBBN_UPDATE="no"
+        fi
     fi
 
-    downoad_latest_file "psbbn-definitive-patch"
-    PSBBN_PATCH="${ASSETS_DIR}/${LATEST_FILE}"
-fi
+    if [ "$PSBBN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
+        if [[ "$(printf '%s\n' "$LATEST_VERSION" "4.0.0" | sort -V | head -n1)" != "4.0.0" ]]; then
+            error_msg "The latest version currently available is v$LATEST_VERSION." "The installer requires version v4.1.0 or higher. Please try again later."
+        fi
 
-get_latest_file "language-pak-$LANG" "$LANG_DISPLAY language pack"
+        downoad_latest_file "psbbn-definitive-patch"
+        PSBBN_PATCH="${ASSETS_DIR}/${LATEST_FILE}"
+    fi
 
-echo "Current language pack version: $LANG_VER" | tee -a "${LOG_FILE}"
+    get_latest_file "language-pak-$LANG" "$LANG_DISPLAY language pack"
 
-if [ "$(printf '%s\n' "$LATEST_LANG" "$LANG_VER" | sort -V | tail -n1)" = "$LANG_VER" ]; then
-    echo
-    echo "You already have the latest language pack installed." | tee -a "${LOG_FILE}"
-    LANG_UPDATE="no"
-fi
+    echo "Current language pack version: $LANG_VER" | tee -a "${LOG_FILE}"
 
-if [ "$LANG_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
-    downoad_latest_file "language-pak"
-    LANG_PACK="${ASSETS_DIR}/${LATEST_FILE}"
-fi
-
-if [[ "$LANG" == "jpn" ]]; then
-    get_latest_file "channels-$LANG" "$LANG_DISPLAY channels"
-
-    echo "Current channels version: $CHAN_VER" | tee -a "${LOG_FILE}"
-    if [ "$(printf '%s\n' "$LATEST_CHAN" "$CHAN_VER" | sort -V | tail -n1)" = "$CHAN_VER" ]; then
+    if [ "$(printf '%s\n' "$LATEST_LANG" "$LANG_VER" | sort -V | tail -n1)" = "$LANG_VER" ]; then
         echo
-        echo "You already have the latest game channels installed." | tee -a "${LOG_FILE}"
-        CHAN_UPDATE="no"
+        echo "You already have the latest language pack installed." | tee -a "${LOG_FILE}"
+        LANG_UPDATE="no"
+    fi
+
+    if [ "$LANG_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
+        downoad_latest_file "language-pak"
+        LANG_PACK="${ASSETS_DIR}/${LATEST_FILE}"
+    fi
+
+    if [[ "$LANG" == "jpn" ]]; then
+        get_latest_file "channels-$LANG" "$LANG_DISPLAY channels"
+
+        echo "Current channels version: $CHAN_VER" | tee -a "${LOG_FILE}"
+        if [ "$(printf '%s\n' "$LATEST_CHAN" "$CHAN_VER" | sort -V | tail -n1)" = "$CHAN_VER" ]; then
+            echo
+            echo "You already have the latest game channels installed." | tee -a "${LOG_FILE}"
+            CHAN_UPDATE="no"
+        else
+            CHAN_UPDATE="yes"
+        fi
+
+        if [ "$CHAN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
+            downoad_latest_file "channels"
+            CHANNELS="${ASSETS_DIR}/${LATEST_FILE}"
+        fi
     else
-        CHAN_UPDATE="yes"
+        CHAN_UPDATE="no"
     fi
+fi
 
-    if [ "$CHAN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
-        downoad_latest_file "channels"
-        CHANNELS="${ASSETS_DIR}/${LATEST_FILE}"
-    fi
-else
+LATEST_OSD=$(<"${ASSETS_DIR}/osdmenu/version.txt")
+echo
+echo "Found OSDMenu version: $LATEST_OSD" | tee -a "${LOG_FILE}"
+echo "Current OSDMenu version: $osdmenu_version" | tee -a "${LOG_FILE}"
+
+if [ "$(printf '%s\n' "$LATEST_OSD" "$osdmenu_version" | sort -V | tail -n1)" = "$osdmenu_version" ]; then
+    echo
+    echo "You already have the latest OSDMenu system software installed." | tee -a "${LOG_FILE}"
+    OSD_UPDATE="no"
+fi
+
+if [ "$OS" = "HOSD" ]; then
+    PSBBN_UPDATE="no"
+    LANG_UPDATE="no"
     CHAN_UPDATE="no"
 fi
 
-if [ "$PSBBN_UPDATE" == "no" ] && [ "$LANG_UPDATE" == "no" ] && [ "$CHAN_UPDATE" == "no" ]; then
+if [ "$PSBBN_UPDATE" == "no" ] && [ "$OSD_UPDATE" == "no" ] && [ "$LANG_UPDATE" == "no" ] && [ "$CHAN_UPDATE" == "no" ]; then
     echo
     echo "You are already running the latest version. No need to update." | tee -a "${LOG_FILE}"
     echo
@@ -813,19 +883,28 @@ if [ "$PSBBN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
     echo "====================================== PSBBN Definitive Patch v$LATEST_VERSION ======================================="
     if [ "$LATEST_VERSION" = "4.1.0" ]; then
         echo
-        echo "            NEW! Multilingual Support:"
-        echo "            - The PSBBN Definitive Patch now supports English, Japanese, German, Italian,"
-        echo "              Portuguese (Brazil), and Spanish"
-        echo "            - Select your preferred language during PSBBN installation"
-        echo "            - The language can also be changed later from the Extras menu"
-        echo "            - When the language is set to Japanese, Japan-region games will be displayed in the"
-        echo "              Game Collection on HOSDMenu using their Japanese titles."
-        echo "            - When the language is set to Japanese, the original Japanese online Game Channels"
-        echo "              can be accessed from the Game Channel."
+        echo "            New Multilingual Support:"
+        echo "            - The PSBBN Definitive Project now supports English, Japanese, German, Italian,"
+        echo "              Portuguese (Brazil), and Spanish."
+        echo "            - Select your preferred language during PSBBN and HOSDMenu installation."
+        echo "            - The language can also be changed later from the Optional Extras menu."
+        echo "            - When the language is set to Japanese, Japan-region games will appear in the"
+        echo "              PSBBN Game Collection and HOSDMenu's Browser using their original Japanese titles."
+        echo "            - When the language is set to Japanese, the original Japanese online game channels"
+        echo "              can be accessed from the PSBBN Game Channel."
         echo
-        echo "        Full Release notes on GitHub: https://github.com/CosmicScale/PSBBN-Definitive-English-Patch"  
+        echo "            New Features:"
+        echo "            - OSDMenu MBR and HOSDMenu have been updated to version 1.2.0."
+        echo "            - Selecting \"Install Games and Apps\" from the main menu will install the all-new"
+        echo "              OSDMenu Configurator."
+        echo "            - The options \"Install Movies\" and \"Install Photos\" are now available in the"
+        echo "              Install Media menu."
+        echo "            - You can now change screen settings and clear the art & icon cache in the"
+        echo "              Optional Extras menu."
         echo
-        echo "        Watch the latest video covering this update: https://youtu.be/dvCt_ExHwro"
+        echo "        Full release notes on GitHub: https://github.com/CosmicScale/PSBBN-Definitive-English-Patch"  
+        echo
+        echo "        Watch the latest video covering this update: https://youtu.be/_jKzzsClgOY"
     fi
     echo
     echo "============================================================================================================"
@@ -885,7 +964,8 @@ if [ "$MODE" = "install" ]; then
         echo "Space available for APA partitions: $free_space GB" | tee -a "${LOG_FILE}"
         echo
         echo "What size would you like the \"POPS\" partition to be?"
-        echo "This partition is used to store PS1 games."
+        echo "This partition is used to store PS1 games. A typically game requires between 200 and 700 MB."
+        echo
         echo "Minimum 1 GB, maximum $max_pops GB"
         echo
         read -p "Enter partition size (in GB): " pops_gb
@@ -909,6 +989,8 @@ if [ "$MODE" = "install" ]; then
         remaining_gb=$((free_space - pops_gb -1))
         echo
         echo "What size would you like the \"Music\" partition to be?"
+        echo "Music is stored in lossless PCM audio. An album typically requires between 650 and 700 MB."
+        echo
         echo "Minimum 1 GB, maximum $remaining_gb GB"
         echo
         read -p "Enter partition size (in GB): " music_gb
@@ -932,7 +1014,8 @@ if [ "$MODE" = "install" ]; then
         remaining_gb=$((free_space - pops_gb - music_gb))
         echo
         echo "What size would you like the \"Contents\" partition to be?"
-        echo "This partition is used to store movies and photos."
+        echo "This partition is used to store movies and photos. Movies typically use about 1.3 GB per hour."
+        echo
         echo "Minimum 1 GB, maximum $remaining_gb GB"
         echo
         read -p "Enter partition size (in GB): " contents_gb
@@ -957,7 +1040,7 @@ if [ "$MODE" = "install" ]; then
 
         if (( remaining_gb > 0 )); then
             echo
-            echo "Would you like to reserve some space for future use?"
+            echo "Would you like to reserve space on your drive for future APA partitions?"
             echo "You'll need at least 3 GB reserved to install PS2 Linux."
             echo
             read -p "Reserve space? (y/n): " answer
@@ -1059,29 +1142,42 @@ if [ "$MODE" = "install" ]; then
     PFS_COMMANDS
 fi
 
-echo | tee -a "${LOG_FILE}"
-if [ "$MODE" = "update" ]; then
-    if [ "$PSBBN_UPDATE" != "no" ]; then
-        UPDATE_SPLASH
-    fi
-    echo -n "Updating PSBBN..." | tee -a "${LOG_FILE}"
+if [ "$OS" = "PSBBN" ]; then
+    echo | tee -a "${LOG_FILE}"
+    if [ "$MODE" = "update" ]; then
+        if [ "$PSBBN_UPDATE" != "no" ]; then
+            UPDATE_SPLASH
+        fi
+        echo -n "Updating PS2 System Software..." | tee -a "${LOG_FILE}"
 
-    if version_le "${psbbn_version:-0}" "4.1.0"; then
-        COMMANDS="device ${DEVICE}\n"
-        COMMANDS+="rmpart __linux.6\n"
-        COMMANDS+="mkpart __linux.6 128M EXT2\n"
-        COMMANDS+="rmpart __linux.9\n"
-        COMMANDS+="mkpart __linux.9 2048M EXT2\n"
-        COMMANDS+="exit"
-        echo "Deleting and recreating __linux.6 and __linux.9..." >>"${LOG_FILE}"
-        PFS_COMMANDS
+        if version_le "${psbbn_version:-0}" "4.1.0"; then
+            COMMANDS="device ${DEVICE}\n"
+            COMMANDS+="rmpart __linux.6\n"
+            COMMANDS+="mkpart __linux.6 128M EXT2\n"
+            COMMANDS+="rmpart __linux.9\n"
+            COMMANDS+="mkpart __linux.9 2048M EXT2\n"
+            COMMANDS+="exit"
+            echo "Deleting and recreating __linux.6 and __linux.9..." >>"${LOG_FILE}"
+            PFS_COMMANDS
+        fi
+    else
+        echo -n "Installing PSBBN..." | tee -a "${LOG_FILE}"
     fi
-else
-    echo -n "Installing PSBBN..." | tee -a "${LOG_FILE}"
+fi
+
+if [ "$MODE" = "update" ] && [ "$OS" = "PSBBN" ]; then
+    LINUX_PARTITIONS=("__linux.1" "__linux.4" "__linux.5" "__linux.6" "__linux.7" "__linux.9" )
+    PFS_PARTITIONS=("__system" "__sysconf" )
+elif [ "$MODE" = "update" ] && [ "$OS" = "HOSD" ]; then
+    PFS_PARTITIONS=("__system" "__sysconf" )
 fi
 
 mapper_probe
-mount_cfs
+
+if [ "$OS" = "PSBBN" ]; then
+    mount_cfs
+fi
+
 mount_pfs
 
 if [ "$MODE" = "install" ]; then
@@ -1089,7 +1185,7 @@ if [ "$MODE" = "install" ]; then
     mkdir -p "${STORAGE_DIR}/__common/Your Saves" 2>> "${LOG_FILE}"
 fi
 
-if [ "$PSBBN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
+if [ "$PSBBN_UPDATE" != "no" ]; then
     echo "Installing PSBBN Update..." >> "${LOG_FILE}"
     ALL_ERRORS=$(sudo tar zxpf "${PSBBN_PATCH}" -C "${STORAGE_DIR}/" 2>&1 >/dev/null)
 
@@ -1101,7 +1197,7 @@ if [ "$PSBBN_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
     fi
 fi
 
-if [ "$LANG_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
+if [ "$LANG_UPDATE" != "no" ]; then
     echo "Installing PSBBN Language Pack..." >> "${LOG_FILE}"
     sudo tar zxpf "$LANG_PACK" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || error_msg "Failed to install $LANG_DISPLAY language pack." "See ${LOG_FILE} for details."
     if [[ "$LANG" == "jpn" ]]; then
@@ -1110,11 +1206,13 @@ if [ "$LANG_UPDATE" != "no" ] || [ "$MODE" != "update" ]; then
 fi
 
 if [ "$CHAN_UPDATE" == "yes" ]; then
-    echo "Installing Online Channels..." >> "${LOG_FILE}"
+    echo "Installing Game Channels..." >> "${LOG_FILE}"
     sudo tar zxpf "${CHANNELS}" -C "${STORAGE_DIR}/" >> "${LOG_FILE}" 2>&1 || error_msg "Failed to install channels." "See ${LOG_FILE} for details."
 fi
 
-cp -f "${ASSETS_DIR}/osdmenu/"{hosdmenu.elf,version.txt} "${STORAGE_DIR}/__system/osdmenu/" 2>> "${LOG_FILE}" || error_msg "Failed to copy hosdmenu.elf."
+if [ "$OSD_UPDATE" != "no" ]; then
+    cp -f "${ASSETS_DIR}/osdmenu/"{hosdmenu.elf,version.txt} "${STORAGE_DIR}/__system/osdmenu/" 2>> "${LOG_FILE}" || error_msg "Failed to copy hosdmenu.elf."
+fi
 
 # Check if OSDMBR.CNF exists
 if [ ! -f "${STORAGE_DIR}/__sysconf/osdmenu/OSDMBR.CNF" ]; then
@@ -1130,7 +1228,7 @@ boot_circle_arg3 = -noflags
 boot_square =
 boot_triangle =
 boot_start = 
-cdrom_skip_ps2logo = 1
+cdrom_skip_ps2logo = 0
 cdrom_disable_gameid = 0
 cdrom_use_dkwdrv = 0
 ps1drv_enable_fast = 0
@@ -1148,7 +1246,7 @@ boot_circle =
 boot_square =
 boot_triangle = 
 boot_start = 
-cdrom_skip_ps2logo = 1
+cdrom_skip_ps2logo = 0
 cdrom_disable_gameid = 0
 cdrom_use_dkwdrv = 0
 ps1drv_enable_fast = 0
@@ -1159,6 +1257,8 @@ prefer_bbn = 1
 osd_language = $LANG
 EOL
     fi
+else
+    echo "OSDMBR.CNF already exists — skipping." >> "${LOG_FILE}"
 fi
 
 # Check if OSDMENU.CNF exists
@@ -1185,8 +1285,8 @@ OSDSYS_menu_top_delimiter =
 OSDSYS_menu_bottom_delimiter =
 OSDSYS_num_displayed_items = 5
 OSDSYS_Skip_Disc = 0
-OSDSYS_Skip_Logo = 1
-cdrom_skip_ps2logo = 1
+OSDSYS_Skip_Logo = 0
+cdrom_skip_ps2logo = 0
 cdrom_disable_gameid = 0
 cdrom_use_dkwdrv = 0
 ps1drv_enable_fast = 0
@@ -1198,33 +1298,33 @@ else
     echo "OSDMENU.CNF already exists — skipping." >> "${LOG_FILE}"
 fi
 
-if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
-        echo "Cleaning up files from older installs:" >> "${LOG_FILE}"
-        rm -rf "${STORAGE_DIR}/__system/osd110u" 2>> "${LOG_FILE}"
-        rm -f "${STORAGE_DIR}/__system/p2lboot/PSBBN.ELF" 2>> "${LOG_FILE}"
-        rm -rf "${STORAGE_DIR}/__sysconf/PS2BBL" 2>> "${LOG_FILE}"
+if [ "$OS" = "PSBBN" ] && [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
+    echo "Cleaning up files from older installs:" >> "${LOG_FILE}"
+    rm -rf "${STORAGE_DIR}/__system/osd110u" 2>> "${LOG_FILE}"
+    rm -f "${STORAGE_DIR}/__system/p2lboot/PSBBN.ELF" 2>> "${LOG_FILE}"
+    rm -rf "${STORAGE_DIR}/__sysconf/PS2BBL" 2>> "${LOG_FILE}"
 
-        if [ "$MODE" = "update" ] && [ "${psbbn_version:-0}" = "3.00" ]; then
-            if ! sudo mount "${MAPPER}__linux.7" "${STORAGE_DIR}/__linux.7" >>"${LOG_FILE}" 2>&1; then
-                error_msg "Failed to mount __linux.7 partition."
-            fi
-        
-            mkdir -p "${SCRIPTS_DIR}/tmp"
-            sudo cp "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0" "${SCRIPTS_DIR}/tmp" >> "${LOG_FILE}" 2>&1
-            TARGET="${SCRIPTS_DIR}/tmp/shortcut_0"
-
-            # If TARGET exists, remove lines ending with PP.LAUNCHELF, PP.HOSDMENU and PP.LAUNCHDISC
-            if [ -f "$TARGET" ]; then
-                sudo sed -i '/PP\.LAUNCHELF$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
-                sudo sed -i '/PP\.HOSDMENU\.HIDDEN$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
-                sudo sed -i '/PP\.LAUNCHDISC$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
-            fi
-
-            sudo cp -f "${TARGET}" "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0"  >> "${LOG_FILE}" 2>&1
+    if [ "$MODE" = "update" ] && [ "${psbbn_version:-0}" = "3.00" ]; then
+        if ! sudo mount "${MAPPER}__linux.7" "${STORAGE_DIR}/__linux.7" >>"${LOG_FILE}" 2>&1; then
+            error_msg "Failed to mount __linux.7 partition."
         fi
+        
+        mkdir -p "${SCRIPTS_DIR}/tmp"
+        sudo cp "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0" "${SCRIPTS_DIR}/tmp" >> "${LOG_FILE}" 2>&1
+        TARGET="${SCRIPTS_DIR}/tmp/shortcut_0"
+
+        # If TARGET exists, remove lines ending with PP.LAUNCHELF, PP.HOSDMENU and PP.LAUNCHDISC
+        if [ -f "$TARGET" ]; then
+            sudo sed -i '/PP\.LAUNCHELF$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+            sudo sed -i '/PP\.HOSDMENU\.HIDDEN$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+            sudo sed -i '/PP\.LAUNCHDISC$/d' "$TARGET" >> "${LOG_FILE}" 2>&1
+        fi
+
+        sudo cp -f "${TARGET}" "${STORAGE_DIR}/__linux.7/bn/sysconf/shortcut_0"  >> "${LOG_FILE}" 2>&1
+    fi
 fi
 
-if [ "$MODE" = "update" ]; then
+if [ "$OS" = "PSBBN" ] && [ "$MODE" = "update" ]; then
     if [[ "$ENTER" == "O" ]] || { [[ -z "$ENTER" ]] && [[ "$LANG" == "jpn" ]]; }; then
         if sudo cp -f "${ASSETS_DIR}/kernel/vmlinux_jpn" "${STORAGE_DIR}/__system/p2lboot/vmlinux" >> "${LOG_FILE}" 2>&1 \
             && sudo cp -f "${ASSETS_DIR}/kernel/o.tm2" "${STORAGE_DIR}/__linux.4/bn/data/tex/btn_r.tm2" >> "${LOG_FILE}" 2>&1 \
@@ -1277,7 +1377,7 @@ fi
 
 UNMOUNT_ALL
 
-if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
+if [ "$OS" = "PSBBN" ] && [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
     COMMANDS="device ${DEVICE}\n"
     COMMANDS+="rmpart PP.LAUNCHDISC\n"
     COMMANDS+="rmpart PP.HDDOSD\n"
@@ -1288,7 +1388,10 @@ if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
 fi
 
 clean_up
-BOOTSTRAP
+
+if [ "$OSD_UPDATE" != "no" ]; then
+    BOOTSTRAP
+fi
 
 echo | tee -a "${LOG_FILE}"
 
@@ -1343,16 +1446,37 @@ apa_checksum_fix
 
 ###############################################################################################
 
-CHECK_PARTITIONS
+if [ "$OS" = "PSBBN" ]; then
+    CHECK_PARTITIONS
+fi
 
 MOUNT_OPL
 
-if [ "$MODE" = "update" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
-        rm -rf "${OPL}/APPS/LAUNCHDISC" 2>> "${LOG_FILE}"
-        rm -rf "${OPL}/APPS/HDDOSD" 2>> "${LOG_FILE}"
-        rm -rf "${OPL}/APPS/LAUNCHELF" 2>> "${LOG_FILE}"
-        rm -rf "${OPL}/APPS/BBNAVIGATOR" 2>> "${LOG_FILE}"
-        rm -f "${TOOLKIT_PATH}/games/APPS/"{Launch-Disc.elf,HDD-OSD.elf,PSBBN.ELF,BOOT.ELF}
+if [ "$MODE" = "update" ]; then
+    rm -rf "${OPL}/APPS/LAUNCHDISC" 2>> "${LOG_FILE}"
+    rm -rf "${OPL}/APPS/HDDOSD" 2>> "${LOG_FILE}"
+    rm -rf "${OPL}/APPS/LAUNCHELF" 2>> "${LOG_FILE}"
+    rm -rf "${OPL}/APPS/BBNAVIGATOR" 2>> "${LOG_FILE}"
+    rm -f "${TOOLKIT_PATH}/games/APPS/"{Launch-Disc.elf,HDD-OSD.elf,PSBBN.ELF}
+
+    FILE="${TOOLKIT_PATH}/games/APPS/BOOT.ELF"
+    TARGET_MD5="20a5b2c1ffb86e742fb5705b5d9d7370"
+
+    # Check if file exists
+    if [[ -f "$FILE" ]]; then
+        # Get md5 checksum
+        FILE_MD5=$(md5sum "$FILE" | awk '{print $1}')
+
+        # Compare and delete if matches
+        if [[ "$FILE_MD5" == "$TARGET_MD5" ]]; then
+            rm -f "$FILE"
+            echo "Deleted $FILE (MD5 matched)" >> "${LOG_FILE}"
+        else
+            echo "MD5 does not match, file not deleted." >> "${LOG_FILE}"
+        fi
+    else
+        echo "File not found: $FILE" >> "${LOG_FILE}"
+    fi
 fi
 
 if [ "$MODE" = "install" ]; then
@@ -1368,8 +1492,9 @@ if [ "$MODE" = "install" ]; then
         echo "ENTER = X" >> "$OPL/version.txt"
     fi
     echo "SCREEN = 4:3" >> "$OPL/version.txt"
+fi
 
-else
+if [ "$OS" = "PSBBN" ] && [ "$MODE" = "update" ]; then
     if [[ -f "${OPL}/version.txt" ]]; then
         sed -i "1s|.*|$LATEST_VERSION|" "${OPL}/version.txt"
         if ! grep -q "APA_SIZE *=" "${OPL}/version.txt"; then
@@ -1415,6 +1540,13 @@ else
     fi
 fi
 
+# Update or add OSDMenu version
+if grep -q "^OSDMenu =" "${OPL}/version.txt"; then
+    sed -i "s|^OSDMenu =.*|OSDMenu = $LATEST_OSD|" "${OPL}/version.txt"
+else
+    echo "OSDMenu = $LATEST_OSD" >> "${OPL}/version.txt"
+fi
+
 # Add disk icon
 cp -f "${ASSETS_DIR}/autorun.ico" "${OPL}"
 cat << EOF > "${OPL}/autorun.inf"
@@ -1435,37 +1567,69 @@ if [ "$MODE" = "install" ]; then
     echo "[✓] PSBBN Successfully Installed!" | tee -a "${LOG_FILE}"
 else
     UPDATE_SPLASH
-    echo "====================================== [✓] PSBBN Successfully Updated =====================================" | tee -a "${LOG_FILE}"
+    if [ "$OS" = "PSBBN" ]; then
+        echo "=============================== [✓] PS2 System Software Successfully Updated ===============================" | tee -a "${LOG_FILE}"
+    fi
     echo
     if [ "$PSBBN_UPDATE" != "no" ]; then
-        echo "      PSBBN System Software updated to version: $LATEST_VERSION"
+        echo "   PSBBN System Software updated to version: $LATEST_VERSION" | tee -a "${LOG_FILE}"
     fi
+
     if [ "$LANG_UPDATE" != "no" ]; then
-        echo "      Language Pack updated to version: $LANG $LATEST_LANG"
+        echo "   Language Pack updated to version: $LANG $LATEST_LANG" | tee -a "${LOG_FILE}"
     fi
+
     if [ "$CHAN_UPDATE" == "yes" ]; then
-        echo "      Online Channels uptaded to version: $LANG $LATEST_CHAN"
+        echo "   Online Channels uptaded to version: $LANG $LATEST_CHAN" | tee -a "${LOG_FILE}"
     fi
+
     echo
+    if [ "$OSD_UPDATE" != "no" ]; then
+        echo "   OSDMenu System Software updated to version: $LATEST_OSD" | tee -a "${LOG_FILE}"
+        echo
+        echo "   The OSDMenu changelog can be found here: https://github.com/pcm720/OSDMenu/releases"
+        if [ "$LATEST_OSD" == "1.2.0" ] && [ "$PSBBN_UPDATE" == "no" ]; then
+            echo
+            echo "   New Features:"
+            echo "   - Italian, Portuguese (Brazil), and Spanish have been added as additional languages."
+            echo "     The language can be changed in the Optional Extras menu."
+            echo "   - Selecting \"Install Games and Apps\" from the main menu will install the all-new OSDMenu Configurator."
+            echo "   - You can now clear the art & icon cache in the Optional Extras menu."
+            echo
+            echo "   New Features Exclusive to PSBBN:"
+            echo "   - The options \"Install Movies\" and \"Install Photos\" are now available in the Install Media menu."
+            echo "   - You can now change screen settings in the Optional Extras menu."
+            echo
+            echo "   Full release notes on GitHub: https://github.com/CosmicScale/PSBBN-Definitive-English-Patch"
+            echo
+            echo "   Watch the latest video covering this update: https://youtu.be/_jKzzsClgOY"
+        fi
+    fi
 
     if [ "$PSBBN_UPDATE" != "no" ] && version_le "${psbbn_version:-0}" "3.00"; then
-        echo "      Now connect the drive to your PS2 console and boot into PSBBN to complete the installation."
-        echo "      This must be done before running the Game Installer."
         echo
+        echo "                                      ========= IMPORTANT! ========="
+        echo
+        echo "   You must connect the drive to your PS2 console and boot into PSBBN to complete the update."
+        echo "   This step must be completed before running the Game Installer."
     fi
 
     if [ "$PSBBN_UPDATE" != "no" ] && version_le "${psbbn_version:-0}" "4.0.0"; then
-        echo "      It's recommended to rerun the Game Installer and choose \"Add Additional Games and Apps\" to"
-        echo "      improve game startup times and add apps to the System Menu in HOSDMenu."
         echo
+        echo "   Note: It is recommended to rerun the Game Installer and select \"Add Additional Games and Apps.\""
+        echo "   This will improve game startup times and add apps to the HOSDMenu System Menu."
     fi
 
     if [[ ( "$PSBBN_UPDATE" != "no" || "$LANG_UPDATE" != "no" ) && -z "$ENTER" ]]; then
-        echo "      If you had previously swapped the X and O buttons, you'll need to do it again in the Extras menu."
         echo
+        echo "   NOTE: If you previously swapped the X and O buttons, you will need to do so again in the Extras menu."
     fi
+    echo
     echo "============================================================================================================"
 fi
 echo
+if [ "$MODE" = "update" ]; then
+    echo -n "                                   "
+fi
 read -n 1 -s -r -p "Press any key to return to the menu..." </dev/tty
 echo

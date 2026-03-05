@@ -1,5 +1,5 @@
 {
-  description = "PSBBN Definitive English Patch env";
+  description = "PSBBN Definitive Project env";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -58,7 +58,7 @@
             libicu-dev
             pkg-config
             patchelf
-
+            ffmpegthumbnailer
             psbbn
           ];
 
@@ -68,7 +68,7 @@
             ln -sfn ${pythonEnv}/* ./scripts/venv/
 
             echo -e "\033[1;32m==============================================================\033[0m"
-            echo -e "\033[1;36m                PSBBN Definitive English Patch                \033[0m"
+            echo -e "\033[1;36m                PSBBN Definitive Project                      \033[0m"
             echo -e "\033[1;32m==============================================================\033[0m"
             echo ""
             echo -e "Open main menu by executing: \033[1;36mpsbbn\033[0m"
