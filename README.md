@@ -57,6 +57,9 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 # Changelog
 
 **March 5th, 2026 - Movie and Photo Installers, OSDMenu Configurator and more!**  
+<p></p>
+
+[![Movie and Photo Installers, OSDMenu Configurator and more!](https://github.com/user-attachments/assets/f0fae1ee-bf04-4aea-88a6-89e030926282)](https://youtu.be/_jKzzsClgOY)
 
 **More Languages:**
 - In addition to English, Japanese, and German, PSBBN is now available in Italian, Portuguese (Brazil), and Spanish
