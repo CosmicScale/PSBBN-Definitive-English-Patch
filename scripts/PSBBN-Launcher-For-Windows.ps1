@@ -195,7 +195,7 @@ function main {
 
   # run PSBBN regular steps
   wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- `
-    sudo ./PSBBN-Definitive-Patch.sh -wsl $global:diskList[$selectedDisk].SerialNumber $wslPath
+    ./PSBBN-Definitive-Patch.sh -wsl $global:diskList[$selectedDisk].SerialNumber $wslPath
 
   # clear the terminal to get rid of the wsl-run scripts
   clear

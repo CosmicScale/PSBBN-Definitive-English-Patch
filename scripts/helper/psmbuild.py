@@ -192,7 +192,7 @@ def build_psm(pss_file, png_file, output_file, title_text):
         f.write(tm2_data)
         f.write(b"\x00" * padding_size)
         f.write(mpeg_data)
-
+    print()
     print(f"[✓] Created PSM: {os.path.basename(output_file)}")
 
 # ------------------------------

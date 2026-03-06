@@ -955,7 +955,8 @@ EOF
 cd /d "${display_path}movie\tmp
 "\\\wsl.localhost\PSBBN$wsl_path" mux -v "${file_name}.mux"
 EOF
-        if ! powershell.exe "${display_path}movie/tmp/${file_name}.bat" >> "${LOG_FILE}" 2>&1; then
+        if ! cmd.exe /c "${display_path}movie/tmp/${file_name}.bat" >> "${LOG_FILE}" 2>&1; then
+          echo
           echo "Warning: Skipping video - Failed to create $pss"
           failure=1
           rm -f "$ads" "$m2v" "$mux" "$pss" "$BAT_FILE"
@@ -963,6 +964,7 @@ EOF
         fi
       else
         if ! "${PS2STR}" mux -v "$mux" >> "${LOG_FILE}" 2>&1; then
+          echo
           echo "Warning: Skipping video - Failed to create $pss"
           failure=1
           rm -f "$ads" "$m2v" "$mux" "$pss"
@@ -983,6 +985,7 @@ EOF
       if [ -f "$pss" ] && [ -f "$thumbnail" ]; then
         echo "Creating $file_name.psm..."
         if ! python3 "${HELPER_DIR}/psmbuild.py" "$pss" "$thumbnail" "$psm" 2>> "${LOG_FILE}"; then
+          echo
           echo "Warning: Skipping video - Failed to create $psm"
           failure=1
           rm -f "$pss" "$thumbnail"
@@ -991,6 +994,7 @@ EOF
         echo "Created $psm" >> "${LOG_FILE}"
         sed -i "/^COMMIT;/i INSERT INTO sce_movie VALUES('${movie_title}','Your Movies',${MOVIE_DIR},'pfs:/__contents/contents/video/${MOVIE_DIR}/${database_file}.psm','Your Moviespfs:/__contents/contents/video/${MOVIE_DIR}',260,0,0,512);" "${SQL_FILE}" >> "${LOG_FILE}" 2>&1
       else
+        echo
         echo "Warning: Skipping video - Failed to create $psm"
         failure=1
       fi
