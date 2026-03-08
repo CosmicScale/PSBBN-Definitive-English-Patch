@@ -36,6 +36,7 @@ MEDIA_DIR="${TOOLKIT_PATH}/media"
 OPL="${SCRIPTS_DIR}/OPL"
 LOG_FILE="${TOOLKIT_PATH}/logs/media.log"
 CONFIG_FILE="${TOOLKIT_PATH}/scripts/media.cfg"
+PS2STR="${ASSETS_DIR}/ps2str/linux/ps2str"
 arch="$(uname -m)"
 
 if [[ "$arch" = "x86_64" ]]; then
@@ -52,12 +53,6 @@ fi
 
 wsl="$1"
 path_arg="$2"
-
-if [[ "$wsl" = "true" ]]; then
-  PS2STR="${ASSETS_DIR}/ps2str/win32/ps2str.exe"
-else
-  PS2STR="${ASSETS_DIR}/ps2str/linux/ps2str"
-fi
 
 if [[ -n "$path_arg" ]]; then
     if [[ -d "$path_arg" ]]; then
