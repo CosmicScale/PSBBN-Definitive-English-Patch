@@ -257,14 +257,14 @@ check_dep(){
     fi
 
     if [ "$wsl" = "true" ]; then
-        [[ -d /proc/sys/fs/binfmt_misc ]] && echo "binfmt support exists"  >> "$LOG_FILE" || MISSING=1
+        [[ -d /proc/sys/fs/binfmt_misc ]] && echo "[✓] binfmt support exists"  >> "$LOG_FILE" || MISSING=1
     fi
 
     if [ ! -n "$IN_NIX_SHELL" ]; then
         if [ -x /lib/ld-linux.so.2 ]; then
-            echo "32-bit glibc runtime exists (ld-linux.so.2)" >> "$LOG_FILE"
+            echo "[✓] 32-bit glibc runtime exists (ld-linux.so.2)" >> "$LOG_FILE"
         else
-            echo "32-bit glibc runtime missing (ld-linux.so.2)" >> "$LOG_FILE"
+            echo "[X] 32-bit glibc runtime missing (ld-linux.so.2)" >> "$LOG_FILE"
             MISSING=1
         fi
     fi
