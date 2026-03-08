@@ -898,41 +898,18 @@ EOF
       if [[ -f "$wav" && -f "$m2v" ]]; then
         # Create .ads file
 
-        if [ "$wsl" = "true" ]; then
-          display_path="${display_path//\\//}"
-          wav="${display_path}movie/tmp/${file_name}.wav"
-          ads="${display_path}movie/tmp/${file_name}.ads"
-        fi
-
         if ! "${PS2STR}" encode -v "$wav" "$ads" >> "${LOG_FILE}" 2>&1; then
           echo "Warning: Skipping video - Failed to encode $ads" | tee -a "${LOG_FILE}"
-          ads="${TMP_DIR}/${file_name}.ads"
-          wav="${TMP_DIR}/${file_name}.wav"
           rm -f "$wav" "$ads" "$m2v"
           failure=1
           continue
         fi
         echo "Encoded $wav → $ads" >> "${LOG_FILE}"
-        ads="${TMP_DIR}/${file_name}.ads"
-        wav="${TMP_DIR}/${file_name}.wav"
       fi
 
       if [ -f "$ads" ]; then
         rm -f $wav
-        if [ "$wsl" = "true" ]; then
-          cat > "$mux" <<EOF
-pss
-	stream video:0
-		input "${file_name}.m2v"
-	end
-
-	stream pcm:0
-		input "${file_name}.ads"
-	end
-end
-EOF
-        else
-          cat > "$mux" <<EOF
+        cat > "$mux" <<EOF
 pss
 	stream video:0
 		input "$m2v"
@@ -943,33 +920,17 @@ pss
 	end
 end
 EOF
-        fi
       fi
 
       echo -n "Encoding $file_name.pss..." | tee -a "${LOG_FILE}"
       echo >> "${LOG_FILE}"
       # Create .pss file
-      if [ "$wsl" = "true" ]; then
-        wsl_path="${PS2STR//\//\\}"
-        cat > "$BAT_FILE" <<EOF
-cd /d "${display_path}movie\tmp
-"\\\wsl.localhost\PSBBN$wsl_path" mux -v "${file_name}.mux"
-EOF
-        if ! cmd.exe /c "${display_path}movie/tmp/${file_name}.bat" >> "${LOG_FILE}" 2>&1; then
-          echo
-          echo "Warning: Skipping video - Failed to create $pss"
-          failure=1
-          rm -f "$ads" "$m2v" "$mux" "$pss" "$BAT_FILE"
-          continue
-        fi
-      else
-        if ! "${PS2STR}" mux -v "$mux" >> "${LOG_FILE}" 2>&1; then
-          echo
-          echo "Warning: Skipping video - Failed to create $pss"
-          failure=1
-          rm -f "$ads" "$m2v" "$mux" "$pss"
-          continue
-        fi
+      if ! "${PS2STR}" mux -v "$mux" >> "${LOG_FILE}" 2>&1; then
+        echo
+        echo "Warning: Skipping video - Failed to create $pss"
+        failure=1
+        rm -f "$ads" "$m2v" "$mux" "$pss"
+        continue
       fi
       echo
 
