@@ -30,7 +30,7 @@ body:
         ```
         wsl --unregister PSBBN
         ```
-        2. Download the latest version of the `PSBBN-Launcher-For-Windows.ps1` script [here](https://raw.githubusercontent.com/CosmicScale/PSBBN-Definitive-English-Patch/refs/heads/main/scripts/PSBBN-Launcher-For-Windows.ps1) (Right-click and select **Save link as**).
+        2. Download the latest version of the `PSBBN-Launcher-For-Windows.ps1` script [here](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch/releases/download/latest/PSBBN-Launcher-For-Windows.ps1).
         3. Make sure you have an active internet connection. If you are using a VPN, try disabling it
         4. Run the `PSBBN-Launcher-For-Windows.ps1` script again
 
