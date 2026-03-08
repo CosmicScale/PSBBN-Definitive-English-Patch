@@ -166,6 +166,7 @@ check_required_files() {
         "${HELPER_DIR}/TitlesDB_PS2.csv"
         "${HELPER_DIR}/txt_to_icon_sys.py"
         "${HELPER_DIR}/vmc_groups.list"
+        "${HELPER_DIR}/psmbuild.py"
         "${CUE2POPS}"
         "${HDL_DUMP}"
         "${MKFS_EXFAT}"
@@ -257,6 +258,15 @@ check_dep(){
 
     if [ "$wsl" = "true" ]; then
         [[ -d /proc/sys/fs/binfmt_misc ]] && echo "binfmt support exists"  >> "$LOG_FILE" || MISSING=1
+    fi
+
+    if [ ! -n "$IN_NIX_SHELL" ]; then
+        if [ -x /lib/ld-linux.so.2 ]; then
+            echo "32-bit glibc runtime exists (ld-linux.so.2)" >> "$LOG_FILE"
+        else
+            echo "32-bit glibc runtime missing (ld-linux.so.2)" >> "$LOG_FILE"
+            MISSING=1
+        fi
     fi
 
     echo >> "$LOG_FILE"
