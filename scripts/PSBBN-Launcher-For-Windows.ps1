@@ -569,9 +569,9 @@ function prepareWslPath ($windowsPath) {
   $wslPath = ''
   
   # covers basic drive letters
-  if ($windowsPath -match '(?<driveLetter>.):\\(?<path>.+)') {
+  if ($windowsPath -match '(?<driveLetter>.):\\(?<path>.+)?') {
     $driveLetter = $Matches.driveLetter.ToLower()
-    $path = $Matches.path.Replace("\", "/")
+    $path = $Matches.path ? $Matches.path.Replace("\", "/") : ""
     $wslPath = "/mnt/$driveLetter/$path"
   }
   # covers network paths (e.g. samba drives)
