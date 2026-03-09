@@ -22,7 +22,7 @@
 
 if [[ "$LAUNCHED_BY_MAIN" != "1" ]]; then
     echo "This script should not be run directly. Please run: PSBBN-Definitive-Patch.sh"
-    exit 1
+    #exit 1
 fi
 
 trap 'echo; exit 130' INT
@@ -30,6 +30,7 @@ trap 'echo; exit 130' INT
 TOOLKIT_PATH="$(pwd)"
 SOURCES_LIST="/etc/apt/sources.list"
 LOG_FILE="${TOOLKIT_PATH}/logs/setup.log"
+arch="$(uname -m)"
 
 error_msg() {
     echo
@@ -90,15 +91,24 @@ EOF
 
 # Detect package manager and install packages
 if [ -x "$(command -v apt-get)" ]; then
-    sudo dpkg --add-architecture i386
-    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 libfuse2 dosfstools e2fsprogs libc-bin exfatprogs exfat-fuse util-linux fdisk parted bchunk build-essential libicu-dev pkg-config ffmpegthumbnailer binfmt-support libc6:i386 2>&1 | tee -a "${LOG_FILE}"
+    if [[ "$arch" = "x86_64" ]]; then
+        sudo dpkg --add-architecture i386
+        i386="libc6:i386"
+    fi
+    sudo apt-get -q update && sudo apt-get install -y axel imagemagick xxd python3 python3-venv python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 libfuse2 dosfstools e2fsprogs libc-bin exfatprogs exfat-fuse util-linux fdisk parted bchunk build-essential libicu-dev pkg-config ffmpegthumbnailer binfmt-support $i386 2>&1 | tee -a "${LOG_FILE}"
 # Or if user is on Fedora-based system, do this instead
 elif [ -x "$(command -v dnf)" ]; then
+    if [[ "$arch" = "x86_64" ]]; then
+        i386="glibc.i686"
+    fi
     sudo dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm 2>&1 | tee -a "${LOG_FILE}"
-    sudo dnf install -y gcc-c++ axel ImageMagick xxd python3 python3-devel python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 fuse-libs dosfstools e2fsprogs glibc-common exfatprogs fuse-exfat util-linux parted bchunk libicu-devel pkgconf ffmpegthumbnailer glibc.i686 2>&1 | tee -a "${LOG_FILE}"
+    sudo dnf install -y gcc-c++ axel ImageMagick xxd python3 python3-devel python3-pip bc rsync curl zip unzip wget ffmpeg lvm2 fuse-libs dosfstools e2fsprogs glibc-common exfatprogs fuse-exfat util-linux parted bchunk libicu-devel pkgconf ffmpegthumbnailer $i386 2>&1 | tee -a "${LOG_FILE}"
 # Or if user is on Arch-based system, do this instead
 elif [ -x "$(command -v pacman)" ]; then
-    sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip bc rsync curl zip unzip wget ffmpeg lvm2 fuse2 dosfstools e2fsprogs glibc exfatprogs util-linux parted bchunk base-devel icu pkgconf ffmpegthumbnailer lib32-glibc 2>&1 | tee -a "${LOG_FILE}"
+    if [[ "$arch" = "x86_64" ]]; then
+        i386="lib32-glibc"
+    fi
+    sudo pacman -S --needed --noconfirm axel imagemagick xxd python pyenv python-pip bc rsync curl zip unzip wget ffmpeg lvm2 fuse2 dosfstools e2fsprogs glibc exfatprogs util-linux parted bchunk base-devel icu pkgconf ffmpegthumbnailer $i386 2>&1 | tee -a "${LOG_FILE}"
 elif [ -n "$IN_NIX_SHELL" ]; then
     error_msg "Running in Nix environment - packages should be provided by flake and setup should not be run."
 else
