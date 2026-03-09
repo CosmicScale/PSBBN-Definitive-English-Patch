@@ -710,7 +710,9 @@ Supported formats are `.mp3`, `.m4a`, `.flac` and `.ogg`. Each file’s metadata
 ### Movie Installer
 Install videos for playback on the [PSBBN Movie Channel](#movie-channel). To use the Movie Installer, you must be running **PSBBN Definitive Project version 3.00 or later**. Your PC must also have an x86 processor.
 
-Supported formats including `MP4`, `M4V`, `MKV`, `VOB`, and more. Place your video files in the default `movie` folder on your PC, or choose a custom location using [Set Media Location](#set-media-location), and place the files in the `movie` subfolder.
+The Movie Installer supports `MP4`, `M4V`, `MKV`, `VOB`, and other popular formats. Movies can be up to approximately 1 hour and 40 minutes long, though the actual maximum may be shorter depending on the bit rate.
+
+Place your video files in the default `movie` folder on your PC, or choose a custom location using [Set Media Location](#set-media-location), and place the files in the `movie` subfolder.
 
 ### Photo Installer
 Install images for viewing on the [PSBBN Photo Channel](#photo-channel). To use the Photo Installer, you must be running **PSBBN Definitive Project version 3.00 or later**.

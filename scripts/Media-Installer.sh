@@ -522,7 +522,7 @@ movie_space_check() {
     DURATION_MINUTES=$(echo "$DURATION_SECONDS / 60" | bc -l)
 
     # Estimates
-    local VIDEO_MB_PER_MIN=24
+    local VIDEO_MB_PER_MIN=20
     local AUDIO_MB_PER_MIN=13
 
     local VIDEO_ESTIMATED_SIZE_MB=$(echo "$DURATION_MINUTES * $VIDEO_MB_PER_MIN" | bc -l)
@@ -563,8 +563,13 @@ movie_space_check() {
         return 1
     fi
 
-    if (( $(echo "$AVAILABLE_STORAGE_MB < $VIDEO_ESTIMATED_SIZE_ROUNDED" | bc -l) )); then
+    if (( AVAILABLE_STORAGE_MB < VIDEO_ESTIMATED_SIZE_ROUNDED )); then
         ps2_space="1"
+        return 1
+    fi
+
+    if (( VIDEO_ESTIMATED_SIZE_ROUNDED > 2048 )); then
+        ps2_space="2"
         return 1
     fi
 
@@ -851,6 +856,16 @@ EOF
         echo "Sufficient free space available on PS2 storage." >> "${LOG_FILE}"
       fi
 
+      if [ "$ps2_space" = "2" ]; then
+        echo | tee -a "${LOG_FILE}"
+        echo "Warning: ${f##*/} is too long." | tee -a "${LOG_FILE}"
+        echo "Maximum video length is approximately 1h 40m." | tee -a "${LOG_FILE}"
+        failure=1
+        continue
+      else
+        echo "Video not too long." >> "${LOG_FILE}"
+      fi
+
       echo
       echo "Processing: ${f##*/}" | tee -a "${LOG_FILE}"
 
@@ -898,6 +913,13 @@ EOF
       if [[ -f "$wav" && -f "$m2v" ]]; then
         # Create .ads file
 
+        if (( $(stat -c%s "$wav") + $(stat -c%s "$m2v") > 2147483648 - 15728640 )); then
+          echo "Warning: Skipping video - $file_name.psm is larger than 2048 MiB" | tee -a "${LOG_FILE}"
+          failure=1
+          rm -f "$wav" "$m2v"
+          continue
+        fi
+
         if [ "$wsl" = "true" ]; then
           display_path="${display_path//\\//}"
           wav="${display_path}movie/tmp/${file_name}.wav"
@@ -915,6 +937,10 @@ EOF
         echo "Encoded $wav → $ads" >> "${LOG_FILE}"
         ads="${TMP_DIR}/${file_name}.ads"
         wav="${TMP_DIR}/${file_name}.wav"
+      else
+        echo "Warning: Skipping video - Failed to convert ${f##*/} with ffmpeg." | tee -a "${LOG_FILE}"
+        failure=1
+        rm -f "$wav" "$m2v"
       fi
 
       if [ -f "$ads" ]; then
@@ -957,7 +983,7 @@ cd /d "${display_path}movie\tmp
 EOF
         if ! cmd.exe /c "${display_path}movie/tmp/${file_name}.bat" >> "${LOG_FILE}" 2>&1; then
           echo
-          echo "Warning: Skipping video - Failed to create $pss"
+          echo "Warning: Skipping video - Failed to create $pss" | tee -a "${LOG_FILE}"
           failure=1
           rm -f "$ads" "$m2v" "$mux" "$pss" "$BAT_FILE"
           continue
@@ -965,7 +991,7 @@ EOF
       else
         if ! "${PS2STR}" mux -v "$mux" >> "${LOG_FILE}" 2>&1; then
           echo
-          echo "Warning: Skipping video - Failed to create $pss"
+          echo "Warning: Skipping video - Failed to create $pss" | tee -a "${LOG_FILE}"
           failure=1
           rm -f "$ads" "$m2v" "$mux" "$pss"
           continue
@@ -986,7 +1012,7 @@ EOF
         echo "Creating $file_name.psm..."
         if ! python3 "${HELPER_DIR}/psmbuild.py" "$pss" "$thumbnail" "$psm" 2>> "${LOG_FILE}"; then
           echo
-          echo "Warning: Skipping video - Failed to create $psm"
+          echo "Warning: Skipping video - Failed to create $psm" | tee -a "${LOG_FILE}"
           failure=1
           rm -f "$pss" "$thumbnail"
           continue
