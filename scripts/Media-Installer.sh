@@ -711,7 +711,8 @@ option_two() {
 ======================================== Using the Movie Installer =========================================
 
     Supported formats:
-    The movie installer supports most common video formats including mp4, m4v, mkv, and vob
+    The movie installer supports most common video formats including mp4, m4v, mkv, and vob, as well as
+    the PlayStation 2 video formats pss and psm.
 
     Place your movie files in:
     ${display_path}movie
@@ -728,7 +729,7 @@ EOF
         \( -iname "*.mp4" -o -iname "*.m4v" -o -iname "*.mov" -o -iname "*.mkv" \
         -o -iname "*.avi" -o -iname "*.webm" -o -iname "*.mpg" -o -iname "*.mpeg"\
         -o -iname "*.vob" -o -iname "*.ts" -o -iname "*.m2ts" -o -iname "*.mts" \
-        -o -iname "*.ogv" \) -print0
+        -o -iname "*.ogv" -o -iname "*.pss" -o -iname "*.psm" \) -print0
   )
 
   if (( ${#movies[@]} )); then
@@ -826,127 +827,128 @@ EOF
       movie_title="${movie_title//\'/\'\'}"
       database_file="${file_name//\'/\'\'}"
 
-      # Skip if .pss already exists
+      # Skip if .psm already exists
       if [[ -f "$psm" ]]; then
         echo | tee -a "${LOG_FILE}"
         echo "Skipping (already processed): ${f##*/}" | tee -a "${LOG_FILE}"
         continue
       fi
 
-      movie_space_check
+      # if not .psm or .pss file
+      if [[ $f != *.pss && $f != *.psm && $f != *.PSS && $f != *.PSM ]]; then
+          movie_space_check
 
-      if [ "$local_space" = "1" ]; then
-        echo | tee -a "${LOG_FILE}"
-        echo "Warning: Not enough local storage space to convert ${f##*/}." | tee -a "${LOG_FILE}"
-        echo "Need $(format_size "$TOTAL_ROUNDED"), but only $(format_size "$AVAILABLE_LOCAL_MB") available." | tee -a "${LOG_FILE}"
-        failure=1
-        continue
-      else
-        echo
-        echo "Sufficient local free space available." >> "${LOG_FILE}"
-      fi
-
-      if [ "$ps2_space" = "1" ]; then
-        echo | tee -a "${LOG_FILE}"
-        echo "Warning: Not enough PS2 storage space to convert ${f##*/}." | tee -a "${LOG_FILE}"
-        echo "Need $(format_size "$VIDEO_ESTIMATED_SIZE_ROUNDED"), but only $(format_size "$AVAILABLE_STORAGE_MB") available." | tee -a "${LOG_FILE}"
-        failure=1
-        continue
-      else
-        echo "Sufficient free space available on PS2 storage." >> "${LOG_FILE}"
-      fi
-
-      if [ "$ps2_space" = "2" ]; then
-        echo | tee -a "${LOG_FILE}"
-        echo "Warning: ${f##*/} is too long." | tee -a "${LOG_FILE}"
-        echo "Maximum video length is approximately 1h 40m." | tee -a "${LOG_FILE}"
-        failure=1
-        continue
-      else
-        echo "Video not too long." >> "${LOG_FILE}"
-      fi
-
-      echo
-      echo "Processing: ${f##*/}" | tee -a "${LOG_FILE}"
-
-      tmp_log="$(mktemp)"
-
-      # Extract audio
-      ffmpeg -y -hide_banner -loglevel error -stats \
-        -i "$f" \
-        -af "aresample=48000,volume=3.874dB" \
-        -vn \
-        -acodec pcm_s16le \
-        "$wav" 2>&1 | tee "$tmp_log"
-
-      # Detect interlacing
-      field_order=$(ffprobe -v error -select_streams v:0 \
-        -show_entries stream=field_order -of default=nw=1:nk=1 "$f")
-
-      if [[ "$field_order" == "progressive" ]]; then
-        interlace_opts=""
-        echo "Input is progressive → encoding progressive"
-      else
-        interlace_opts="-flags +ilme+ildct -top 1"
-        echo "Input is interlaced → encoding interlaced"
-      fi
-
-      # Convert video
-      ffmpeg -y -hide_banner -loglevel error -stats \
-        -i "$f" \
-        -vf "fps=30000/1001,scale=iw*sar:ih,setsar=1,scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2,format=yuv420p" \
-        -an \
-        -c:v mpeg2video \
-        -b:v 1684k \
-        -g 15 \
-        -bf 2 \
-        -trellis 1 \
-        $interlace_opts \
-        "$m2v" 2>&1 | tee -a "$tmp_log"
-
-      # Append only lines that don’t start with frame= or size= to the real log
-      grep -Ev '^(frame=|size=)' "$tmp_log" >> "$LOG_FILE"
-
-      # Remove temp file
-      rm -f "$tmp_log"
-    
-      if [[ -f "$wav" && -f "$m2v" ]]; then
-        # Create .ads file
-
-        if (( $(stat -c%s "$wav") + $(stat -c%s "$m2v") > 2147483648 - 15728640 )); then
-          echo "Warning: Skipping video - $file_name.psm is larger than 2048 MiB" | tee -a "${LOG_FILE}"
+        if [ "$local_space" = "1" ]; then
+          echo | tee -a "${LOG_FILE}"
+          echo "Warning: Not enough local storage space to convert ${f##*/}." | tee -a "${LOG_FILE}"
+          echo "Need $(format_size "$TOTAL_ROUNDED"), but only $(format_size "$AVAILABLE_LOCAL_MB") available." | tee -a "${LOG_FILE}"
           failure=1
-          rm -f "$wav" "$m2v"
           continue
+        else
+          echo
+          echo "Sufficient local free space available." >> "${LOG_FILE}"
         fi
 
-        if [ "$wsl" = "true" ]; then
-          display_path="${display_path//\\//}"
-          wav="${display_path}movie/tmp/${file_name}.wav"
-          ads="${display_path}movie/tmp/${file_name}.ads"
+        if [ "$ps2_space" = "1" ]; then
+          echo | tee -a "${LOG_FILE}"
+          echo "Warning: Not enough PS2 storage space to convert ${f##*/}." | tee -a "${LOG_FILE}"
+          echo "Need $(format_size "$VIDEO_ESTIMATED_SIZE_ROUNDED"), but only $(format_size "$AVAILABLE_STORAGE_MB") available." | tee -a "${LOG_FILE}"
+          failure=1
+          continue
+        else
+          echo "Sufficient free space available on PS2 storage." >> "${LOG_FILE}"
         fi
 
-        if ! "${PS2STR}" encode -v "$wav" "$ads" >> "${LOG_FILE}" 2>&1; then
-          echo "Warning: Skipping video - Failed to encode $ads" | tee -a "${LOG_FILE}"
+        if [ "$ps2_space" = "2" ]; then
+          echo | tee -a "${LOG_FILE}"
+          echo "Warning: ${f##*/} is too long." | tee -a "${LOG_FILE}"
+          echo "Maximum video length is approximately 1h 40m." | tee -a "${LOG_FILE}"
+          failure=1
+          continue
+        else
+          echo "Video not too long." >> "${LOG_FILE}"
+        fi
+
+        echo "Processing: ${f##*/}" | tee -a "${LOG_FILE}"
+
+        tmp_log="$(mktemp)"
+
+        # Extract audio
+        ffmpeg -y -hide_banner -loglevel error -stats \
+          -i "$f" \
+          -af "aresample=48000,volume=3.874dB" \
+          -vn \
+          -acodec pcm_s16le \
+          "$wav" 2>&1 | tee "$tmp_log"
+
+        # Detect interlacing
+        field_order=$(ffprobe -v error -select_streams v:0 \
+          -show_entries stream=field_order -of default=nw=1:nk=1 "$f")
+
+        if [[ "$field_order" == "progressive" ]]; then
+          interlace_opts=""
+          echo "Input is progressive → encoding progressive"
+        else
+          interlace_opts="-flags +ilme+ildct -top 1"
+          echo "Input is interlaced → encoding interlaced"
+        fi
+
+        # Convert video
+        ffmpeg -y -hide_banner -loglevel error -stats \
+          -i "$f" \
+          -vf "fps=30000/1001,scale=iw*sar:ih,setsar=1,scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2,format=yuv420p" \
+          -an \
+          -c:v mpeg2video \
+          -b:v 1684k \
+          -g 15 \
+          -bf 2 \
+          -trellis 1 \
+          $interlace_opts \
+          "$m2v" 2>&1 | tee -a "$tmp_log"
+
+        # Append only lines that don’t start with frame= or size= to the real log
+        grep -Ev '^(frame=|size=)' "$tmp_log" >> "$LOG_FILE"
+
+        # Remove temp file
+        rm -f "$tmp_log"
+    
+        if [[ -f "$wav" && -f "$m2v" ]]; then
+          # Create .ads file
+
+          if (( $(stat -c%s "$wav") + $(stat -c%s "$m2v") > 2147483648 - 15728640 )); then
+            echo "Warning: Skipping video - $file_name.psm is larger than 2048 MiB" | tee -a "${LOG_FILE}"
+            failure=1
+            rm -f "$wav" "$m2v"
+            continue
+          fi
+
+          if [ "$wsl" = "true" ]; then
+            display_path="${display_path//\\//}"
+            wav="${display_path}movie/tmp/${file_name}.wav"
+            ads="${display_path}movie/tmp/${file_name}.ads"
+          fi
+
+          if ! "${PS2STR}" encode -v "$wav" "$ads" >> "${LOG_FILE}" 2>&1; then
+            echo "Warning: Skipping video - Failed to encode $ads" | tee -a "${LOG_FILE}"
+            ads="${TMP_DIR}/${file_name}.ads"
+            wav="${TMP_DIR}/${file_name}.wav"
+            rm -f "$wav" "$ads" "$m2v"
+            failure=1
+            continue
+          fi
+          echo "Encoded $wav → $ads" >> "${LOG_FILE}"
           ads="${TMP_DIR}/${file_name}.ads"
           wav="${TMP_DIR}/${file_name}.wav"
-          rm -f "$wav" "$ads" "$m2v"
+        else
+          echo "Warning: Skipping video - Failed to convert ${f##*/} with ffmpeg." | tee -a "${LOG_FILE}"
           failure=1
-          continue
+          rm -f "$wav" "$m2v"
         fi
-        echo "Encoded $wav → $ads" >> "${LOG_FILE}"
-        ads="${TMP_DIR}/${file_name}.ads"
-        wav="${TMP_DIR}/${file_name}.wav"
-      else
-        echo "Warning: Skipping video - Failed to convert ${f##*/} with ffmpeg." | tee -a "${LOG_FILE}"
-        failure=1
-        rm -f "$wav" "$m2v"
-      fi
 
-      if [ -f "$ads" ]; then
-        rm -f $wav
-        if [ "$wsl" = "true" ]; then
-          cat > "$mux" <<EOF
+        if [ -f "$ads" ]; then
+          rm -f $wav
+          if [ "$wsl" = "true" ]; then
+            cat > "$mux" <<EOF
 pss
 	stream video:0
 		input "${file_name}.m2v"
@@ -957,8 +959,8 @@ pss
 	end
 end
 EOF
-        else
-          cat > "$mux" <<EOF
+          else
+            cat > "$mux" <<EOF
 pss
 	stream video:0
 		input "$m2v"
@@ -969,63 +971,109 @@ pss
 	end
 end
 EOF
+          fi
         fi
-      fi
 
-      echo -n "Encoding $file_name.pss..." | tee -a "${LOG_FILE}"
-      echo >> "${LOG_FILE}"
-      # Create .pss file
-      if [ "$wsl" = "true" ]; then
-        wsl_path="${PS2STR//\//\\}"
-        cat > "$BAT_FILE" <<EOF
+        echo -n "Encoding $file_name.pss..." | tee -a "${LOG_FILE}"
+        echo >> "${LOG_FILE}"
+
+        # Create .pss file
+        if [ "$wsl" = "true" ]; then
+          wsl_path="${PS2STR//\//\\}"
+          cat > "$BAT_FILE" <<EOF
 cd /d "${display_path}movie\tmp
 "\\\wsl.localhost\PSBBN$wsl_path" mux -v "${file_name}.mux"
 EOF
-        if ! cmd.exe /c "${display_path}movie/tmp/${file_name}.bat" >> "${LOG_FILE}" 2>&1; then
-          echo
-          echo "Warning: Skipping video - Failed to create $pss" | tee -a "${LOG_FILE}"
-          failure=1
-          rm -f "$ads" "$m2v" "$mux" "$pss" "$BAT_FILE"
-          continue
+          if ! cmd.exe /c "${display_path}movie/tmp/${file_name}.bat" >> "${LOG_FILE}" 2>&1; then
+            echo
+            echo "Warning: Skipping video - Failed to create $pss" | tee -a "${LOG_FILE}"
+            failure=1
+            rm -f "$ads" "$m2v" "$mux" "$pss" "$BAT_FILE"
+            continue
+          fi
+        else
+          if ! "${PS2STR}" mux -v "$mux" >> "${LOG_FILE}" 2>&1; then
+            echo
+            echo "Warning: Skipping video - Failed to create $pss" | tee -a "${LOG_FILE}"
+            failure=1
+            rm -f "$ads" "$m2v" "$mux" "$pss"
+            continue
+          fi
         fi
-      else
-        if ! "${PS2STR}" mux -v "$mux" >> "${LOG_FILE}" 2>&1; then
-          echo
-          echo "Warning: Skipping video - Failed to create $pss" | tee -a "${LOG_FILE}"
-          failure=1
-          rm -f "$ads" "$m2v" "$mux" "$pss"
-          continue
-        fi
-      fi
-      echo
-
-      rm -f "$ads" "$m2v" "$mux" "$BAT_FILE"
-
-      if (( $(echo "$DURATION_MINUTES < 1" | bc -l) )); then
-        ffmpegthumbnailer -i "$f" -o "$thumbnail" -t 30 -s 640 >> "${LOG_FILE}" 2>&1
-      else
-        ffmpegthumbnailer -i "$f" -o "$thumbnail" -s 640 >> "${LOG_FILE}" 2>&1
-      fi
-
-      # Build final .psm
-      if [ -f "$pss" ] && [ -f "$thumbnail" ]; then
-        echo "Creating $file_name.psm..."
-        if ! python3 "${HELPER_DIR}/psmbuild.py" "$pss" "$thumbnail" "$psm" 2>> "${LOG_FILE}"; then
-          echo
-          echo "Warning: Skipping video - Failed to create $psm" | tee -a "${LOG_FILE}"
-          failure=1
-          rm -f "$pss" "$thumbnail"
-          continue
-        fi
-        echo "Created $psm" >> "${LOG_FILE}"
-        sed -i "/^COMMIT;/i INSERT INTO sce_movie VALUES('${movie_title}','Your Movies',${MOVIE_DIR},'pfs:/__contents/contents/video/${MOVIE_DIR}/${database_file}.psm','Your Moviespfs:/__contents/contents/video/${MOVIE_DIR}',260,0,0,512);" "${SQL_FILE}" >> "${LOG_FILE}" 2>&1
-      else
         echo
-        echo "Warning: Skipping video - Failed to create $psm"
-        failure=1
+
+        rm -f "$ads" "$m2v" "$mux" "$BAT_FILE"
       fi
 
-      rm -f "$wav" "$ads" "$m2v" "$mux" "$pss" "$thumbnail" "$BAT_FILE"
+      if [[ $f != *.psm && $f != *.PSM ]]; then
+        if [[ -z "$DURATION_SECONDS" ]]; then
+          # Get duration in seconds
+          DURATION_SECONDS=$(ffprobe -v error \
+            -show_entries format=duration \
+            -of default=noprint_wrappers=1:nokey=1 \
+            "$f")
+
+          # Convert seconds to minutes
+          DURATION_MINUTES=$(echo "$DURATION_SECONDS / 60" | bc -l)
+
+          if [[ -z "$DURATION_SECONDS" ]]; then
+            echo "Could not determine video duration." >>"${LOG_FILE}"
+            DURATION_SECONDS="0"
+          fi
+        fi
+
+        if (( $(echo "$DURATION_MINUTES < 1" | bc -l) )); then
+          ffmpegthumbnailer -i "$f" -o "$thumbnail" -t 30 -s 640 >> "${LOG_FILE}" 2>&1
+        else
+          ffmpegthumbnailer -i "$f" -o "$thumbnail" -s 640 >> "${LOG_FILE}" 2>&1
+        fi
+
+        # Build final .psm
+        if [[ $f == *.pss || $f == *.PSS ]]; then
+          pss="$f"
+        fi
+
+        if [ -f "$pss" ] && [ -f "$thumbnail" ]; then
+          echo
+          if ! python3 "${HELPER_DIR}/psmbuild.py" "$pss" "$thumbnail" "$psm" 2>> "${LOG_FILE}"; then
+            echo
+            echo "Warning: Skipping video - Failed to create $psm" | tee -a "${LOG_FILE}"
+            failure=1
+            if [[ $f != *.pss && $f != *.PSS ]]; then
+              rm -f "$pss"
+            fi
+            rm -f "$thumbnail"
+            continue
+          fi
+          echo "Created $psm" >> "${LOG_FILE}"
+        else
+          echo
+          echo "Warning: Skipping video - Failed to create $psm"| tee -a "${LOG_FILE}"
+          failure=1
+        fi
+      fi
+
+      if [[ $f == *.psm || $f == *.PSM ]]; then
+        echo
+        echo -n "Copying $file_name.psm..."
+        if ! cp -f "$f" "${STORAGE_DIR}/__contents/contents/video/${MOVIE_DIR}/${database_file}.psm" 2>> "${LOG_FILE}"; then
+          echo
+          echo "Warning: Skipping video - Failed to copy $f"| tee -a "${LOG_FILE}"
+          failure=1
+        else
+          echo
+          echo "Created $psm" >> "${LOG_FILE}"
+        fi
+      fi
+
+      if [ -f "${STORAGE_DIR}/__contents/contents/video/${MOVIE_DIR}/${database_file}.psm" ]; then
+        sed -i "/^COMMIT;/i INSERT INTO sce_movie VALUES('${movie_title}','Your Movies',${MOVIE_DIR},'pfs:/__contents/contents/video/${MOVIE_DIR}/${database_file}.psm','Your Moviespfs:/__contents/contents/video/${MOVIE_DIR}',260,0,0,512);" "${SQL_FILE}" >> "${LOG_FILE}" 2>&1
+      fi
+
+      if [[ $f != *.pss && $f != *.PSS ]]; then
+        rm -f "$pss"
+      fi
+      rm -f "$wav" "$ads" "$m2v" "$mux" "$thumbnail" "$BAT_FILE"
     done
 
     sql_out="$("${SQLITE}" "${TMP_DIR}/movie.db" < "${SQL_FILE}" 2>&1)"

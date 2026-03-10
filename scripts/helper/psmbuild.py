@@ -207,6 +207,7 @@ if __name__ == "__main__":
     png_file = sys.argv[2]
     output_file = sys.argv[3]
 
+    print(f"Creating {os.path.basename(output_file)}...", end="", flush=True)
     # Title derived from output filename without extension
     title = output_file.rsplit(".", 1)[0]
     build_psm(pss_file, png_file, output_file, title_text=title)
