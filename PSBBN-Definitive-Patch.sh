@@ -71,7 +71,7 @@ wsl=false
 if [[ "$1" == "-wsl" && -n "$2" && -n "$3" ]]; then
     wsl=true
     serialnumber="$2"
-    path_arg="$3"
+    path_arg="${3%/}"
 fi
 
 error_msg() {

@@ -1341,7 +1341,7 @@ option_four() {
     echo "Current Linux Media Folder: $MEDIA_DIR" >> "${LOG_FILE}"
     echo "Current Media Folder: $display_path" | tee -a "${LOG_FILE}"
     echo
-    read -p "Enter new path for media folder: " new_path
+    read -r -p "Enter new path for media folder: " new_path
 
     # --- Detect & convert Windows path ---
     if [[ "$new_path" =~ ^[A-Za-z]: ]]; then
