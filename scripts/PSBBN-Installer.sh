@@ -360,6 +360,7 @@ mount_cfs() {
             fi
             
             [ -d "${MOUNT_PATH}" ] || mkdir -p "${MOUNT_PATH}"
+                sleep 2
                 if [[ "$PARTITION_NAME" = "__linux.7" ]] && [ "$MODE" = "update" ]; then
                     echo echo "Skipping mount for __linux.7" >>"${LOG_FILE}"
                 else
