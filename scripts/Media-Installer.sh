@@ -861,10 +861,25 @@ EOF
 
         if [ "$ps2_space" = "2" ]; then
           echo | tee -a "${LOG_FILE}"
-          echo "Warning: ${f##*/} is too long." | tee -a "${LOG_FILE}"
+          echo "Warning: ${f##*/} might be too long." | tee -a "${LOG_FILE}"
           echo "Maximum video length is approximately 1h 40m." | tee -a "${LOG_FILE}"
-          failure=1
-          continue
+          echo
+          while true; do
+            read -p "Convert the video anyway? (y/n):" CONVERT
+            case "$CONVERT" in
+            [Yy])
+                break
+                ;;
+            [Nn])
+                echo "Skipping: ${f##*/}" | tee -a "${LOG_FILE}"
+                continue 2
+                ;;
+            *)
+                echo
+                echo "Please enter y or n."
+                ;;
+            esac
+          done
         else
           echo "Video not too long." >> "${LOG_FILE}"
         fi
