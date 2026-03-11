@@ -560,12 +560,12 @@ sudo apt install git
 ```
 Clone the repository:
 ```
-git clone https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
+git clone https://github.com/CosmicScale/PSBBN-Definitive-Project.git
 ```
 
-You can then change to the `PSBBN-Definitive-English-Patch` directory and run `PSBBN-Definitive-Patch.sh`:
+You can then change to the `PSBBN-Definitive-Project` directory and run `PSBBN-Definitive-Patch.sh`:
 ```
-cd PSBBN-Definitive-English-Patch
+cd PSBBN-Definitive-Project
 ./PSBBN-Definitive-Patch.sh
 ```
 ## Installing on Windows
