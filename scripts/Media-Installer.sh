@@ -523,25 +523,25 @@ movie_space_check() {
 
     # Estimates
     if [ "$DURATION_MINUTES" -le 31 ]; then
-      bitrate=1800k
+      bitrate=1800
       local VIDEO_MB_PER_MIN=24
     elif [ "$DURATION_MINUTES" -le 89 ]; then
-      bitrate=1600k
+      bitrate=1600
       local VIDEO_MB_PER_MIN=23
     elif [ "$DURATION_MINUTES" -le 92 ]; then
-      bitrate=1400k
+      bitrate=1400
       local VIDEO_MB_PER_MIN=22
     elif [ "$DURATION_MINUTES" -le 102 ]; then
-      bitrate=1200k
+      bitrate=1200
       local VIDEO_MB_PER_MIN=20
     elif [ "$DURATION_MINUTES" -le 107 ]; then
-      bitrate=1000k
+      bitrate=1000
       local VIDEO_MB_PER_MIN=19
     elif [ "$DURATION_MINUTES" -le 120 ]; then
-      bitrate=800k
+      bitrate=800
       local VIDEO_MB_PER_MIN=17
     else
-      bitrate=600k
+      bitrate=600
       local VIDEO_MB_PER_MIN=16
     fi
 
@@ -934,14 +934,14 @@ EOF
           echo "Input is interlaced → encoding interlaced" | tee -a "${LOG_FILE}"
         fi
 
-        echo "Encoding video at ${bitrate%k} kbps" | tee -a "${LOG_FILE}"
+        echo "Encoding video at $bitrate kbps" | tee -a "${LOG_FILE}"
         # Convert video
         ffmpeg -y -hide_banner -loglevel error -stats \
           -i "$f" \
           -vf "fps=30000/1001,scale=iw*sar:ih,setsar=1,scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2,format=yuv420p" \
           -an \
           -c:v mpeg2video \
-          -b:v $bitrate \
+          -b:v ${bitrate}k \
           -g 30 \
           -bf 3 \
           -trellis 1 \
@@ -965,7 +965,7 @@ EOF
             -vf "fps=30000/1001,scale=iw*sar:ih,setsar=1,scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2,format=yuv420p" \
             -an \
             -c:v mpeg2video \
-            -b:v $bitrate \
+            -b:v ${bitrate}k \
             -g 30 \
             -bf 3 \
             -trellis 1 \
