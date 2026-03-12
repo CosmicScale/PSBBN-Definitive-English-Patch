@@ -709,7 +709,7 @@ Supported formats are `.mp3`, `.m4a`, `.flac` and `.ogg`. Each file’s metadata
 ### Movie Installer
 Install videos for playback on the [PSBBN Movie Channel](#movie-channel). To use the Movie Installer, you must be running **PSBBN Definitive Project version 3.00 or later**. Your PC must also have an x86 processor.
 
-The Movie Installer supports `MP4`, `M4V`, `MKV`, `VOB`, and other popular formats, as well as the PlayStation 2 video formats `pss` and `psm`. Movies can be up to approximately 1 hour and 40 minutes long, though the actual maximum may be shorter depending on the bit rate.
+The Movie Installer supports `MP4`, `M4V`, `MKV`, `VOB`, and other popular formats, as well as the PlayStation 2 video formats `pss` and `psm`. Shorter movies are encoded with a higher bitrate than longer movies. For best results, limit movie length to 2 hours and 15 minutes; longer movies may encode poorly or fail to convert.
 
 Place your video files in the default `movie` folder on your PC, or choose a custom location using [Set Media Location](#set-media-location), and place the files in the `movie` subfolder.
 
@@ -840,7 +840,7 @@ The **Music Channel** allows you to play back music stored on your PS2's interna
 It also supports exporting music to a NetMD-compatible MiniDisc recorder. However, MiniDisc support is broken in the current version of the PSBBN Definitive Project. If you want to try the MiniDisc functionality, you can use a [legacy version of the PSBBN Definitive English Patch](#legacy-versions-of-the-psbbn-definitive-english-patch).
 
 ## Movie Channel
-The **Movie Channel** allows you to play back movies stored on your PS2's internal drive and create playlists. Movies can be downloaded from several of the [Online Game Channels](#game-channel), and installed using the [Movie Installer](#movie-installer).
+The **Movie Channel** allows you to play back movies stored on your PS2's internal drive, organise your movies, and create playlists. Movies can be downloaded from several of the [Online Game Channels](#game-channel), and installed using the [Movie Installer](#movie-installer).
 
 ## Photo Channel
 The Photo Channel allows you to view photos stored on the PS2's internal drive or a FAT-formatted USB device (USB stick, digital camera, etc.). Photos can be imported from USB devices, and installed using the [Photo Installer](#photo-installer). You can create albums and playlists of your photos. You can also download game artwork and screenshots from the [Online Game Channels](#game-channel).

@@ -519,10 +519,32 @@ movie_space_check() {
     fi
 
     # Convert seconds to minutes
-    DURATION_MINUTES=$(echo "$DURATION_SECONDS / 60" | bc -l)
+    DURATION_MINUTES=$(echo "scale=0; $DURATION_SECONDS / 60" | bc)
 
     # Estimates
-    local VIDEO_MB_PER_MIN=20
+    if [ "$DURATION_MINUTES" -le 31 ]; then
+      bitrate=1800k
+      local VIDEO_MB_PER_MIN=24
+    elif [ "$DURATION_MINUTES" -le 89 ]; then
+      bitrate=1600k
+      local VIDEO_MB_PER_MIN=23
+    elif [ "$DURATION_MINUTES" -le 92 ]; then
+      bitrate=1400k
+      local VIDEO_MB_PER_MIN=22
+    elif [ "$DURATION_MINUTES" -le 102 ]; then
+      bitrate=1200k
+      local VIDEO_MB_PER_MIN=20
+    elif [ "$DURATION_MINUTES" -le 107 ]; then
+      bitrate=1000k
+      local VIDEO_MB_PER_MIN=19
+    elif [ "$DURATION_MINUTES" -le 120 ]; then
+      bitrate=800k
+      local VIDEO_MB_PER_MIN=17
+    else
+      bitrate=600k
+      local VIDEO_MB_PER_MIN=16
+    fi
+
     local AUDIO_MB_PER_MIN=13
 
     local VIDEO_ESTIMATED_SIZE_MB=$(echo "$DURATION_MINUTES * $VIDEO_MB_PER_MIN" | bc -l)
@@ -568,7 +590,7 @@ movie_space_check() {
         return 1
     fi
 
-    if (( VIDEO_ESTIMATED_SIZE_ROUNDED > 2048 )); then
+    if [ "$DURATION_MINUTES" -gt 135 ]; then
         ps2_space="2"
         return 1
     fi
@@ -862,7 +884,8 @@ EOF
         if [ "$ps2_space" = "2" ]; then
           echo | tee -a "${LOG_FILE}"
           echo "Warning: ${f##*/} might be too long." | tee -a "${LOG_FILE}"
-          echo "Maximum video length is approximately 1h 40m." | tee -a "${LOG_FILE}"
+          echo "The recommended maximum video length is approximately 2h 15m."
+          echo "The video will be converted at a low bitrate and may fail to convert." | tee -a "${LOG_FILE}"
           echo
           while true; do
             read -p "Convert the video anyway? (y/n):" CONVERT
@@ -890,9 +913,12 @@ EOF
 
         # Extract audio
         ffmpeg -y -hide_banner -loglevel error -stats \
+          -guess_layout_max 0 \
           -i "$f" \
           -af "aresample=48000,volume=3.874dB" \
+          -map 0:a:0 \
           -vn \
+          -ac 2 \
           -acodec pcm_s16le \
           "$wav" 2>&1 | tee "$tmp_log"
 
@@ -902,22 +928,25 @@ EOF
 
         if [[ "$field_order" == "progressive" ]]; then
           interlace_opts=""
-          echo "Input is progressive → encoding progressive"
+          echo "Input is progressive → encoding progressive" | tee -a "${LOG_FILE}"
         else
           interlace_opts="-flags +ilme+ildct -top 1"
-          echo "Input is interlaced → encoding interlaced"
+          echo "Input is interlaced → encoding interlaced" | tee -a "${LOG_FILE}"
         fi
 
+        echo "Encoding video at ${bitrate%k} kbps" | tee -a "${LOG_FILE}"
         # Convert video
         ffmpeg -y -hide_banner -loglevel error -stats \
           -i "$f" \
           -vf "fps=30000/1001,scale=iw*sar:ih,setsar=1,scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2,format=yuv420p" \
           -an \
           -c:v mpeg2video \
-          -b:v 1684k \
-          -g 15 \
-          -bf 2 \
+          -b:v $bitrate \
+          -g 30 \
+          -bf 3 \
           -trellis 1 \
+          -dc 10 \
+          -sc_threshold 40 \
           $interlace_opts \
           "$m2v" 2>&1 | tee -a "$tmp_log"
 
@@ -926,16 +955,35 @@ EOF
 
         # Remove temp file
         rm -f "$tmp_log"
+
+        if (( $(stat -c%s "$wav") + $(stat -c%s "$m2v") > 2147483648 - 15728640 )); then
+          echo "Warning: The file $file_name.psm will be larger than 2048 MiB" | tee -a "${LOG_FILE}"
+          bitrate=$((bitrate - 200))
+          rm -f "$m2v"
+          ffmpeg -y -hide_banner -loglevel error -stats \
+            -i "$f" \
+            -vf "fps=30000/1001,scale=iw*sar:ih,setsar=1,scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2,format=yuv420p" \
+            -an \
+            -c:v mpeg2video \
+            -b:v $bitrate \
+            -g 30 \
+            -bf 3 \
+            -trellis 1 \
+            -dc 10 \
+            -sc_threshold 40 \
+            $interlace_opts \
+            "$m2v" 2>&1 | tee -a "$tmp_log"
+
+            if (( $(stat -c%s "$wav") + $(stat -c%s "$m2v") > 2147483648 - 15728640 )); then
+              echo "Warning: Skipping video - file $file_name.psm larger than 2048 MiB" | tee -a "${LOG_FILE}"
+              failure=1
+              rm -f "$wav" "$m2v"
+              continue
+            fi
+        fi
     
         if [[ -f "$wav" && -f "$m2v" ]]; then
           # Create .ads file
-
-          if (( $(stat -c%s "$wav") + $(stat -c%s "$m2v") > 2147483648 - 15728640 )); then
-            echo "Warning: Skipping video - $file_name.psm is larger than 2048 MiB" | tee -a "${LOG_FILE}"
-            failure=1
-            rm -f "$wav" "$m2v"
-            continue
-          fi
 
           if [ "$wsl" = "true" ]; then
             display_path="${display_path//\\//}"
@@ -1125,7 +1173,6 @@ EOF
   else
     error_msg "No movies to install." | tee -a "${LOG_FILE}"
   fi
-
 }
 
 option_three() {
