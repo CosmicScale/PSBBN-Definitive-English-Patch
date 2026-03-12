@@ -52,7 +52,7 @@ This project uses [webhook.site](https://webhook.site/) to automatically contrib
 - [Music Installer](#music-installer) for converting and installing music
 - [Movie Installer](#movie-installer) for converting and installing videos
 - [Photo Installer](#photo-installer) for converting and installing images
-- Install [optional extras](#optional-extras) such a [PS2 Linux](#ps2-linux)
+- Install [optional extras](#optional-extras) such a [PS2 Linux](#install-ps2-linux)
 
 # Changelog
 
@@ -233,7 +233,7 @@ Patches **HDD-OSD** and introduces several improvements:
 - Replaces unsupported characters in metadata with safe alternatives
 - Clearly groups skipped files by reason
 
-**[PS2 Linux Installer:](#ps2-linux)**
+**[PS2 Linux Installer:](#install-ps2-linux)**
 - Updates **[OSDMenu MBR](#osdmenu-mbr)** config to enable the booting of PS2 Linux.
 
 **[PSBBN Launcher for Windows:](#installing-on-windows)**
@@ -578,7 +578,7 @@ The recommended way to install the **PSBBN Definitive Project** on Windows is by
 **Enabling Virtualization:**  
 It may be necessary to enable SVM Mode (for AMD CPUs) or VT-x (for Intel CPUs) in your BIOS settings if it is not already enabled. Instructions on how to do this can be found [here](https://www.elevenforum.com/t/enable-or-disable-cpu-virtualization-in-uefi-bios-firmware-settings-on-windows-pc.4928/).
 
-Download the **PSBBN Launcher for Windows** [here](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch/releases/download/latest/PSBBN-Launcher-For-Windows.ps1).
+Download the **PSBBN Launcher for Windows [here](https://github.com/CosmicScale/PSBBN-Definitive-English-Patch/releases/download/latest/PSBBN-Launcher-For-Windows.ps1**)**.
 
 **Set the PowerShell Execution Policy:**  
 Before running the script for the first time, you must change the execution policy in PowerShell:
@@ -606,8 +606,7 @@ It is normal for the selected drive to be unmounted in Windows while running the
 If you experience any issues while running the **PSBBN Launcher for Windows**, see **[troubleshooting](#problems-running-the-script)**.
 
 ## Main Menu
-`PSBBN-Definitive-Patch.sh` is your gateway to the **PSBBN Definitive Project**. Running this script launches the main menu.  
-If this is your first time running the script or you are missing dependencies, the setup process will automatically run and install everything required.  
+If this is your first time running the script, or if required dependencies are missing, the setup process will automatically run and install everything needed before the main menu is displayed.
 
 From the main menu, you will have the following options:
 
@@ -631,7 +630,7 @@ Installs PS1 and PS2 games, plus homebrew apps.
     5. [Initialise Music Partition](#initialise-music-partition)
 
 6. [Optional Extras](#optional-extras)  
-    1. [Install PS2 Linux](#ps2-linux)
+    1. [Install PS2 Linux](#install-ps2-linux)
     2. [Reassign Cross and Circle Buttons](#reassign-cross-and-circle-buttons) 
     3. [Change Language](#change-language)
     4. [Change Screen Settings](#change-screen-settings)
@@ -727,13 +726,13 @@ Erases all music data from **PSBBN** and resets the music database. Use this opt
 
 ## Optional Extras
 Select **Optional Extras** from the main menu and you will be presented with the following option:
-1. [Install PS2 Linux](#ps2-linux)
+1. [Install PS2 Linux](#install-ps2-linux)
 2. [Reassign Cross and Circle Buttons](#reassign-cross-and-circle-buttons)
 3. [Change Language](#change-language)
 4. [Change Screen Settings](#change-screen-settings)
 5. [Clear Art & Icon Cache](#clear-art--icon-cache)
 
-### PS2 Linux
+### Install PS2 Linux
 **NOTE: This feature is for PSBBN only.**  
 PlayStation 2 Linux is an official kit from Sony that turned the PS2 into a Linux-based personal computer.  
 The **Install PS2 Linux** option allows you to install or reinstall PS2 Linux. To install PS2 Linux, you must be running **PSBBN Definitive Project version 4.0.0 or later**.
