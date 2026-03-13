@@ -1114,7 +1114,7 @@ APP_ART() {
     local title_id="${title_id^^}"
 
     case "$title_id" in
-    OPL*)
+    OPL*|OPNPS2LD*)
         APP_ID="OPENPS2LOAD"
         ;;
     ULE*|ULAUNCH*)
