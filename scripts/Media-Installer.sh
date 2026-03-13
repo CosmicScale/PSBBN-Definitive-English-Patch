@@ -959,6 +959,7 @@ EOF
         if (( $(stat -c%s "$wav") + $(stat -c%s "$m2v") > 2147483648 - 15728640 )); then
           echo "Warning: The file $file_name.psm will be larger than 2048 MiB" | tee -a "${LOG_FILE}"
           bitrate=$((bitrate - 200))
+          echo "Re-encoding at $bitrate kbps" | tee -a "${LOG_FILE}"
           rm -f "$m2v"
           ffmpeg -y -hide_banner -loglevel error -stats \
             -i "$f" \
