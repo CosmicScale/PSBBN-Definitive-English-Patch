@@ -152,9 +152,14 @@ function main {
     Exit
   }
   
-  # if a folder with the previous name of the git repository exists, remove it
+  # if a folder with the previous name of the git repository exists,
+  # rename it and move the git remote origin to the new url
   wsl -d $wslLabel --cd "~" -- [ -d ./PSBBN-Definitive-English-Patch ] `
-    `&`& rm -rf ./PSBBN-Definitive-English-Patch
+    `&`& `( `
+      mv ./PSBBN-Definitive-English-Patch ./PSBBN-Definitive-Project `
+      `&`& cd PSBBN-Definitive-Project/ `
+      `&`& git remote set-url origin https://github.com/CosmicScale/PSBBN-Definitive-Project.git `
+    `)
 
   # clone the PSBBN repo into ~, or pull if it's already there
   Write-Host
