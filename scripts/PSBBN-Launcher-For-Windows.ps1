@@ -41,10 +41,6 @@ $networkDriveMountpoint = "/mnt/PSBBN-network-drive"
 
 # --- DO NOT MODIFY THE VARIABLES BELOW ---
 
-# in case $gitBranch no longer exists on the remote, use this as fallback
-# DO NOT change this unless the repo has deleted the main branch or is using another branch as release
-$fallbackGitBranch = "main"
-
 # the escape character used to color text
 $e = [char] 27
 
@@ -155,25 +151,26 @@ function main {
     " -ForegroundColor Red
     Exit
   }
-
-  # check if the git branch exists on the remote, and if not, use the fallback
-  if (-Not ( `
-    wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- `
-    git fetch `&`& git branch -r --list origin/$gitBranch `
-  )) {
-    $gitBranch = $fallbackGitBranch
-  }
+  
+  # if a folder with the previous name of the git repository exists,
+  # rename it and move the git remote origin to the new url
+  wsl -d $wslLabel --cd "~" -- [ -d ./PSBBN-Definitive-English-Patch ] `
+    `&`& `( `
+      mv ./PSBBN-Definitive-English-Patch ./PSBBN-Definitive-Project `
+      `&`& cd PSBBN-Definitive-Project/ `
+      `&`& git remote set-url origin https://github.com/CosmicScale/PSBBN-Definitive-Project.git `
+    `)
 
   # clone the PSBBN repo into ~, or pull if it's already there
   Write-Host
-  wsl -d $wslLabel --cd "~" -- [ -d PSBBN-Definitive-English-Patch/.git ] `
+  wsl -d $wslLabel --cd "~" -- [ -d PSBBN-Definitive-Project/.git ] `
     `&`& `( `
-      cd PSBBN-Definitive-English-Patch/ `
+      cd PSBBN-Definitive-Project/ `
       `&`& git fetch origin $gitBranch `
       `&`& git checkout $gitBranch `
       `&`& git pull --ff-only `
     `) `
-    `|`| git clone -b $gitBranch https://github.com/CosmicScale/PSBBN-Definitive-English-Patch.git
+    `|`| git clone -b $gitBranch https://github.com/CosmicScale/PSBBN-Definitive-Project.git
 
   if (-Not ($isWslInstalled)) {
     Write-Host "------- Linux magic finishes ---------`n"
@@ -194,7 +191,7 @@ function main {
   clear
 
   # run PSBBN regular steps
-  wsl -d $wslLabel --cd "~/PSBBN-Definitive-English-Patch" -- `
+  wsl -d $wslLabel --cd "~/PSBBN-Definitive-Project" -- `
     ./PSBBN-Definitive-Patch.sh -wsl $global:diskList[$selectedDisk].SerialNumber $wslPath
 
   # clear the terminal to get rid of the wsl-run scripts
@@ -509,7 +506,7 @@ Before you continue, you can fill this folder with your games and other media:
     - put images in /photo (.jpg, .png, .tif, .gif, .bmp, .webp files, etc)
 
 You can refer to the PSBBN Readme to know more.
-https://github.com/CosmicScale/PSBBN-Definitive-English-Patch
+https://github.com/CosmicScale/PSBBN-Definitive-Project
 " -ForegroundColor Yellow
 
   # store the selected path to re-use next time the script is ran
