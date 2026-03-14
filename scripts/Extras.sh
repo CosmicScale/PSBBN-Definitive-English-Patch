@@ -1387,6 +1387,75 @@ option_five() {
     read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
 }
 
+option_six() {
+    echo "########################################################################################################" >> "${LOG_FILE}"
+    echo "PS2 VMC Groups:" >> "${LOG_FILE}"
+    EXTRAS_SPLASH
+
+    clean_up
+    MOUNT_OPL || return 1
+
+    if [[ "$(awk -F' *= *' '$1=="VMC_GROUPS"{print $2}' "${OPL}/version.txt" 2>/dev/null)" == "enabled" ]]; then
+        current_status="ENABLED"
+    else
+        current_status="DISABLED"
+    fi
+
+    cat <<EOF
+                              PS2 VMC Groups for Neutrino
+                              ---------------------------
+                              Current status: $current_status
+
+            When enabled, the Game Installer creates an 8MB virtual memory
+            card (VMC) image file for every PS2 game installed with Neutrino.
+
+            Games belonging to a cross-game save group (as documented at
+            https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin/wiki)
+            share a single VMC so that cross-game save features work correctly.
+            Multi-disc games also share a single VMC across all discs.
+
+            All other PS2 games each receive their own unique 8MB VMC.
+            VMC files and CFG entries that already exist are never overwritten.
+
+            Note: VMC files are created in games/VMC/ and are synced to the
+            PS2 drive on the next game installation run.
+
+EOF
+
+    if [[ "$current_status" == "ENABLED" ]]; then
+        read -rp "                                    Disable PS2 VMC Groups? (y/n): " answer </dev/tty
+        if [[ "${answer,,}" == "y" ]]; then
+            if grep -q '^VMC_GROUPS =' "${OPL}/version.txt"; then
+                sed -i 's/^VMC_GROUPS =.*/VMC_GROUPS = disabled/' "${OPL}/version.txt"
+            else
+                echo 'VMC_GROUPS = disabled' >> "${OPL}/version.txt"
+            fi
+            VMC_STATUS="disabled"
+            echo
+            echo "                              [✓] PS2 VMC Groups disabled."
+        fi
+    else
+        read -rp "                                    Enable PS2 VMC Groups? (y/n): " answer </dev/tty
+        if [[ "${answer,,}" == "y" ]]; then
+            if grep -q '^VMC_GROUPS =' "${OPL}/version.txt"; then
+                sed -i 's/^VMC_GROUPS =.*/VMC_GROUPS = enabled/' "${OPL}/version.txt"
+            else
+                echo 'VMC_GROUPS = enabled' >> "${OPL}/version.txt"
+            fi
+            VMC_STATUS="enabled"
+            echo
+            echo "                              [✓] PS2 VMC Groups enabled."
+            echo "                              VMC files will be created on the next game installation."
+        fi
+    fi
+
+    UNMOUNT_OPL
+
+    echo
+    read -n 1 -s -r -p "                                    Press any key to return to the menu..." </dev/tty
+    echo
+}
+
 EXTRAS_SPLASH() {
 clear
     cat << "EOF"
@@ -1405,7 +1474,14 @@ EOF
 # Function to display the menu
 display_menu() {
     EXTRAS_SPLASH
-    cat << "EOF"
+
+    if [[ "$VMC_STATUS" == "enabled" ]]; then
+        vmc_status="[ON] "
+    else
+        vmc_status="[OFF]"
+    fi
+
+    cat <<EOF
                                     1) Install PS2 Linux
 
                                     2) Reassign Cross and Circle Buttons
@@ -1415,10 +1491,11 @@ display_menu() {
                                     4) Change Screen Settings
 
                                     5) Clear Art & Icon Cache
-
-                                    b) Back to Main Menu
-
 EOF
+    printf "                                    6) PS2 VMC Groups for Neutrino  %s\n" "$vmc_status"
+    echo
+    echo "                                    b) Back to Main Menu"
+    echo
 }
 
 clear
@@ -1453,6 +1530,12 @@ if ! sudo rm -rf "${STORAGE_DIR}"; then
     error_msg "Failed to remove $STORAGE_DIR folder."
 fi
 
+# Read VMC_GROUPS from version.txt to show [ON]/[OFF] in the menu without
+# needing to mount OPL on every display_menu call.
+MOUNT_OPL
+VMC_STATUS=$(awk -F' *= *' '$1=="VMC_GROUPS"{print $2}' "${OPL}/version.txt" 2>/dev/null)
+UNMOUNT_OPL
+
 # Main loop
 
 while true; do
@@ -1474,6 +1557,9 @@ while true; do
             ;;
         5)
             option_five
+            ;;
+        6)
+            option_six
             ;;
         b|B)
             break

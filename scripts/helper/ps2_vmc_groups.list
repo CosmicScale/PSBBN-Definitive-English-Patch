@@ -1,0 +1,1263 @@
+# PS2 VMC Groups for Neutrino/NHDDL
+# Based on: https://github.com/sync-on-luma/xebplus-neutrino-loader-plugin/wiki/Memory-Card-Groups
+#
+# Format:
+#   XEBP_xxx.xx        <- Group ID header (becomes the VMC filename)
+#   GAME_ID|Title      <- Title ID entry belonging to this group
+#
+# Cross-game groups use XEBP_100.xx naming.
+# Multi-disc groups use XEBP_000.xx naming.
+#
+# NOTE: Groups 24 and 40 contain many games whose combined save data may
+# exceed 8MB.  Consider using a 32MB image for those groups if needed.
+
+XEBP_100.01
+SCES-53286|Jak-X: Combat Racing
+SCUS-97429|Jak-X: Combat Racing
+SLES-53286|Jak-X: Combat Racing
+SCED-52952|Jak 3
+SCES-52460|Jak 3
+SCKA-20040|Jak 3
+SCUS-97330|Jak 3
+SLES-52460|Jak 3
+SCUS-97516|Jak 3
+SCPS-15021|Jak II (Renegade)
+SCPS-15057|Jak II (Renegade)
+SCES-51608|Jak II (Renegade)
+SLES-51608|Jak II (Renegade)
+SCKA-20010|Jak II (Renegade)
+SCUS-97265|Jak II (Renegade)
+PAPX-90223|Jak & Daxter: The Precursor Legacy
+SCES-50361|Jak & Daxter: The Precursor Legacy
+SCUS-97124|Jak & Daxter: The Precursor Legacy
+SCKA-20060|Ratchet: Deadlocked
+SCUS-97465|Ratchet: Deadlocked
+SCES-53285|Ratchet: Deadlocked
+SLES-53285|Ratchet: Deadlocked
+SCPS-15100|Ratchet: Deadlocked
+SCAJ-20157|Ratchet: Deadlocked
+SCPS-19321|Ratchet: Deadlocked
+SCPS-19328|Ratchet: Deadlocked
+
+XEBP_100.02
+PBPX-95516|Ratchet & Clank
+SCED-51075|Ratchet & Clank
+SCES-50916|Ratchet & Clank
+SCKA-20120|Ratchet & Clank
+SCPS-15037|Ratchet & Clank
+SCUS-97199|Ratchet & Clank
+SLES-50916|Ratchet & Clank
+SCKA-20011|Ratchet & Clank: Going Commando
+SCPS-15056|Ratchet & Clank: Going Commando
+SCPS-19317|Ratchet & Clank: Going Commando
+SCUS-97268|Ratchet & Clank: Going Commando
+SCUS-97513|Ratchet & Clank: Going Commando
+SCES-52456|Ratchet & Clank: Up Your Arsenal
+SCKA-20037|Ratchet & Clank: Up Your Arsenal
+SCPS-15084|Ratchet & Clank: Up Your Arsenal
+SLES-52456|Ratchet & Clank: Up Your Arsenal
+SCAJ-20109|Ratchet & Clank: Up Your Arsenal
+SCPS-19309|Ratchet & Clank: Up Your Arsenal
+
+XEBP_100.03
+SCES-55496|Secret Agent Clank
+SCUS-97623|Secret Agent Clank
+SCPS-15120|Ratchet & Clank: Size Matters
+SCUS-97615|Ratchet & Clank: Size Matters
+
+XEBP_100.04
+PBPX-95601|Gran Turismo 4
+SCAJ-30006|Gran Turismo 4
+SCAJ-30007|Gran Turismo 4
+SCES-51719|Gran Turismo 4
+SCKA-30001|Gran Turismo 4
+SCPS-17001|Gran Turismo 4
+SCUS-97328|Gran Turismo 4
+SLES-51719|Gran Turismo 4
+PBPX-95523|Gran Turismo 4 - Prologue
+PBPX-95524|Gran Turismo 4 - Prologue
+SCAJ-20066|Gran Turismo 4 - Prologue
+SCES-52438|Gran Turismo 4 - Prologue
+SCPS-15055|Gran Turismo 4 - Prologue
+SLES-52438|Gran Turismo 4 - Prologue
+SCPS-19304|Gran Turismo 4 - Prologue
+PBPX-95502|Gran Turismo 3: A-Spec
+SCPS-15009|Gran Turismo 3: A-Spec
+SCPS-55007|Gran Turismo 3: A-Spec
+SCUS-97102|Gran Turismo 3: A-Spec
+SCUS-97512|Gran Turismo 3: A-Spec
+SCPS-72001|Gran Turismo 3: A-Spec
+PBPX-95503|Gran Turismo 3: A-Spec
+SCPS-15010|Gran Turismo Concept 2001 Tokyo
+SCPS-55005|Gran Turismo Concept 2001 Tokyo
+SCPS-19208|Gran Turismo Concept 2001 Tokyo
+SCES-50858|Gran Turismo Concept 2002 Tokyo-Geneva
+SCPS-55902|Gran Turismo Concept 2002 Tokyo-Geneva
+SCPS-55903|Gran Turismo Concept 2002 Tokyo-Geneva
+SCPS-56005|Gran Turismo Concept 2002 Tokyo-Seoul
+SCKA-20029|Gran Turismo Concept 2002 Tokyo-Seoul
+
+XEBP_100.05
+SCES-50382|Silent Hill 2
+SLES-50382|Silent Hill 2
+SLPM-65051|Silent Hill 2
+SLUS-20228|Silent Hill 2
+SCES-51156|Silent Hill 2: Director's Cut
+SLES-51156|Silent Hill 2: Director's Cut
+SCES-51434|Silent Hill 3
+SLES-51434|Silent Hill 3
+SLPM-65257|Silent Hill 3
+SLUS-20622|Silent Hill 3
+SLPM-66018|Silent Hill 3
+SLPM-65622|Silent Hill 3
+
+XEBP_100.06
+SCES-50490|Final Fantasy X
+SCES-50491|Final Fantasy X
+SCES-50492|Final Fantasy X
+SCES-50493|Final Fantasy X
+SCES-50494|Final Fantasy X
+SLES-50490|Final Fantasy X
+SLES-50491|Final Fantasy X
+SLES-50492|Final Fantasy X
+SLES-50493|Final Fantasy X
+SLES-50494|Final Fantasy X
+SLPS-25050|Final Fantasy X
+SLUS-20312|Final Fantasy X
+SLKA-25214|Final Fantasy X
+SLPM-66677|Final Fantasy X
+SLPM-66124|Final Fantasy X
+SLPM-65115|Final Fantasy X
+SLPM-67513|Final Fantasy X
+SLPS-25088|Final Fantasy X
+SCAJ-25012|Final Fantasy X-2
+SCES-51815|Final Fantasy X-2
+SCES-51816|Final Fantasy X-2
+SCES-51817|Final Fantasy X-2
+SCES-51818|Final Fantasy X-2
+SCES-51819|Final Fantasy X-2
+SLAJ-25012|Final Fantasy X-2
+SLES-51815|Final Fantasy X-2
+SLES-51816|Final Fantasy X-2
+SLES-51817|Final Fantasy X-2
+SLES-51818|Final Fantasy X-2
+SLES-51819|Final Fantasy X-2
+SLKA-25144|Final Fantasy X-2
+SLPS-25250|Final Fantasy X-2
+SLUS-20672|Final Fantasy X-2
+SLPM-66678|Final Fantasy X-2
+SLPM-66125|Final Fantasy X-2
+SCAJ-20068|Final Fantasy X-2
+SLPM-65478|Final Fantasy X-2
+
+XEBP_100.07
+SCAJ-20099|Ico
+SCCS-40005|Ico
+SCED-50844|Ico
+SCES-50760|Ico
+SCPS-11003|Ico
+SCPS-55001|Ico
+SCPS-56001|Ico
+SCUS-97113|Ico
+SLES-50760|Ico
+SCKA-20028|Ico
+SCPS-19103|Ico
+SCPS-19151|Ico
+SCAJ-20196|Shadow of the Colossus
+SCAJ-20146|Shadow of the Colossus
+SCES-53326|Shadow of the Colossus
+SCUS-97472|Shadow of the Colossus
+SLES-53326|Shadow of the Colossus
+
+XEBP_100.08
+SLKA-25080|.hack//Part 1: Infection
+SCES-52237|.hack//Part 1: Infection
+SLES-52237|.hack//Part 1: Infection
+SLUS-20267|.hack//Part 1: Infection
+SCPS-55029|.hack//Part 1: Infection
+SLPS-25121|.hack//Part 1: Infection
+SLPS-73230|.hack//Part 1: Infection
+SLKA-25138|.hack//Part 2: Mutation
+SCES-52467|.hack//Part 2: Mutation
+SLES-52467|.hack//Part 2: Mutation
+SLUS-20562|.hack//Part 2: Mutation
+SLPS-73231|.hack//Part 2: Mutation
+SCPS-55042|.hack//Part 2: Mutation
+SLPS-25143|.hack//Part 2: Mutation
+SLKA-25145|.hack//Part 3: Outbreak
+SCES-52469|.hack//Part 3: Outbreak
+SLES-52469|.hack//Part 3: Outbreak
+SLUS-20563|.hack//Part 3: Outbreak
+SCAJ-20004|.hack//Part 3: Outbreak
+SLPS-25158|.hack//Part 3: Outbreak
+SLPS-73232|.hack//Part 3: Outbreak
+SCES-52468|.hack//Part 4: Quarantine
+SLES-52468|.hack//Part 4: Quarantine
+SLUS-20564|.hack//Part 4: Quarantine
+SLKA-25174|.hack//Part 4: Quarantine
+SLPS-73233|.hack//Part 4: Quarantine
+SCAJ-20024|.hack//Part 4: Quarantine
+SLPS-25202|.hack//Part 4: Quarantine
+SLUS-21258|.hack//G.U. Vol.1: Rebirth
+SLUS-29199|.hack//G.U. Vol.1: Rebirth
+SLPS-25651|.hack//G.U. Vol.1: Rebirth
+SLPS-73259|.hack//G.U. Vol.1: Rebirth
+SLPS-25755|.hack//G.U. Vol.1: Rebirth
+SLPS-25655|.hack//G.U. Vol.2: Reminisce
+SLPS-73266|.hack//G.U. Vol.2: Reminisce
+SLUS-21488|.hack//G.U. Vol.2: Reminisce
+SLPS-25656|.hack//G.U. Vol.3: Redemption
+SLPS-73267|.hack//G.U. Vol.3: Redemption
+SLUS-21489|.hack//G.U. Vol.3: Redemption
+SLPS-25652|.hack//G.U. Terminal Disc
+SLPS-25756|.hack//G.U. Terminal Disc
+SLUS-21480|.hack//G.U. Terminal Disc
+SLPS-25527|.hack//fragment
+SLPM-68521|.hack//fragment
+
+XEBP_100.09
+SLUS-21168|Castlevania: Curse of Darkness
+SCES-53755|Castlevania: Curse of Darkness
+SLES-53755|Castlevania: Curse of Darkness
+SLKA-25328|Castlevania: Curse of Darkness
+SCES-52118|Castlevania: Lament of Innocence
+SLES-52118|Castlevania: Lament of Innocence
+SLPM-65444|Castlevania: Lament of Innocence
+SLUS-20733|Castlevania: Lament of Innocence
+SLKA-25082|Castlevania: Lament of Innocence
+SLPM-66325|Castlevania: Lament of Innocence
+SLPM-65406|Castlevania: Lament of Innocence
+
+XEBP_100.10
+SCES-53194|LEGO Star Wars
+SLES-53194|LEGO Star Wars
+SLUS-21083|LEGO Star Wars
+SLPS-20423|LEGO Star Wars
+SCES-54221|LEGO Star Wars II: The Original Trilogy
+SLES-54221|LEGO Star Wars II: The Original Trilogy
+SLPM-66572|LEGO Star Wars II: The Original Trilogy
+SLUS-21409|LEGO Star Wars II: The Original Trilogy
+
+XEBP_100.11
+SCES-51589|Resident Evil Outbreak
+SLES-51589|Resident Evil Outbreak
+SLUS-20765|Resident Evil Outbreak
+SCES-53319|Resident Evil Outbreak - File #2
+SLES-53319|Resident Evil Outbreak - File #2
+SLUS-20984|Resident Evil Outbreak - File #2
+
+XEBP_100.12
+SLKA-25265|Devil May Cry 3
+SLPM-65880|Devil May Cry 3
+SLUS-20964|Devil May Cry 3
+SCES-53038|Devil May Cry 3
+SLES-53038|Devil May Cry 3
+SCES-54186|Devil May Cry 3: Special Edition
+SLES-54186|Devil May Cry 3: Special Edition
+SLUS-21361|Devil May Cry 3: Special Edition
+SLPM-74268|Devil May Cry 3: Special Edition
+SLPM-66160|Devil May Cry 3: Special Edition
+SLPM-74242|Devil May Cry 3: Special Edition
+
+XEBP_100.13
+SCES-53769|Suikoden Tactics
+SLES-53769|Suikoden Tactics
+SLUS-21245|Suikoden Tactics
+SCES-52913|Suikoden IV
+SLES-52913|Suikoden IV
+SLUS-20979|Suikoden IV
+SLPM-74213|Suikoden IV
+SLPM-65600|Suikoden IV
+SLPM-65599|Suikoden IV
+
+XEBP_100.14
+SCES-53200|Dragon Ball Z: Budokai Tenkaichi
+SLES-53200|Dragon Ball Z: Budokai Tenkaichi
+SLUS-21227|Dragon Ball Z: Budokai Tenkaichi
+SLPS-25560|Dragon Ball Z: Budokai Tenkaichi
+SLUS-21441|Dragon Ball Z: Budokai Tenkaichi 2
+SCES-54164|Dragon Ball Z: Budokai Tenkaichi 2
+SLES-54164|Dragon Ball Z: Budokai Tenkaichi 2
+SLPS-25690|Dragon Ball Z: Budokai Tenkaichi 2
+
+XEBP_100.15
+SCES-51233|Dragon Ball Z: Budokai
+SLES-51233|Dragon Ball Z: Budokai
+SLPS-25174|Dragon Ball Z: Budokai
+SLUS-20591|Dragon Ball Z: Budokai
+SCES-51839|Dragon Ball Z: Budokai 2
+SLES-51839|Dragon Ball Z: Budokai 2
+SLPS-25330|Dragon Ball Z: Budokai 2
+SLUS-20779|Dragon Ball Z: Budokai 2
+SLPM-68513|Dragon Ball Z: Budokai 2
+SCES-52730|Dragon Ball Z: Budokai 3
+SLES-52730|Dragon Ball Z: Budokai 3
+SLUS-20998|Dragon Ball Z: Budokai 3
+SCES-53346|Dragon Ball Z: Budokai 3
+SLES-53346|Dragon Ball Z: Budokai 3
+SLUS-21123|Dragon Ball Z: Budokai 3
+
+XEBP_100.16
+SLPM-62206|Growlanser II
+SLUS-20758|Growlanser II
+SLPS-20106|Growlanser II
+SLPS-20105|Growlanser II
+SLPM-62207|Growlanser III
+SLPM-62208|Growlanser III
+SLUS-20759|Growlanser III
+SLPM-62440|Growlanser III
+
+XEBP_100.17
+SLUS-20469|Xenosaga Episode I
+SLPS-29002|Xenosaga Episode I
+SLPS-73901|Xenosaga Episode I
+SLPS-29001|Xenosaga Episode I
+SLPS-29005|Xenosaga Episode I
+SCPS-55901|Xenosaga Episode I
+SCAJ-30001|Xenosaga Episode I
+SCAJ-20086|Xenosaga Episode II
+SLPS-25368|Xenosaga Episode II
+SCAJ-20087|Xenosaga Episode II
+SLPS-25369|Xenosaga Episode II
+SLPS-73224|Xenosaga Episode II
+SLPS-73225|Xenosaga Episode II
+SLPS-25366|Xenosaga Episode II
+SLPS-25367|Xenosaga Episode II
+SLES-82034|Xenosaga Episode II
+SLES-82035|Xenosaga Episode II
+SLUS-20892|Xenosaga Episode II
+SLUS-21133|Xenosaga Episode II
+SLUS-21389|Xenosaga Episode III
+SLUS-21417|Xenosaga Episode III
+SCAJ-20179|Xenosaga Episode III
+SLPS-25640|Xenosaga Episode III
+SCAJ-20180|Xenosaga Episode III
+SLPS-25641|Xenosaga Episode III
+
+XEBP_100.18
+SLES-55018|Persona 3
+SLUS-21569|Persona 3
+SCKA-20099|Persona 3
+SLPM-66445|Persona 3
+SLES-55354|Persona 3 FES
+SLUS-21621|Persona 3 FES
+SLPM-66689|Persona 3 FES
+SLPM-83770|Persona 3 FES
+
+XEBP_100.19
+SCES-54308|Phantasy Star Universe
+SLES-54308|Phantasy Star Universe
+SLPM-66031|Phantasy Star Universe
+SLUS-21194|Phantasy Star Universe
+SLPM-74244|Phantasy Star Universe
+SLES-54892|Phantasy Star Universe: Ambition of the Illuminus
+SLPM-66663|Phantasy Star Universe: Ambition of the Illuminus
+SLUS-21631|Phantasy Star Universe: Ambition of the Illuminus
+
+XEBP_100.20
+SCES-53458|Shin Megami Tensei: Digital Devil Saga
+SLES-53458|Shin Megami Tensei: Digital Devil Saga
+SLUS-20974|Shin Megami Tensei: Digital Devil Saga
+SCAJ-20095|Shin Megami Tensei: Digital Devil Saga
+SLPM-65597|Shin Megami Tensei: Digital Devil Saga
+SLPM-66372|Shin Megami Tensei: Digital Devil Saga
+SCES-54555|Shin Megami Tensei: Digital Devil Saga 2
+SLES-54555|Shin Megami Tensei: Digital Devil Saga 2
+SLUS-21152|Shin Megami Tensei: Digital Devil Saga 2
+SCAJ-20120|Shin Megami Tensei: Digital Devil Saga 2
+SLPM-65795|Shin Megami Tensei: Digital Devil Saga 2
+SLPM-66373|Shin Megami Tensei: Digital Devil Saga 2
+
+XEBP_100.21
+SLPM-62154|DDRMAX: Dance Dance Revolution 6th MIX
+SLPM-65277|DDRMAX2: Dance Dance Revolution 7th MIX
+SLPM-65358|Dance Dance Revolution EXTREME
+SLPM-62427|Dance Dance Revolution Party Collection
+SLPM-65775|DDR FESTIVAL
+SLPM-66242|DDR STRIKE
+SLPM-66609|DanceDanceRevolution SuperNOVA
+SLPM-66930|DanceDanceRevolution SuperNOVA 2
+SLPM-55090|DanceDanceRevolution X
+SLPM-66313|Guitar Freaks V & DrumMania V
+SLPM-66314|Pop'N Music 12: Iroha
+
+XEBP_100.22
+SCUS-97104|ATV Offroad Fury
+SCES-50293|ATV Offroad Fury
+SLES-50293|ATV Offroad Fury
+SCUS-97211|ATV Offroad Fury 2
+SLES-51814|ATV Offroad Fury 2
+SCUS-97510|ATV Offroad Fury 2
+SCUS-97369|ATV Offroad Fury 2
+SCUS-97405|ATV Offroad Fury 3
+SLES-53754|ATV Offroad Fury 3
+SCES-53754|ATV Offroad Fury 3
+SCUS-97514|ATV Offroad Fury 3
+SLUS-97405|ATV Offroad Fury 3
+
+XEBP_100.23
+SCES-52942|Midnight Club 3: DUB Edition
+SLES-52942|Midnight Club 3: DUB Edition
+SLUS-21029|Midnight Club 3: DUB Edition
+SCES-53717|Midnight Club 3: DUB Edition Remix
+SLES-53717|Midnight Club 3: DUB Edition Remix
+SLUS-21355|Midnight Club 3: DUB Edition Remix
+
+# NOTE: Group 24 may exceed 8MB due to many EA Sports Bio titles (19MB total)
+XEBP_100.24
+SCES-51797|Madden NFL 2004
+SLES-51797|Madden NFL 2004
+SLUS-20752|Madden NFL 2004
+SCES-52581|Madden NFL 2005
+SLES-52581|Madden NFL 2005
+SLUS-21000|Madden NFL 2005
+SLUS-21025|Madden NFL 2005 - Collector's Edition
+SLUS-20719|NCAA Football 2004
+SLUS-20991|NCAA Football 2005
+SCES-51887|Tiger Woods PGA Tour 2004
+SLES-51887|Tiger Woods PGA Tour 2004
+SLUS-20757|Tiger Woods PGA Tour 2004
+SLUS-20754|NASCAR Thunder 2004
+SLUS-20824|NASCAR Thunder 2004
+SLUS-20868|MVP Baseball 2004
+SLUS-20750|FIFA Soccer 2004
+SCES-51953|FIFA Soccer 2004
+SCES-51963|FIFA Soccer 2004
+SCES-51964|FIFA Soccer 2004
+SLES-51953|FIFA Soccer 2004
+SLES-51963|FIFA Soccer 2004
+SLES-51964|FIFA Soccer 2004
+SCES-52374|Fight Night 2004
+SLES-52374|Fight Night 2004
+SLPM-65587|Fight Night 2004
+SLUS-20906|Fight Night 2004
+SCES-51798|NHL 2004
+SLES-51798|NHL 2004
+SLUS-20756|NHL 2004
+SLES-52022|Total Club Manager 2004
+
+XEBP_100.25
+SCES-50422|Madden NFL 2002
+SLES-50422|Madden NFL 2002
+SLUS-20263|Madden NFL 2002
+SLPS-25079|Madden NFL 2002
+SLUS-20241|NCAA Football 2002
+
+XEBP_100.26
+SCES-51154|Madden NFL 2003
+SLES-51154|Madden NFL 2003
+SLUS-20529|Madden NFL 2003
+SLPS-25157|Madden NFL 2003
+SLUS-20530|NCAA Football 2003
+
+XEBP_100.27
+SLPM-66204|Madden NFL 06
+SLUS-21213|Madden NFL 06
+SLUS-21214|NCAA Football 06
+SCES-52982|NFL Street 2
+SLES-52982|NFL Street 2
+SLUS-21118|NFL Street 2
+SCES-52584|Burnout 3: Takedown
+SCES-52585|Burnout 3: Takedown
+SLAJ-25053|Burnout 3: Takedown
+SLES-52584|Burnout 3: Takedown
+SLES-52585|Burnout 3: Takedown
+SLPM-65719|Burnout 3: Takedown
+SLUS-21050|Burnout 3: Takedown
+SLPM-65958|Burnout 3: Takedown
+SLPM-66962|Burnout 3: Takedown
+SLKA-25206|Burnout 3: Takedown
+SCES-53506|Burnout Revenge
+SCES-53507|Burnout Revenge
+SLES-53506|Burnout Revenge
+SLES-53507|Burnout Revenge
+SLPM-66108|Burnout Revenge
+SLUS-21242|Burnout Revenge
+SLKA-25304|Burnout Revenge
+SLAJ-25066|Burnout Revenge
+SLPM-66652|Burnout Revenge
+SLPM-55004|Burnout Revenge
+SCES-53886|Black
+SCES-54030|Black
+SLAJ-25078|Black
+SLES-54030|Black
+SLPM-66354|Black
+SLUS-21376|Black
+SLUS-29180|Black
+SLPM-66731|Black
+SLPM-66961|Black
+SLES-53886|Black
+
+XEBP_100.28
+SCES-54248|Madden NFL 07
+SLES-54248|Madden NFL 07
+SLPM-66600|Madden NFL 07
+SLUS-21476|Madden NFL 07
+SLUS-21477|Madden NFL 07
+SLUS-21459|NCAA Football 07
+SLUS-21407|NFL Head Coach
+
+XEBP_100.29
+SLPM-66837|Madden NFL 08
+SLUS-21638|Madden NFL 08
+SLUS-21620|NCAA Football 08
+
+XEBP_100.30
+SLUS-21770|Madden NFL 09
+SLUS-21752|NCAA Football 09
+
+XEBP_100.31
+SLUS-21893|Madden NFL 10
+SLUS-21892|NCAA Football 10
+
+XEBP_100.32
+SCES-51340|NBA 2K3
+SLAJ-25007|NBA 2K3
+SLES-51340|NBA 2K3
+SLPM-65269|NBA 2K3
+SLUS-20476|NBA 2K3
+SLUS-20538|NCAA College Basketball 2K3
+
+XEBP_100.33
+SCES-51339|NFL 2K3
+SLES-51339|NFL 2K3
+SLPM-65224|NFL 2K3
+SLUS-20457|NFL 2K3
+SLUS-20453|NCAA College Football 2K3
+
+XEBP_100.34
+SCES-52008|NBA Live 2004
+SLES-52008|NBA Live 2004
+SLPS-25297|NBA Live 2004
+SLUS-20755|NBA Live 2004
+SLPM-65666|NBA Live 2004
+SLUS-20771|NCAA March Madness 2004
+
+XEBP_100.35
+SCES-51661|Dynasty Warriors 4
+SCES-51662|Dynasty Warriors 4
+SCES-51663|Dynasty Warriors 4
+SCES-51664|Dynasty Warriors 4
+SCES-51665|Dynasty Warriors 4
+SLES-51661|Dynasty Warriors 4
+SLES-51662|Dynasty Warriors 4
+SLES-51663|Dynasty Warriors 4
+SLES-51664|Dynasty Warriors 4
+SLES-51665|Dynasty Warriors 4
+SLUS-20653|Dynasty Warriors 4
+SLKA-25339|Dynasty Warriors 4
+SCES-52171|Dynasty Warriors 4: Xtreme Legends
+SCES-52172|Dynasty Warriors 4: Xtreme Legends
+SCES-52174|Dynasty Warriors 4: Xtreme Legends
+SCES-52175|Dynasty Warriors 4: Xtreme Legends
+SLES-52171|Dynasty Warriors 4: Xtreme Legends
+SLES-52172|Dynasty Warriors 4: Xtreme Legends
+SLES-52173|Dynasty Warriors 4: Xtreme Legends
+SLES-52174|Dynasty Warriors 4: Xtreme Legends
+SLES-52175|Dynasty Warriors 4: Xtreme Legends
+SCES-52591|Dynasty Warriors 4: Empires
+SCES-52592|Dynasty Warriors 4: Empires
+SCES-52593|Dynasty Warriors 4: Empires
+SLES-52591|Dynasty Warriors 4: Empires
+SLES-52592|Dynasty Warriors 4: Empires
+SLES-52593|Dynasty Warriors 4: Empires
+SLUS-20938|Dynasty Warriors 4: Empires
+SLKA-25340|Dynasty Warriors 4: Empires
+SLKA-25417|Dynasty Warriors 4: Empires
+
+XEBP_100.36
+SCES-53339|Dynasty Warriors 5
+SLES-53339|Dynasty Warriors 5
+SLUS-21153|Dynasty Warriors 5
+SCES-53860|Dynasty Warriors 5: Xtreme Legends
+SCES-53861|Dynasty Warriors 5: Xtreme Legends
+SCES-53862|Dynasty Warriors 5: Xtreme Legends
+SLES-53860|Dynasty Warriors 5: Xtreme Legends
+SLES-53861|Dynasty Warriors 5: Xtreme Legends
+SLES-53862|Dynasty Warriors 5: Xtreme Legends
+SLUS-21299|Dynasty Warriors 5: Xtreme Legends
+SCES-54095|Dynasty Warriors 5: Empires
+SCES-54096|Dynasty Warriors 5: Empires
+SCES-54097|Dynasty Warriors 5: Empires
+SLES-54095|Dynasty Warriors 5: Empires
+SLES-54096|Dynasty Warriors 5: Empires
+SLES-54097|Dynasty Warriors 5: Empires
+SLUS-21398|Dynasty Warriors 5: Empires
+SLUS-20879|Romance of the Three Kingdoms IX
+SLPM-65423|Romance of the Three Kingdoms IX
+SLPM-66172|Romance of the Three Kingdoms IX
+SLKA-25266|Romance of the Three Kingdoms IX
+SLPM-66813|Romance of the Three Kingdoms IX
+SLPM-66523|Romance of the Three Kingdoms IX
+SLPM-66971|Romance of the Three Kingdoms IX
+SLUS-21202|Romance of the Three Kingdoms X
+SLPM-65891|Romance of the Three Kingdoms X
+SLPM-66560|Romance of the Three Kingdoms X
+SLUS-21584|Romance of the Three Kingdoms XI
+SLPM-66549|Romance of the Three Kingdoms XI
+SLPM-66701|Romance of the Three Kingdoms XI
+
+XEBP_100.37
+SCES-52551|Samurai Warriors
+SCES-52553|Samurai Warriors
+SCES-52555|Samurai Warriors
+SLUS-20878|Samurai Warriors
+SLPM-62535|Samurai Warriors: Xtreme Legends
+SLUS-21080|Samurai Warriors: Xtreme Legends
+SLES-53002|Samurai Warriors: Xtreme Legends
+SLES-53003|Samurai Warriors: Xtreme Legends
+SLES-53004|Samurai Warriors: Xtreme Legends
+SCES-53119|Kessen III
+SCES-53120|Kessen III
+SCES-53121|Kessen III
+SLAJ-25057|Kessen III
+SLES-53119|Kessen III
+SLES-53120|Kessen III
+SLES-53121|Kessen III
+SLPM-65781|Kessen III
+SLPM-74223|Kessen III
+SLPM-62573|Kessen III
+SLPM-74231|Kessen III
+KOEI-00021|Kessen III
+SLPM-65780|Kessen III
+
+XEBP_100.38
+SCES-54340|Samurai Warriors 2
+SLES-54340|Samurai Warriors 2
+SLUS-21462|Samurai Warriors 2
+SLES-55108|Samurai Warriors 2: Xtreme Legends
+SLUS-21726|Samurai Warriors 2: Xtreme Legends
+SLUS-21585|Samurai Warriors 2: Empires
+
+XEBP_100.39
+SCES-54845|Warriors Orochi
+SLES-54845|Warriors Orochi
+SLUS-21662|Warriors Orochi
+SLUS-21803|Warriors Orochi 2
+
+# NOTE: Group 40 (PES series) may exceed 8MB due to many games (~1.3MB each)
+XEBP_100.40
+SCES-50412|Pro Evolution Soccer
+SCES-50462|Pro Evolution Soccer
+SLES-50412|Pro Evolution Soccer
+SLES-50462|Pro Evolution Soccer
+SLES-51114|Pro Evolution Soccer 2
+SCES-51114|Pro Evolution Soccer 2
+SCES-51912|Pro Evolution Soccer 3
+SCES-51915|Pro Evolution Soccer 3
+SLES-51912|Pro Evolution Soccer 3
+SLES-51915|Pro Evolution Soccer 3
+SCES-52760|Pro Evolution Soccer 4
+SCES-52800|Pro Evolution Soccer 4
+SLES-52760|Pro Evolution Soccer 4
+SLES-52800|Pro Evolution Soccer 4
+SCES-53444|Pro Evolution Soccer 5
+SCES-53544|Pro Evolution Soccer 5
+SCES-53545|Pro Evolution Soccer 5
+SLES-53444|Pro Evolution Soccer 5
+SLES-53544|Pro Evolution Soccer 5
+SLES-53545|Pro Evolution Soccer 5
+SCES-54203|Pro Evolution Soccer 6
+SCES-54204|Pro Evolution Soccer 6
+SCES-54360|Pro Evolution Soccer 6
+SCES-54361|Pro Evolution Soccer 6
+SCES-54362|Pro Evolution Soccer 6
+SLES-54203|Pro Evolution Soccer 6
+SLES-54204|Pro Evolution Soccer 6
+SLES-54360|Pro Evolution Soccer 6
+SLES-54361|Pro Evolution Soccer 6
+SLES-54362|Pro Evolution Soccer 6
+SLES-54913|Pro Evolution Soccer 2008
+SLUS-21685|Pro Evolution Soccer 2008
+SLES-55406|Pro Evolution Soccer 2009
+SLUS-21821|Pro Evolution Soccer 2009
+SLES-55587|Pro Evolution Soccer 2010
+SLES-55636|Pro Evolution Soccer 2011
+SLES-55656|Pro Evolution Soccer 2012
+SLES-55666|Pro Evolution Soccer 2013
+SLES-55673|Pro Evolution Soccer 2014
+SCES-53899|Pro Evolution Soccer Management
+SLES-53899|Pro Evolution Soccer Management
+
+XEBP_100.41
+SCES-50360|Twisted Metal: Black
+SCUS-97101|Twisted Metal: Black
+SLES-50360|Twisted Metal: Black
+SCES-51224|War of the Monsters
+SCUS-97197|War of the Monsters
+SLES-51224|War of the Monsters
+SLPM-65412|War of the Monsters
+
+XEBP_100.42
+SCES-52707|Monster Hunter
+SLES-52707|Monster Hunter
+SLPM-65495|Monster Hunter
+SLUS-20896|Monster Hunter
+SLPM-74248|Monster Hunter G
+SLKA-25219|Monster Hunter G
+SLPM-65869|Monster Hunter G
+
+XEBP_100.43
+SCES-54376|Barnyard
+SCKA-20096|Barnyard
+SLES-54376|Barnyard
+SLUS-21277|Barnyard
+SCES-53418|Tak: The Great JuJu Challenge
+SCES-53695|Tak: The Great JuJu Challenge
+SLES-53418|Tak: The Great JuJu Challenge
+SLES-53695|Tak: The Great JuJu Challenge
+SLUS-21218|Tak: The Great JuJu Challenge
+SCES-53494|SpongeBob SquarePants: Lights, Camera, PANTS!
+SCES-53496|SpongeBob SquarePants: Lights, Camera, PANTS!
+SLES-53494|SpongeBob SquarePants: Lights, Camera, PANTS!
+SLES-53496|SpongeBob SquarePants: Lights, Camera, PANTS!
+SLUS-21252|SpongeBob SquarePants: Lights, Camera, PANTS!
+SLUS-21284|Nicktoons Unite!
+SLES-53634|Nicktoons Unite!
+
+XEBP_100.44
+SCES-54163|Naruto: Ultimate Ninja
+SLPS-25293|Naruto: Ultimate Ninja
+SLES-54163|Naruto: Ultimate Ninja
+SLUS-21358|Naruto: Ultimate Ninja
+SLPS-73212|Naruto: Ultimate Ninja
+SLPS-25398|Naruto: Ultimate Ninja 2
+SLPS-73221|Naruto: Ultimate Ninja 2
+SLES-54878|Naruto: Ultimate Ninja 2
+SLUS-21575|Naruto: Ultimate Ninja 2
+SLES-55237|Naruto: Ultimate Ninja 3
+SLUS-21727|Naruto: Ultimate Ninja 3
+SLPS-73251|Naruto: Ultimate Ninja 3
+SLPS-25589|Naruto: Ultimate Ninja 3
+SLPS-25768|Naruto Shippuden: Ultimate Ninja 4
+SLUS-21862|Naruto Shippuden: Ultimate Ninja 4
+SLES-55605|Naruto Shippuden: Ultimate Ninja 5
+SLPS-25837|Naruto Shippuden: Ultimate Ninja 5
+
+XEBP_100.45
+SCES-52725|Need for Speed: Underground 2
+SLES-52725|Need for Speed: Underground 2
+SLUS-21065|Need for Speed: Underground 2
+SLUS-29118|Need for Speed: Underground 2
+SLPM-66960|Need for Speed: Underground 2
+SLPM-65766|Need for Speed: Underground 2
+SLPM-66051|Need for Speed: Underground 2
+SCES-53557|Need for Speed: Most Wanted
+SCES-53558|Need for Speed: Most Wanted
+SCES-53559|Need for Speed: Most Wanted
+SLES-53557|Need for Speed: Most Wanted
+SLES-53558|Need for Speed: Most Wanted
+SLES-53559|Need for Speed: Most Wanted
+SLPM-66232|Need for Speed: Most Wanted
+SLUS-21267|Need for Speed: Most Wanted
+SLPM-66562|Need for Speed: Most Wanted
+SCES-53857|Need for Speed: Most Wanted - Black Edition
+SLAJ-25075|Need for Speed: Most Wanted - Black Edition
+SLES-53857|Need for Speed: Most Wanted - Black Edition
+SLUS-21351|Need for Speed: Most Wanted - Black Edition
+SLPM-66869|Need for Speed: Carbon
+SCES-54321|Need for Speed: Carbon
+SCES-54322|Need for Speed: Carbon
+SCES-54323|Need for Speed: Carbon
+SCES-54324|Need for Speed: Carbon
+SLAJ-25091|Need for Speed: Carbon
+SLES-54321|Need for Speed: Carbon
+SLES-54322|Need for Speed: Carbon
+SLES-54323|Need for Speed: Carbon
+SLES-54324|Need for Speed: Carbon
+SLPM-66617|Need for Speed: Carbon
+SLUS-21493|Need for Speed: Carbon
+SCES-54402|Need for Speed: Carbon - Collector's Edition
+SCES-54492|Need for Speed: Carbon - Collector's Edition
+SCES-54493|Need for Speed: Carbon - Collector's Edition
+SLES-54402|Need for Speed: Carbon - Collector's Edition
+SLES-54492|Need for Speed: Carbon - Collector's Edition
+SLES-54493|Need for Speed: Carbon - Collector's Edition
+SLUS-21494|Need for Speed: Carbon - Collector's Edition
+SLPM-66932|Need for Speed: ProStreet
+SLUS-21658|Need for Speed: ProStreet
+SLES-55002|Need for Speed: ProStreet
+SLPM-55151|Need for Speed: ProStreet
+
+XEBP_100.46
+SLUS-21395|Avatar: The Last Airbender
+SLES-54188|Avatar: The Last Airbender
+SLES-54840|Avatar: The Burning Earth
+SLUS-21588|Avatar: The Burning Earth
+
+XEBP_100.47
+PAPX-90234|Katamari Damacy
+SCAJ-20079|Katamari Damacy
+SCKA-20025|Katamari Damacy
+SLPS-25360|Katamari Damacy
+SLUS-21008|Katamari Damacy
+SLPS-73210|Katamari Damacy
+SLPS-73240|Katamari Damacy
+SLPS-25467|We Love Katamari
+SCAJ-20135|We Love Katamari
+SCKA-20051|We Love Katamari
+SLPS-73241|We Love Katamari
+SLUS-21230|We Love Katamari
+
+XEBP_100.48
+SLES-52674|Total Club Manager 2005
+SCES-52563|FIFA Football 2005
+SLES-52563|FIFA Football 2005
+SLES-52559|FIFA Football 2005
+SCES-52559|FIFA Football 2005
+SLES-52562|FIFA Football 2005
+SCES-52562|FIFA Football 2005
+SLES-52561|FIFA Football 2005
+SCES-52561|FIFA Football 2005
+SLES-52560|FIFA Football 2005
+SCES-52560|FIFA Football 2005
+
+XEBP_100.49
+SLPM-65413|Onimusha 3: Demon Siege
+SCES-51914|Onimusha 3: Demon Siege
+SLES-51914|Onimusha 3: Demon Siege
+SLUS-20694|Onimusha 3: Demon Siege
+SCES-51913|Onimusha: Blade Warrior
+SLES-51913|Onimusha: Blade Warrior
+SLPM-65411|Onimusha: Blade Warrior
+SLUS-20710|Onimusha: Blade Warrior
+
+XEBP_100.50
+SLPM-66965|Guilty Gear XX: Accent Core Plus
+SLPM-66964|Guilty Gear XX: Accent Core Plus - Append Edition
+
+XEBP_100.51
+SLES-82042|Metal Gear Solid 3: Subsistence
+SLES-82043|Metal Gear Solid 3: Subsistence
+SLES-82044|Metal Gear Solid 3: Subsistence
+SLES-82045|Metal Gear Solid 3: Subsistence
+SLES-82046|Metal Gear Solid 3: Subsistence
+SLES-82047|Metal Gear Solid 3: Subsistence
+SLES-82048|Metal Gear Solid 3: Subsistence
+SLES-82049|Metal Gear Solid 3: Subsistence
+SLES-82050|Metal Gear Solid 3: Subsistence
+SLES-82051|Metal Gear Solid 3: Subsistence
+SLES-82052|Metal Gear Solid 3: Subsistence
+SLES-82053|Metal Gear Solid 3: Subsistence
+SLKA-25353|Metal Gear Solid 3: Subsistence
+SLKA-25354|Metal Gear Solid 3: Subsistence
+SLUS-21243|Metal Gear Solid 3: Subsistence
+SLPM-66223|Metal Gear Solid 3: Subsistence
+SLPM-66224|Metal Gear Solid 3: Subsistence
+SLPM-66220|Metal Gear Solid 3: Subsistence
+SLPM-66221|Metal Gear Solid 3: Subsistence
+SLPM-66222|Metal Gear Solid 3: Subsistence
+SLUS-21359|Metal Gear Solid 3: Subsistence
+SLUS-21360|Metal Gear Solid 3: Subsistence
+SLPM-66117|Metal Gear Solid 3: Subsistence
+SLPM-66118|Metal Gear Solid 3: Subsistence
+SLPM-66119|Metal Gear Solid 3: Subsistence
+SLPM-55237|Metal Gear & Metal Gear 2: Solid Snake
+SLPM-66795|Metal Gear & Metal Gear 2: Solid Snake
+SLPM-66799|Metal Gear & Metal Gear 2: Solid Snake
+SLPM-74258|Metal Gear & Metal Gear 2: Solid Snake
+
+XEBP_100.52
+SLPM-65870|Mahou Sensei Negima! 1-Jikanme
+SLPM-66258|Mahou Sensei Negima! 1-Jikanme
+SLPM-65871|Mahou Sensei Negima! 1-Jikanme
+SLPM-66062|Mahou Sensei Negima! 2-Jikanme
+SLPM-66063|Mahou Sensei Negima! 2-Jikanme
+SLPM-66329|Mahou Sensei Negima! Kagai Jugyou
+SLPM-66592|Negima!? 3-Jikanme
+SLPM-66593|Negima!? 3-Jikanme
+SLPM-66704|Negima!? Dream Tactic
+SLPM-66705|Negima!? Dream Tactic
+
+XEBP_100.53
+SLUS-21348|Yakuza
+SLKA-25342|Yakuza
+SLPM-66168|Yakuza
+SLPM-74253|Yakuza
+SLPM-74234|Yakuza
+SLES-55242|Yakuza 2
+SLPM-66602|Yakuza 2
+SLPM-66603|Yakuza 2
+SLKA-25280|Yakuza 2
+SLKA-25281|Yakuza 2
+SLPM-74301|Yakuza 2
+SLPM-74302|Yakuza 2
+
+XEBP_100.54
+SCAJ-25045|Sakura Taisen V Episode 0
+SLAJ-25045|Sakura Taisen V Episode 0
+SLPM-65531|Sakura Taisen V Episode 0
+SLKA-25207|Sakura Taisen V Episode 0
+SLPM-66208|Sakura Taisen V Episode 0
+SLAJ-25034|Sakura Taisen Monogatari: Mysterious Paris
+SLPM-65515|Sakura Taisen Monogatari: Mysterious Paris
+SLUS-21927|Sakura Wars: So Long, My Love
+SLAJ-35001|Sakura Wars: So Long, My Love
+SLKA-35003|Sakura Taisen: Atsuki Chishio Ni
+SLPM-67003|Sakura Taisen: Atsuki Chishio Ni
+SLAJ-35003|Sakura Taisen: Atsuki Chishio Ni
+
+XEBP_100.55
+SLPS-73418|Shadow Hearts
+SCES-50677|Shadow Hearts
+SCES-50822|Shadow Hearts
+SLES-50677|Shadow Hearts
+SLES-50822|Shadow Hearts
+SLPS-25041|Shadow Hearts
+SLUS-20347|Shadow Hearts
+SLES-82030|Shadow Hearts: Covenant
+SLES-82031|Shadow Hearts: Covenant
+SLUS-21041|Shadow Hearts: Covenant
+SLUS-21044|Shadow Hearts: Covenant
+SLPS-25317|Shadow Hearts: Covenant
+SLPS-73214|Shadow Hearts: Covenant
+SLPM-60214|Shadow Hearts: Covenant
+SLPM-60226|Shadow Hearts: Covenant
+SLPM-73214|Shadow Hearts: Covenant
+
+XEBP_100.56
+SCES-50054|Midnight Club: Street Racing
+SLES-50054|Midnight Club: Street Racing
+SCES-50071|Midnight Club: Street Racing
+SLES-50071|Midnight Club: Street Racing
+SLPS-20068|Midnight Club: Street Racing
+SLUS-20063|Midnight Club: Street Racing
+SLPM-62189|Midnight Club: Street Racing
+SCES-50055|Smuggler's Run
+SCES-50061|Smuggler's Run
+SLES-50055|Smuggler's Run
+SLES-50061|Smuggler's Run
+SLUS-20065|Smuggler's Run
+
+XEBP_100.57
+SLUS-21039|TOCA Race Driver 2
+SLPM-66498|TOCA Race Driver 2
+SCES-52637|TOCA Race Driver 2
+SLES-52637|TOCA Race Driver 2
+SCES-52638|TOCA Race Driver 2
+SLES-52638|TOCA Race Driver 2
+SCES-52639|TOCA Race Driver 2
+SLES-52639|TOCA Race Driver 2
+SCES-53087|TOCA Race Driver 3
+SLES-53087|TOCA Race Driver 3
+SLUS-21182|TOCA Race Driver 3
+SLPM-66881|TOCA Race Driver 3
+SLPM-55046|TOCA Race Driver 3
+SLUS-29178|TOCA Race Driver 3
+SCES-53088|TOCA Race Driver 3
+SLES-53088|TOCA Race Driver 3
+SCES-53089|TOCA Race Driver 3
+SLES-53089|TOCA Race Driver 3
+
+XEBP_100.58
+SCES-52458|Disgaea: Hour of Darkness (PAL)
+SLES-52458|Disgaea: Hour of Darkness (PAL)
+SCES-54454|Disgaea 2: Cursed Memories (PAL)
+SLES-54454|Disgaea 2: Cursed Memories (PAL)
+
+XEBP_100.59
+SLUS-20666|Disgaea: Hour of Darkness (NTSC-U)
+SLUS-21397|Disgaea 2: Cursed Memories (NTSC-U)
+
+XEBP_100.60
+SLPS-20251|Makai Senki Disgaea (JPN)
+SLPS-20250|Makai Senki Disgaea (JPN)
+SCAJ-10001|Makai Senki Disgaea (JPN)
+SLPS-73103|Makai Senki Disgaea 2 (JPN)
+SLPS-25608|Makai Senki Disgaea 2 (JPN)
+SLPS-25607|Makai Senki Disgaea 2 (JPN)
+SLPS-73254|Makai Senki Disgaea 2 (JPN)
+
+XEBP_100.61
+SCES-50079|Armored Core 2
+SLES-50079|Armored Core 2
+SLPS-25007|Armored Core 2
+SLUS-20014|Armored Core 2
+SCCS-40011|Armored Core 2: Another Age
+SCES-50905|Armored Core 2: Another Age
+SCPS-55024|Armored Core 2: Another Age
+SLES-50905|Armored Core 2: Another Age
+SLPS-25040|Armored Core 2: Another Age
+SLUS-20249|Armored Core 2: Another Age
+SLPS-73411|Armored Core 2: Another Age
+SCES-51399|Armored Core 3
+SCPS-55014|Armored Core 3
+SLES-51399|Armored Core 3
+SLPS-25112|Armored Core 3
+SLUS-20435|Armored Core 3
+SCAJ-20011|Armored Core 3
+SLPS-25169|Armored Core 3
+SLPS-73420|Armored Core 3
+SLPS-73417|Armored Core 3
+SLUS-20644|Silent Line: Armored Core
+SLKA-25041|Silent Line: Armored Core
+SLES-52203|Silent Line: Armored Core
+
+XEBP_100.62
+SLUS-20718|Sonic Heroes
+SLES-51950|Sonic Heroes
+SLPM-65431|Sonic Heroes
+SLKA-25122|Sonic Heroes
+SLUS-20917|Sonic Mega Collection Plus
+SLES-52998|Sonic Mega Collection Plus
+SLPM-65758|Sonic Mega Collection Plus
+SLKA-25233|Sonic Mega Collection Plus
+SLES-53350|Sonic Gems Collection
+SLPM-66074|Sonic Gems Collection
+
+XEBP_100.63
+SLUS-20152|Ace Combat 04: Shattered Skies
+SLPS-25052|Ace Combat 04: Shattered Skies
+SCES-50410|Ace Combat 04: Shattered Skies
+SLUS-20851|Ace Combat 5: The Unsung War
+SLPS-25418|Ace Combat 5: The Unsung War
+SCKA-20042|Ace Combat 5: The Unsung War
+SCES-52424|Ace Combat 5: The Unsung War
+SLUS-21346|Ace Combat Zero: The Belkan War
+SLPS-25629|Ace Combat Zero: The Belkan War
+SCKA-20070|Ace Combat Zero: The Belkan War
+SCES-54041|Ace Combat Zero: The Belkan War
+
+XEBP_100.64
+SCUS-97140|The Mark of Kri
+SCUS-97201|The Mark of Kri
+SCUS-97416|Rise of the Kasai
+
+XEBP_100.65
+SLUS-20459|Shinobi
+SCES-51428|Shinobi
+SLPM-65200|Shinobi
+SLKA-25021|Shinobi
+SLUS-20810|Nightshade
+SLES-52238|Nightshade
+SLPM-65447|Nightshade
+SLKA-25135|Nightshade
+
+XEBP_100.66
+SLUS-21165|Arc the Lad: End of Darkness
+SCAJ-20108|Arc the Lad: End of Darkness
+SCPS-15058|Arc the Lad: End of Darkness
+SCUS-97231|Arc the Lad: Twilight of the Spirits
+SCAJ-20019|Arc the Lad: Twilight of the Spirits
+SCAJ-20038|Arc the Lad: Twilight of the Spirits
+SCES-51910|Arc the Lad: Twilight of the Spirits
+SLES-51910|Arc the Lad: Twilight of the Spirits
+SCCS-40007|Arc the Lad: Twilight of the Spirits
+PAPX-90230|Arc the Lad: Twilight of the Spirits
+PCPX-96330|Arc the Lad: Twilight of the Spirits
+
+XEBP_100.67
+SCES-54153|Virtua Pro Football
+SLES-54153|Virtua Pro Football
+SLPM-66442|Virtua Pro Football
+SCES-54151|Let's Make a Soccer Team!
+SLES-54151|Let's Make a Soccer Team!
+
+XEBP_100.68
+SLES-54460|Dragon Sisters
+SLES-54569|Zombie Hunters 2
+
+XEBP_100.69
+SLPS-20441|Simple 2000 Vol.87: The Senko
+SLPS-20466|Simple 2000 Vol.101: The Onee-chan Pon
+
+XEBP_100.70
+SCES-53398|Zombie Zone
+SLES-53398|Zombie Zone
+SCES-54461|Zombie Hunters
+SLES-54461|Zombie Hunters
+
+XEBP_100.71
+SLPM-62525|Simple 2000 Vol.61: The O-Ane-Chapara
+SLKA-15045|Simple 2000 Vol.61: The O-Ane-Chapara
+SLPM-62638|Simple 2000 Vol.80: The O-Ane-Chan Puruu
+
+XEBP_100.72
+SCPS-15025|Saru! Get You! 2
+SCPS-19206|Saru! Get You! 2
+SCPS-19308|Saru! Get You! 2
+SCPS-55035|Saru! Get You! 2
+PAPX-90330|Saru! Get You! 2: Ukki Ukki Disc
+
+XEBP_100.73
+SLPM-65176|King of Colosseum (Red)
+SLPM-65206|King of Colosseum (Green)
+
+XEBP_100.74
+SLUS-20636|The Suffering
+SLES-52531|The Suffering
+SLED-52488|The Suffering
+SLES-52439|The Suffering
+SLES-51693|The Suffering
+SLUS-21189|The Suffering: Ties That Bind
+SLES-53528|The Suffering: Ties That Bind
+SLES-53526|The Suffering: Ties That Bind
+SLES-53527|The Suffering: Ties That Bind
+SLED-53627|The Suffering: Ties That Bind
+SLES-53626|The Suffering: Ties That Bind
+
+XEBP_100.75
+SLUS-20565|Champions of Norrath
+SLES-52373|Champions of Norrath
+SLES-52325|Champions of Norrath
+SLUS-20973|Champions: Return to Arms
+SLES-53039|Champions: Return to Arms
+
+# Armored Core Memory Card Group 2 (multi-disc / cross-save)
+XEBP_000.01
+SLES-82036|Armored Core: Nexus (Disc 1)
+SLES-82037|Armored Core: Nexus (Disc 2)
+SLPS-25338|Armored Core: Nexus (Disc 1)
+SLPS-25339|Armored Core: Nexus (Disc 2)
+SCAJ-20076|Armored Core: Nexus (Disc 1)
+SCAJ-20077|Armored Core: Nexus (Disc 2)
+SLUS-20986|Armored Core: Nexus (Disc 1)
+SLUS-21079|Armored Core: Nexus (Disc 2)
+SLKA-25201|Armored Core: Nexus (Disc 1)
+SLKA-25202|Armored Core: Nexus (Disc 2)
+SLPS-73202|Armored Core: Nexus (Disc 1)
+SLPS-73203|Armored Core: Nexus (Disc 2)
+SLUS-21200|Armored Core: Nine Breaker
+SCKA-20047|Armored Core: Nine Breaker
+SLPS-25408|Armored Core: Nine Breaker
+SLES-53819|Armored Core: Nine Breaker
+SLUS-21338|Armored Core: Last Raven
+SLPS-25730|Armored Core: Last Raven
+SLPM-68520|Armored Core: Last Raven
+SLPS-25462|Armored Core: Last Raven
+SLES-53820|Armored Core: Last Raven
+
+# Multi-disc games (shared VMC per title)
+XEBP_000.02
+SLPM-65086|Ayumi Hamasaki Dome Tour 2001 (Disc 1)
+SLPM-65087|Ayumi Hamasaki Dome Tour 2001 (Disc 2)
+
+XEBP_000.03
+SLPS-20084|Basic Studio (Disc 1)
+SLPS-20085|Basic Studio (Disc 2)
+
+XEBP_000.04
+SLPM-55221|beatmania IIDX 16 EMPRESS + PREMIUM BEST (Disc 1)
+SLPM-55222|beatmania IIDX 16 EMPRESS + PREMIUM BEST (Disc 2)
+
+XEBP_000.05
+SCPS-11019|Bravo Music (Disc 1)
+SCPS-11020|Bravo Music (Disc 2)
+
+XEBP_000.06
+SLES-82021|Cy Girls (Disc 1)
+SLES-82020|Cy Girls (Disc 2)
+SLUS-20697|Cy Girls (Disc 1)
+SLUS-20854|Cy Girls (Disc 2)
+SLPM-65506|Cy Girls (Disc 1)
+SLPM-65507|Cy Girls (Disc 2)
+SLPM-65742|COOL GIRL (Disc 1)
+SLPM-65743|COOL GIRL (Disc 2)
+SLPM-65504|COOL GIRL (Disc 1)
+SLPM-65505|COOL GIRL (Disc 2)
+
+XEBP_000.07
+SLES-82011|Devil May Cry 2 (Disc 1)
+SLES-82012|Devil May Cry 2 (Disc 2)
+SLPM-65232|Devil May Cry 2 (Disc 1)
+SLPM-65233|Devil May Cry 2 (Disc 2)
+SCCS-40002|Devil May Cry 2 (Disc 1)
+SCCS-40003|Devil May Cry 2 (Disc 2)
+SLUS-20484|Devil May Cry 2 (Disc 1)
+SLUS-20627|Devil May Cry 2 (Disc 2)
+
+XEBP_000.08
+SLPS-20140|Dream Audition Super Hit (Disc 1)
+SLPS-20141|Dream Audition Super Hit (Disc 2)
+
+XEBP_000.09
+SLPM-65040|The Fear (Disc 1)
+SLPM-65041|The Fear (Disc 2)
+SLPM-65042|The Fear (Disc 3)
+SLPM-65043|The Fear (Disc 4)
+
+XEBP_000.10
+SCAJ-20141|Grandia III (Disc 1)
+SLPM-65976|Grandia III (Disc 1)
+SLPM-85976|Grandia III (Disc 2)
+SLUS-21334|Grandia III (Disc 1)
+SLUS-21345|Grandia III (Disc 2)
+
+XEBP_000.11
+SLPM-65002|Love Story (Disc 1)
+SLPM-65003|Love Story (Disc 2)
+
+XEBP_000.12
+SLPM-66602|Ryu ga Gotoku 2 (Disc 1)
+SLKA-25280|Ryu ga Gotoku 2 (Disc 1)
+SLKA-25281|Ryu ga Gotoku 2 (Disc 2)
+SLPM-74301|Ryu ga Gotoku 2 (Disc 1)
+
+XEBP_000.13
+SLES-82038|Onimusha: Dawn of Dreams (Disc 1)
+SLES-82039|Onimusha: Dawn of Dreams (Disc 2)
+SLUS-21180|Onimusha: Dawn of Dreams (Disc 1)
+SLUS-21362|Onimusha: Dawn of Dreams (Disc 2)
+SCKA-20086|Onimusha: Dawn of Dreams (Disc 1)
+SCKA-20087|Onimusha: Dawn of Dreams (Disc 2)
+SLPM-66275|Onimusha: Dawn of Dreams (Disc 1)
+SLPM-66276|Onimusha: Dawn of Dreams (Disc 2)
+SLPM-74251|Onimusha: Dawn of Dreams (Disc 1)
+SLPM-74232|Onimusha: Dawn of Dreams (Disc 2)
+
+XEBP_000.14
+SLAJ-25104|Shin Sangoku Musou 5 Special (Disc 1)
+SLAJ-25105|Shin Sangoku Musou 5 Special (Disc 2)
+SLAJ-35007|Shin Sangoku Musou 5 Special (Disc 1)
+SLAJ-35008|Shin Sangoku Musou 5 Special (Disc 2)
+SLKA-35005|Shin Sangoku Musou 5 Special (Disc 1)
+SLKA-35006|Shin Sangoku Musou 5 Special (Disc 2)
+SLPM-55082|Shin Sangoku Musou 5 Special (Disc 1)
+SLPM-55083|Shin Sangoku Musou 5 Special (Disc 2)
+SLPM-74286|Shin Sangoku Musou 5 Special (Disc 1)
+SLPM-74287|Shin Sangoku Musou 5 Special (Disc 2)
+
+XEBP_000.15
+SLUS-20806|Space Channel 5: Special Edition (Disc 1)
+SLUS-20807|Space Channel 5: Special Edition (Disc 2)
+
+XEBP_000.16
+SCPS-55019|Star Ocean: Till the End of Time (Disc 1)
+SLES-82028|Star Ocean: Till the End of Time (Disc 1)
+SLES-82029|Star Ocean: Till the End of Time (Disc 2)
+SLUS-20488|Star Ocean: Till the End of Time (Disc 1)
+SLUS-20891|Star Ocean: Till the End of Time (Disc 2)
+SLPM-66478|Star Ocean: Till the End of Time (Disc 1)
+SLPM-66479|Star Ocean: Till the End of Time (Disc 2)
+SCAJ-20070|Star Ocean: Till the End of Time (Disc 1)
+SLPM-65438|Star Ocean: Till the End of Time (Disc 1)
+SLPM-65439|Star Ocean: Till the End of Time (Disc 2)
+SLPM-65209|Star Ocean: Till the End of Time (Director's Cut)
+
+XEBP_000.17
+SLPS-20018|Stepping Selection (Disc 1)
+SLPS-20019|Stepping Selection (Disc 2)
+
+XEBP_000.18
+SLUS-20837|Ribbit King Plus (Disc 1)
+SLUS-20914|Ribbit King Plus (Disc 2)
+
+XEBP_000.20
+SLPM-66924|D.C. II P.S. - Da Capo II (Disc 1)
+SLPM-66925|D.C. II P.S. - Da Capo II (Disc 2)
+SLPM-66922|D.C. II P.S. - Da Capo II (Disc 3)
+SLPM-66923|D.C. II P.S. - Da Capo II (Disc 4)
+SLPM-55171|D.C. II P.S. - Da Capo II (Disc 5)
+SLPM-55172|D.C. II P.S. - Da Capo II (Disc 6)
+
+XEBP_000.21
+SLPM-62049|Densha de Go! 3 (Disc 1)
+SLPM-62050|Densha de Go! 3 (Disc 2)
+
+XEBP_000.22
+SLPM-66779|Galaxy Angel II - Mugen Kairou no Kagi (Disc 1)
+SLPM-66780|Galaxy Angel II - Mugen Kairou no Kagi (Disc 2)
+
+XEBP_000.23
+SLPM-55118|Galaxy Angel II - Eigou Kaiki no Toki (Disc 1)
+SLPM-55119|Galaxy Angel II - Eigou Kaiki no Toki (Disc 2)
