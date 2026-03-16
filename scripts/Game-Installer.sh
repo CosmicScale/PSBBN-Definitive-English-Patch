@@ -548,6 +548,97 @@ CREATE_VMC() {
     cp -rf "${POPS_DIR}/${VMC_FOLDER}/"* "${STORAGE_DIR}/__common/POPS"
 }
 
+CREATE_PS2_VMC() {
+
+    declare -A vmc_groups_by_id
+    declare -A vmc_sizes_by_group
+    current_group=""
+    current_size="8"
+
+    echo | tee -a "${LOG_FILE}"
+    echo -n "Creating VMCs for PS2 games..." | tee -a "${LOG_FILE}"
+
+    # Compile genvmc if not already compiled
+    if [[ ! -x "${HELPER_DIR}/genvmc" ]]; then
+        echo >> "${LOG_FILE}"
+        echo "Compiling genvmc..." >> "${LOG_FILE}"
+        if ! gcc -std=gnu99 -o "${HELPER_DIR}/genvmc" "${HELPER_DIR}/genvmc.c" >> "${LOG_FILE}" 2>&1; then
+            echo " failed to compile genvmc." | tee -a "${LOG_FILE}"
+            return 1
+        fi
+    fi
+
+    # Parse ps2_vmc_groups.list
+    exec 3< "${HELPER_DIR}/ps2_vmc_groups.list"
+    while IFS= read -r line <&3; do
+        line="${line%%$'\r'}"
+        [[ -z "$line" ]] && continue
+
+        if [[ "$line" == XEBP_* ]]; then
+            current_group="${line%%|*}"
+            size_field="${line#*|}"
+            if [[ "$size_field" != "$current_group" ]]; then
+                current_size="$size_field"
+            else
+                current_size="8"
+            fi
+            vmc_sizes_by_group["$current_group"]="$current_size"
+        elif [[ $line =~ ^[A-Z]{4}_[0-9]{3}\.[0-9]{2} ]]; then
+            vmc_groups_by_id["$line"]="$current_group"
+        fi
+    done
+    exec 3<&-
+
+    # Track which VMC .bin files have been created
+    declare -A created_vmcs
+
+    # Create nhddl directory for per-game YAML files
+    mkdir -p "${OPL}/nhddl"
+
+    # Process each PS2 game
+    exec 3< "${PS2_LIST}"
+    while IFS='|' read -r title game_id publisher disc_type file_name jpn_title <&3; do
+
+        # Determine VMC name and size
+        if [[ -n "${vmc_groups_by_id[$game_id]}" ]]; then
+            vmc_name="${vmc_groups_by_id[$game_id]}"
+            vmc_size="${vmc_sizes_by_group[$vmc_name]}"
+        else
+            vmc_name="$game_id"
+            vmc_size="8"
+        fi
+
+        vmc_file="${vmc_name}.bin"
+
+        # Create VMC .bin if it doesn't already exist
+        if [[ ! -f "${OPL}/VMC/${vmc_file}" ]] && [[ -z "${created_vmcs[$vmc_name]}" ]]; then
+            "${HELPER_DIR}/genvmc" "$vmc_size" "${OPL}/VMC/${vmc_file}" >> "${LOG_FILE}" 2>&1
+            created_vmcs["$vmc_name"]=1
+        fi
+
+        # Write OPL CFG entry
+        cfg_file="${OPL}/CFG/${game_id}.cfg"
+        if [[ -f "$cfg_file" ]] && grep -q '^\$VMC_0=' "$cfg_file"; then
+            : # VMC already configured
+        else
+            printf '$VMC_0=%s\r\n' "${vmc_name}" >> "$cfg_file"
+        fi
+
+        # Write NHDDL YAML for Neutrino
+        iso_name="${file_name%.*}"
+        yaml_file="${OPL}/nhddl/${iso_name}.yaml"
+        if [[ ! -f "$yaml_file" ]]; then
+            printf 'mc0: /VMC/%s\n' "${vmc_file}" > "$yaml_file"
+        elif ! grep -q '^mc0:' "$yaml_file"; then
+            printf 'mc0: /VMC/%s\n' "${vmc_file}" >> "$yaml_file"
+        fi
+
+    done
+    exec 3<&-
+
+    echo " done." | tee -a "${LOG_FILE}"
+}
+
 POPS_SIZE_CKECK() {
 
     if [ "$INSTALL_TYPE" = "sync" ]; then
@@ -1432,6 +1523,18 @@ if [ -z "$APA_SIZE" ] || [ -z "$LANG" ]; then
     error_msg "Error" "Missing required value(s) in ${OPL}/version.txt"
 fi
 
+# Check for existing PS2 VMC .bin files on the drive
+PS2_VMC_EXISTS=false
+if find "${OPL}/VMC" -maxdepth 1 -name "*.bin" -print -quit 2>/dev/null | grep -q .; then
+    PS2_VMC_EXISTS=true
+fi
+
+# Check for existing PS2 games on the OPL partition
+PS2_GAMES_ON_OPL=false
+if find "${OPL}/CD" "${OPL}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) -print -quit 2>/dev/null | grep -q .; then
+    PS2_GAMES_ON_OPL=true
+fi
+
 UNMOUNT_OPL
 
 # Check if the Python virtual environment exists
@@ -1682,6 +1785,28 @@ if { [ "$INSTALL_TYPE" = "sync" ] && find "${GAMES_PATH}/POPS" -maxdepth 1 -type
     PFS_COMMANDS
 fi
 
+# Ask about PS2 VMCs if PS2 games exist
+if find "${GAMES_PATH}/CD" "${GAMES_PATH}/DVD" -maxdepth 1 -type f \( -iname "*.iso" -o -iname "*.zso" \) -print -quit 2>/dev/null | grep -q . \
+   || [[ "$PS2_GAMES_ON_OPL" == "true" ]]; then
+    if [[ "$PS2_VMC_EXISTS" == "true" ]]; then
+        PS2_VMC="y"
+    else
+        SPLASH
+        echo "Would you like to use shared VMCs for PS2 games?"
+        echo
+        echo "Games that share save data will be assigned to the same virtual memory card."
+        echo
+        while true; do
+            read -p "Yes or No (y/n): " PS2_VMC
+            case "$PS2_VMC" in
+                [Yy]) PS2_VMC="y"; break ;;
+                [Nn]) PS2_VMC="n"; break ;;
+                *) echo; echo "Please enter y or n." ;;
+            esac
+        done
+    fi
+fi
+
 SPLASH
 
 echo "PS2 Drive Detected: $DEVICE" >> "${LOG_FILE}"
@@ -1695,6 +1820,11 @@ if [ -n "$HDTVFIX" ]; then
         [Nn]) HDTVFIX="No" ;;
     esac
     echo "HDTV fix for PS1 Games: $HDTVFIX"
+fi
+if [ "$PS2_VMC" = "y" ]; then
+    echo "PS2 VMCs: Yes" | tee -a "${LOG_FILE}"
+elif [ "$PS2_VMC" = "n" ]; then
+    echo "PS2 VMCs: No" | tee -a "${LOG_FILE}"
 fi
 echo
 read -n 1 -s -r -p "Press any key to continue..."
@@ -2698,6 +2828,11 @@ done
 # Print message based on the check
 if ! $files_exist; then
     echo "No OPL files to copy." | tee -a "${LOG_FILE}"
+fi
+
+# Create PS2 VMCs if enabled
+if [ "$PS2_VMC" = "y" ] && [ -s "${PS2_LIST}" ]; then
+    CREATE_PS2_VMC
 fi
 
 echo | tee -a "${LOG_FILE}"
