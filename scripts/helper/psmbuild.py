@@ -110,8 +110,22 @@ def png_to_tm2(png_path):
     with Image.open(png_path) as img:
         img = img.convert("RGB").resize((WIDTH, HEIGHT), Image.Resampling.LANCZOS)
 
-        # Quantize to 256 colors
-        pal_img = img.quantize(colors=256, method=Image.MEDIANCUT, dither=Image.FLOYDSTEINBERG)
+        # Separate RGB for palette generation
+        rgb_img = img.convert("RGB")
+
+        # Build palette using MEDIANCUT
+        pal_base = rgb_img.quantize(
+            colors=256,
+            method=Image.MEDIANCUT,
+            dither=Image.FLOYDSTEINBERG
+        )
+
+        # Apply palette to image
+        pal_img = rgb_img.quantize(
+            palette=pal_base,
+            dither=Image.FLOYDSTEINBERG
+        )
+        
         raw_palette = pal_img.getpalette()[:768]
 
         if len(raw_palette) < 768:
